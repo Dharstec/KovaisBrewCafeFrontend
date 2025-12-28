@@ -7,6 +7,7 @@ const attendance = require("./routes/attendance");
 const category = require("./routes/category");
 const dashboard = require("./routes/dashboard");
 const employeeAdvance = require("./routes/employeeAdvance");
+const stock = require("./routes/stock");
 
 module.exports = function (app) {
     app.use("/", indexRoute);
@@ -18,6 +19,7 @@ module.exports = function (app) {
     app.use("/api", dashboard);
     app.use("/api", employees);
     app.use("/api", employeeAdvance);
+    app.use("/api", stock);
 }
 
 

@@ -143,47 +143,98 @@ exports.getProductById = async (req, res) => {
 };
 
 /* ================= CREATE PRODUCT ================= */
+/* ================= CREATE PRODUCT ================= */
 exports.createProduct = async (req, res) => {
-    const { name, price, category_id, image_url } = req.body;
+  try {
+    const {
+      name,
+      price,
+      category_id,
+      image_url,
+      base_unit,
+      unit_label,
+      unit_value,
+      is_manual_price
+    } = req.body;
 
-    if (!name || price === undefined || !category_id) {
-        return res.status(400).json({ msg: "Name, price & category required" });
+    if (!name || !category_id) {
+      return res.status(400).json({ msg: "Name & category required" });
+    }
+
+    // 🔥 Manual price products can have price = 0
+    if (!is_manual_price && price === undefined) {
+      return res.status(400).json({ msg: "Price required" });
     }
 
     const product = await DB.PostgresInsert("products", {
-        name,
-        price,
-        category_id,
-        is_manual_price : req.body.is_manual_price || false,
-        image_url: image_url || null,
-        is_active: true
+      name,
+      price: is_manual_price ? Number(price || 0) : Number(price),
+      category_id,
+      image_url: image_url || null,
+
+      // 🔥 UNIT SYSTEM
+      base_unit: base_unit || 'pcs',
+      unit_label: unit_label || 'piece',
+      unit_value: Number(unit_value) || 1,
+
+      is_manual_price: !!is_manual_price,
+      is_active: true
     });
 
     res.status(201).json({ success: true, product });
+
+  } catch (err) {
+    console.error("Create product error:", err);
+    res.status(500).json({ msg: "Create failed" });
+  }
 };
 
+
+/* ================= UPDATE PRODUCT ================= */
 /* ================= UPDATE PRODUCT ================= */
 exports.updateProduct = async (req, res) => {
-    const { name, price, category_id, image_url } = req.body;
+  try {
+    const {
+      name,
+      price,
+      category_id,
+      image_url,
+      base_unit,
+      unit_label,
+      unit_value,
+      is_manual_price
+    } = req.body;
 
     const updated = await DB.PostgresUpdate(
-        "products",
-        {
-            name,
-            price,
-            category_id,
-            image_url,
-            is_manual_price: req.body.is_manual_price || false
-        },
-        { id: Number(req.params.id) }
+      "products",
+      {
+        name,
+        price: is_manual_price ? Number(price || 0) : Number(price),
+        category_id,
+        image_url,
+
+        // 🔥 UNIT SYSTEM
+        base_unit,
+        unit_label,
+        unit_value: Number(unit_value) || 1,
+
+        is_manual_price: !!is_manual_price
+      },
+      { id: Number(req.params.id) }
     );
 
     if (!updated) {
-        return res.status(404).json({ msg: "Not found" });
+      return res.status(404).json({ msg: "Not found" });
     }
 
     res.json({ success: true, message: "Updated successfully" });
+
+  } catch (err) {
+    console.error("Update product error:", err);
+    res.status(500).json({ msg: "Update failed" });
+  }
 };
+
 
 /* ================= DELETE PRODUCT (SOFT) ================= */
 exports.deleteProduct = async (req, res) => {

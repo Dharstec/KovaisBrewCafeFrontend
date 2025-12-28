@@ -1,13 +1,12 @@
 const DB = require("../middleware/dbFunctions");
 
 exports.getDashboardSummary = async (req, res) => {
-    try {
-        const today = new Date().toISOString().slice(0, 10);
+  try {
 
-        /* ===============================
-           SALES & BILLING
-           =============================== */
-        const sales = await DB.PostgresAny(`
+    /* ===============================
+       SALES & BILLING (TODAY)
+       =============================== */
+    const sales = await DB.PostgresAny(`
       SELECT 
         COUNT(*) AS total_bills,
         COALESCE(SUM(grand_total), 0) AS total_sales
@@ -15,31 +14,31 @@ exports.getDashboardSummary = async (req, res) => {
       WHERE DATE(created_at) = CURRENT_DATE
     `);
 
-        const pendingBills = await DB.PostgresAny(`
+    const pendingBills = await DB.PostgresAny(`
       SELECT COUNT(*) AS pending
       FROM bills
       WHERE status = 'PENDING'
     `);
 
-        /* ===============================
-           MASTER COUNTS
-           =============================== */
-        const products = await DB.PostgresAny(`
+    /* ===============================
+       MASTER COUNTS
+       =============================== */
+    const products = await DB.PostgresAny(`
       SELECT COUNT(*) FROM products WHERE is_active = true
     `);
 
-        const categories = await DB.PostgresAny(`
+    const categories = await DB.PostgresAny(`
       SELECT COUNT(*) FROM categories WHERE status = true
     `);
 
-        const employees = await DB.PostgresAny(`
+    const employees = await DB.PostgresAny(`
       SELECT COUNT(*) FROM employees WHERE is_active = true
     `);
 
-        /* ===============================
-           ATTENDANCE (TODAY)
-           =============================== */
-        const attendance = await DB.PostgresAny(`
+    /* ===============================
+       ATTENDANCE (TODAY)
+       =============================== */
+    const attendance = await DB.PostgresAny(`
       SELECT
         COUNT(*) FILTER (WHERE status = 'P') AS present,
         COUNT(*) FILTER (WHERE status = 'A') AS absent
@@ -47,23 +46,40 @@ exports.getDashboardSummary = async (req, res) => {
       WHERE date = CURRENT_DATE
     `);
 
-        res.json({
-            today_sales: Number(sales[0].total_sales),
-            today_bills: Number(sales[0].total_bills),
-            pending_bills: Number(pendingBills[0].pending),
+    /* ===============================
+       STOCK SUMMARY (IMPORTANT)
+       =============================== */
+    const stock = await DB.PostgresAny(`
+      SELECT
+        COUNT(*) AS total_items,
+        COUNT(*) FILTER (WHERE ps.current_qty <= ps.min_qty AND ps.current_qty > 0) AS low_stock,
+        COUNT(*) FILTER (WHERE ps.current_qty <= 0) AS out_of_stock
+      FROM product_stock ps
+    `);
 
-            products: Number(products[0].count),
-            categories: Number(categories[0].count),
-            employees: Number(employees[0].count),
+    res.json({
+      today_sales: Number(sales[0].total_sales),
+      today_bills: Number(sales[0].total_bills),
+      pending_bills: Number(pendingBills[0].pending),
 
-            attendance: {
-                present: Number(attendance[0].present),
-                absent: Number(attendance[0].absent)
-            }
-        });
+      products: Number(products[0].count),
+      categories: Number(categories[0].count),
+      employees: Number(employees[0].count),
 
-    } catch (err) {
-        console.error("Dashboard Error:", err);
-        res.status(500).json({ message: "Dashboard load failed" });
-    }
+      attendance: {
+        present: Number(attendance[0].present),
+        absent: Number(attendance[0].absent)
+      },
+
+      stock: {
+        total_items: Number(stock[0].total_items),
+        low_stock: Number(stock[0].low_stock),
+        out_of_stock: Number(stock[0].out_of_stock)
+      }
+    });
+
+  } catch (err) {
+    console.error("Dashboard Error:", err);
+    res.status(500).json({ message: "Dashboard load failed" });
+  }
 };

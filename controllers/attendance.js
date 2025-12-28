@@ -3,22 +3,41 @@ const DB = require("../middleware/dbFunctions");
 exports.markAttendance = async (req, res) => {
   const rows = req.body;
 
-  for (const r of rows) {
-    await DB.PostgresUpsert(
-      "attendance",
-      {
-        employee_id: r.employee_id,
-        date: r.date,
-        status: r.status
-      },
-      ['employee_id', 'date'],   // ✅ conflictCols (ARRAY)
-      ['status']                 // ✅ updateCols (ARRAY)
-    );
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return res.status(400).json({ message: "Invalid data" });
   }
 
-  res.json({ message: "Attendance saved successfully" });
-};
+  const client = await DB.getClient(); // get pg client
+  try {
+    await client.query("BEGIN");
 
+    for (const r of rows) {
+      if (!['P', 'A'].includes(r.status)) {
+        throw new Error("Invalid attendance status");
+      }
+
+      await client.query(
+        `
+        INSERT INTO attendance (employee_id, date, status)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (employee_id, date)
+        DO UPDATE SET status = EXCLUDED.status
+        `,
+        [r.employee_id, r.date, r.status]
+      );
+    }
+
+    await client.query("COMMIT");
+    res.json({ message: "Attendance saved successfully" });
+
+  } catch (err) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: err.message });
+
+  } finally {
+    client.release();
+  }
+};
 
 
 exports.getAttendanceByDate = async (req, res) => {
@@ -33,6 +52,7 @@ exports.getAttendanceByDate = async (req, res) => {
     FROM employees e
     LEFT JOIN attendance a 
       ON a.employee_id = e.id AND a.date = $1
+    WHERE e.is_active = true
     ORDER BY e.name
     `,
     [date]
@@ -40,3 +60,4 @@ exports.getAttendanceByDate = async (req, res) => {
 
   res.json(data);
 };
+

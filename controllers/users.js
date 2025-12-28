@@ -99,7 +99,7 @@ const login = async (req, res) => {
             },
             SECRET_CODE,
             {
-                expiresIn: isAdmin ? '1h' : '10d'   
+                expiresIn: isAdmin ? '3h' : '10d'   
             }
         );
 

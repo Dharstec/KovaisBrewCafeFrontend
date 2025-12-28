@@ -1,5 +1,5 @@
 
-const recipients = ['mgcentering2025@gmail.com']
+const recipients = ['gokuldsp01@gmail.com']
 function generateSearchString(search, columns, tableAliases = {}) {
     if (!search || !columns || !columns.length) return '';
     const sanitized = search.replace(/'/g, "''").toLowerCase();

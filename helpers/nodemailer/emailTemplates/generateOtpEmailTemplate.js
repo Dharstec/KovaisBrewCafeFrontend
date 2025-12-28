@@ -49,10 +49,10 @@ function generateOtpEmailTemplate(otp, userEmail) {
 
           <div class="otp-box">${otp}</div>
 
-          <p>If you didn’t request this OTP, you can safely ignore this email.</p>
+          <p>If you didn't request this OTP, you can safely ignore this email.</p>
 
           <div class="footer">
-            © MG Construction – Secure Admin Login
+            © Kovai's Brew Cafe - Secure Admin Login
           </div>
         </div>
       </body>
