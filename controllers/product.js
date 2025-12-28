@@ -82,6 +82,9 @@ exports.getAllProducts = async (req, res) => {
         p.category_id,
         p.is_manual_price,
         p.is_active,
+        p.base_unit,
+        p.unit_label,
+        p.unit_value,
         c.name AS category
       FROM products p
       JOIN categories c ON c.id = p.category_id
