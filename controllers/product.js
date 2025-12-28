@@ -1,40 +1,46 @@
 const DB = require("../middleware/dbFunctions");
 
 exports.getAllProductsBilling = async (req, res) => {
-    const { search, category_id } = req.query;
+  const { search, category_id } = req.query;
 
-    let query = `
-        SELECT
-            p.id,
-            p.name,
-            p.price,
-            p.image_url,
-            p.category_id,
-            p.is_manual_price,
-            c.name AS category,
-            p.is_active
-        FROM products p
-        JOIN categories c ON c.id = p.category_id
-        WHERE p.is_active = true
-    `;
+  let query = `
+    SELECT
+      p.id,
+      p.name,
+      p.price,
+      p.image_url,
+      p.category_id,
+      p.is_manual_price,
 
-    const params = [];
+      -- 🔥 UNIT FIELDS (REQUIRED)
+      p.base_unit,
+      p.unit_label,
+      p.unit_value,
 
-    if (search) {
-        params.push(`%${search.toLowerCase()}%`);
-        query += ` AND LOWER(p.name) LIKE $${params.length}`;
-    }
+      c.name AS category
+    FROM products p
+    JOIN categories c ON c.id = p.category_id
+    WHERE p.is_active = true
+  `;
 
-    if (category_id) {
-        params.push(category_id);
-        query += ` AND p.category_id = $${params.length}`;
-    }
+  const params = [];
 
-    query += " ORDER BY p.name ASC";
+  if (search) {
+    params.push(`%${search.toLowerCase()}%`);
+    query += ` AND LOWER(p.name) LIKE $${params.length}`;
+  }
 
-    const products = await DB.PostgresAny(query, params);
-    res.json(products);
+  if (category_id) {
+    params.push(category_id);
+    query += ` AND p.category_id = $${params.length}`;
+  }
+
+  query += " ORDER BY p.name ASC";
+
+  const products = await DB.PostgresAny(query, params);
+  res.json(products);
 };
+
 
 
 /* ================= GET ALL PRODUCTS ================= */
