@@ -47,14 +47,20 @@ exports.getDashboardSummary = async (req, res) => {
     `);
 
     /* ===============================
-       STOCK SUMMARY (IMPORTANT)
+       STOCK SUMMARY (FIXED)
        =============================== */
     const stock = await DB.PostgresAny(`
       SELECT
         COUNT(*) AS total_items,
-        COUNT(*) FILTER (WHERE ps.current_qty <= ps.min_qty AND ps.current_qty > 0) AS low_stock,
-        COUNT(*) FILTER (WHERE ps.current_qty <= 0) AS out_of_stock
-      FROM product_stock ps
+        COUNT(*) FILTER (
+          WHERE current_qty <= min_qty AND current_qty > 0
+        ) AS low_stock,
+        COUNT(*) FILTER (
+          WHERE current_qty <= 0
+        ) AS out_of_stock
+      FROM products
+      WHERE track_stock = true
+        AND is_active = true
     `);
 
     res.json({

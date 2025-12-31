@@ -4,62 +4,59 @@ const DB = require("../middleware/dbFunctions");
 exports.getStock = async (req, res) => {
   const data = await DB.PostgresAny(`
     SELECT
-      p.id,
-      p.name,
-      p.unit_label,
-      p.unit_value,
-      p.base_unit,
-      COALESCE(ps.current_qty, 0) AS stock_qty,
-      ps.min_qty
-    FROM products p
-    LEFT JOIN product_stock ps ON ps.product_id = p.id
-    ORDER BY p.name
+      id,
+      name,
+      base_unit,
+      unit_label,
+      ROUND(unit_value)::INTEGER AS unit_value,
+      ROUND(current_qty)::INTEGER AS current_qty,
+      ROUND(min_qty)::INTEGER AS min_qty
+    FROM products
+    WHERE track_stock = true
+      AND is_active = true
+    ORDER BY name
   `);
 
   res.json(data);
 };
 
-/* ================= ADD / REDUCE STOCK ================= */
+
+/* ADD / REDUCE STOCK */
 exports.adjustStock = async (req, res) => {
   try {
     const { product_id, change_qty, reason } = req.body;
 
-    if (!product_id || !change_qty || !reason) {
-      return res.status(400).json({ message: "Missing required fields" });
+    if (!product_id || !change_qty) {
+      return res.status(400).json({ message: "Invalid data" });
     }
 
-    const result = await DB.PostgresAny(
-      `
-      UPDATE product_stock
+    const result = await DB.PostgresAny(`
+      UPDATE products
       SET current_qty = current_qty + $1,
           updated_at = NOW()
-      WHERE product_id = $2
+      WHERE id = $2
+        AND track_stock = true
       RETURNING current_qty
-      `,
-      [change_qty, product_id]
-    );
+    `, [change_qty, product_id]);
 
     if (!result.length) {
-      throw new Error("Product stock not found");
+      return res.status(400).json({ message: "Stock item not found" });
     }
 
-    if (result[0].current_qty < 0) {
-      throw new Error("Stock cannot be negative");
-    }
+    /* OPTIONAL: keep history */
+    await DB.PostgresInsert("stock_logs", {
+      product_id,
+      change_qty,
+      reason: reason || 'MANUAL'
+    });
 
-    await DB.PostgresAny(
-      `
-      INSERT INTO stock_logs
-        (product_id, change_qty, reason, ref_type)
-      VALUES ($1, $2, $3, 'MANUAL')
-      `,
-      [product_id, change_qty, reason]
-    );
-
-    res.json({ message: "Stock updated successfully" });
+    res.json({
+      message: "Stock updated successfully",
+      current_qty: result[0].current_qty
+    });
 
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error("Stock update error:", err);
+    res.status(500).json({ message: "Stock update failed" });
   }
 };
-
