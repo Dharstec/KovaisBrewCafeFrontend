@@ -158,11 +158,12 @@ exports.createProduct = async (req, res) => {
       is_sellable = true,
       track_stock = false,
 
-      current_qty,
-      min_qty,
       base_unit,
       unit_label,
       unit_value,
+
+      current_qty,
+      min_qty,
 
       is_manual_price = false
     } = req.body;
@@ -185,24 +186,29 @@ exports.createProduct = async (req, res) => {
 
       price: is_manual_price ? 0 : Number(price),
       is_manual_price: !!is_manual_price,
-      is_active: true
+      is_active: true,
+
+      // ✅ REQUIRED BY DB
+      base_unit: base_unit || 'pcs',
+      unit_label: unit_label || 'piece',
+      unit_value: Number(unit_value) || 1
     };
 
-    // ✅ ADD STOCK FIELDS ONLY IF track_stock = true
     if (track_stock) {
       payload.current_qty = Number(current_qty) || 0;
       payload.min_qty = Number(min_qty) || 0;
-      payload.base_unit = base_unit || 'pcs';
-      payload.unit_label = unit_label || 'piece';
-      payload.unit_value = Number(unit_value) || 1;
+    } else {
+      payload.current_qty = 0;
+      payload.min_qty = 0;
     }
 
     const product = await DB.PostgresInsert("products", payload);
+
     res.status(201).json({ success: true, product });
 
   } catch (err) {
     console.error("Create product error:", err);
-    res.status(500).json({ msg: "Create failed" });
+    res.status(500).json({ msg: err.message });
   }
 };
 
