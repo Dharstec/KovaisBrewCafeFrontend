@@ -12,7 +12,7 @@ exports.getStock = async (req, res) => {
       ROUND(current_qty)::INTEGER AS current_qty,
       ROUND(min_qty)::INTEGER AS min_qty
     FROM products
-    WHERE name NOT IN ('Stock Items')
+    WHERE name IN ('Stock Items')
       AND is_active = true
     ORDER BY name
   `);
