@@ -9,5 +9,22 @@ router.get("/products/:id", verifyToken, controller.getProductById);
 router.post("/products", verifyToken, controller.createProduct);
 router.put("/products/:id", verifyToken, controller.updateProduct);
 router.delete("/products/:id", verifyToken, controller.deleteProduct);
+router.get(
+  "/recipes/:sale_product_id",
+  verifyToken,
+  controller.getRecipeByProduct
+);
+
+router.post(
+  "/recipes",
+  verifyToken,
+  controller.saveRecipe
+);
+
+router.delete(
+  "/recipes/:id",
+  verifyToken,
+  controller.deleteRecipe
+);
 
 module.exports = router;
