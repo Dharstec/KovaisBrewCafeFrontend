@@ -50,6 +50,9 @@ export class ProductApi {
     return this.http.get<any[]>(`${environment.apiUrl}/stock`);
   }
 
+  getStockDropDownItems() {
+    return this.http.get<any[]>(`${environment.apiUrl}/stock_dropdown`);
+  }
   getRecipeByProduct(id: number) {
     return this.http.get<any[]>(`${environment.apiUrl}/recipes/${id}`);
   }

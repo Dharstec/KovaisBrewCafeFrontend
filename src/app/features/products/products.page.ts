@@ -35,7 +35,6 @@ export class ProductsPage implements OnInit {
   ngOnInit() {
     this.loadProducts();
     this.loadCategories();
-    this.loadStockProducts();
   }
 
   loadProducts() {
@@ -62,7 +61,7 @@ export class ProductsPage implements OnInit {
   }
 
   loadStockProducts() {
-    this.productApi.getStockItems().subscribe((r: any[]) => this.stockProducts = r);
+    this.productApi.getStockDropDownItems().subscribe((r: any[]) => this.stockProducts = r);
   }
 
   open() {
@@ -90,6 +89,7 @@ export class ProductsPage implements OnInit {
   }
 
   edit(p: any) {
+    this.loadStockProducts();
 
     // 🔥 normalize booleans
     const isSellable = p.is_sellable === true || p.is_sellable === 'true';
