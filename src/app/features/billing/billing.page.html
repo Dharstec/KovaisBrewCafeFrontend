@@ -1,0 +1,153 @@
+<div class="pos">
+
+  <!-- LEFT -->
+  <section class="left">
+
+    <div class="header">
+      <div>
+        <h1>Checkout</h1>
+        <span class="sub">Select products</span>
+      </div>
+
+      <input
+        class="search"
+        placeholder="Search product..."
+        [(ngModel)]="searchText" />
+    </div>
+
+    <!-- CATEGORY -->
+    <div class="categories">
+      <button
+        *ngFor="let c of categories"
+        [class.active]="selectedCategory === c.name"
+        (click)="selectedCategory = c.name">
+        {{ c.name }}
+      </button>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="products">
+      <div
+        class="product-card"
+        *ngFor="let p of filteredProducts"
+        (click)="addProduct(p)">
+
+        <div class="image">
+          <img [src]="p.image_url || 'assets/coffee.png'" />
+        </div>
+
+        <div class="info">
+          <div class="name">{{ p.name }}</div>
+
+          <div class="price" *ngIf="!p.is_manual_price">
+            ₹ {{ p.price }}
+          </div>
+
+          <div class="price manual" *ngIf="p.is_manual_price">
+            Manual Price
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- RIGHT -->
+  <aside class="right">
+
+    <h2>Order Summary</h2>
+
+    <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
+
+    <!-- OPTIONAL -->
+    <div class="optional-fields">
+      <input
+        placeholder="Customer Name (optional)"
+        [(ngModel)]="customerName" />
+
+      <select [(ngModel)]="paymentMethod">
+        <option value="">Payment Method (required)</option>
+        <option value="CASH">Cash</option>
+        <option value="UPI">UPI</option>
+      </select>
+    </div>
+
+    <!-- CART -->
+    <div class="cart" *ngIf="cart.length; else empty">
+
+      <div
+        class="cart-item"
+        *ngFor="let i of cart; trackBy: trackByProductId">
+
+        <div class="row">
+          <div class="item-name">{{ i.name }}</div>
+          <div class="line-total">₹ {{ i.price * i.qty }}</div>
+        </div>
+
+        <div class="row controls">
+
+          <div class="price-row">
+            <span>₹</span>
+
+            <span *ngIf="!i.is_manual_price">{{ i.price }}</span>
+
+            <input
+              *ngIf="i.is_manual_price"
+              type="number"
+              [ngModel]="i.price"
+              (ngModelChange)="updateManualPrice(i, $event)" />
+          </div>
+
+          <div class="qty">
+            <button
+              (click)="$event.stopPropagation(); store.update(i.productId, i.qty - 1)">
+              −
+            </button>
+
+            <span>{{ i.qty }}</span>
+
+            <button
+              (click)="$event.stopPropagation(); store.update(i.productId, i.qty + 1)"
+              [disabled]="i.is_manual_price">
+              +
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <ng-template #empty>
+      <p class="empty">No items added</p>
+    </ng-template>
+
+    <!-- SUMMARY -->
+    <div class="summary">
+      <div>
+        <span>Subtotal</span>
+        <span>₹ {{ store.getTotal() }}</span>
+      </div>
+
+      <div class="total">
+        <span>Total</span>
+        <span>₹ {{ store.getTotal() }}</span>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <button class="btn dark" (click)="savePending()">
+      Save Pending
+    </button>
+
+    <button
+      class="btn accent"
+      *ngIf="store.getBillId()"
+      [disabled]="!paymentMethod"
+      (click)="completeBill()">
+      Complete Bill
+    </button>
+
+  </aside>
+
+</div>

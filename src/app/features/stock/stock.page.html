@@ -1,0 +1,73 @@
+<div class="stock-page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>Stock Management</h1>
+      <p class="subtitle">Add / reduce daily stock</p>
+    </div>
+  </div>
+
+  <!-- STOCK TABLE -->
+  <div class="table-wrap">
+    <table>
+
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Unit</th>
+          <th>Current</th>
+          <th>Minimum</th>
+          <th>Change</th>
+          <th>Reason</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let p of stocks">
+
+          <td class="name">{{ p.name }}</td>
+
+          <td>
+            {{ p.unit_label }}
+            <small>({{ p.unit_value }} {{ p.base_unit }})</small>
+          </td>
+
+          <td>
+            <span class="qty" [class.low]="p.current_qty <= p.min_qty">
+              {{ p.current_qty }}
+            </span>
+          </td>
+
+          <td>{{ p.min_qty }}</td>
+
+          <td>
+            <input
+              type="number"
+              [(ngModel)]="p.change_qty"
+              placeholder="+ / - qty"
+            />
+          </td>
+
+          <td>
+            <select [(ngModel)]="p.reason">
+              <option value="DAILY_REFILL">Daily Refill</option>
+              <option value="WASTAGE">Wastage</option>
+              <option value="ADJUSTMENT">Adjustment</option>
+            </select>
+          </td>
+
+          <td>
+            <button class="update" (click)="updateStock(p)">
+              Update
+            </button>
+          </td>
+
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+
+</div>

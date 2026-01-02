@@ -1,0 +1,76 @@
+<div class="dashboard">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h2>Dashboard</h2>
+    <span class="date">Today Overview</span>
+  </div>
+
+  <!-- SALES -->
+  <div class="cards">
+    <div class="card accent">
+      <h4>Today Sales</h4>
+      <p>₹ {{ data.today_sales }}</p>
+    </div>
+
+    <div class="card">
+      <h4>Today Bills</h4>
+      <p>{{ data.today_bills }}</p>
+    </div>
+
+    <div class="card warn">
+      <h4>Pending Bills</h4>
+      <p>{{ data.pending_bills }}</p>
+    </div>
+  </div>
+
+  <!-- MASTER -->
+  <div class="cards">
+    <div class="card">
+      <h4>Products</h4>
+      <p>{{ data.products }}</p>
+    </div>
+
+    <div class="card">
+      <h4>Categories</h4>
+      <p>{{ data.categories }}</p>
+    </div>
+
+    <div class="card">
+      <h4>Employees</h4>
+      <p>{{ data.employees }}</p>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="cards">
+    <div class="card success">
+      <h4>Present Today</h4>
+      <p>{{ data.attendance.present }}</p>
+    </div>
+
+    <div class="card danger">
+      <h4>Absent Today</h4>
+      <p>{{ data.attendance.absent }}</p>
+    </div>
+  </div>
+
+  <!-- STOCK SUMMARY -->
+  <div class="cards">
+    <div class="card">
+      <h4>Total Stock Items</h4>
+      <p>{{ data.stock.total_items }}</p>
+    </div>
+
+    <div class="card warn">
+      <h4>Low Stock</h4>
+      <p>{{ data.stock.low_stock }}</p>
+    </div>
+
+    <div class="card danger">
+      <h4>Out of Stock</h4>
+      <p>{{ data.stock.out_of_stock }}</p>
+    </div>
+  </div>
+
+</div>

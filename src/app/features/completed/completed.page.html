@@ -1,0 +1,71 @@
+<div class="completed">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="title">
+      <h1>Completed Bills</h1>
+      <p class="subtitle">
+        {{ isAdmin ? 'Filter by date range' : 'Today's completed bills' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- DATE FILTER (ADMIN ONLY) -->
+  <div class="date-filter" *ngIf="isAdmin">
+    <div class="field">
+      <label>Start Date</label>
+      <input type="date" [(ngModel)]="startDate">
+    </div>
+
+    <div class="field">
+      <label>End Date</label>
+      <input type="date" [(ngModel)]="endDate">
+    </div>
+
+    <button class="apply" (click)="applyDateFilter()">Apply</button>
+  </div>
+
+  <!-- LIST -->
+  <div class="list" *ngIf="bills.length; else empty">
+
+    <div class="bill" *ngFor="let b of bills">
+
+      <div class="top">
+        <div>
+          <div class="bill-no">Bill #{{ b.id }}</div>
+          <div class="date">{{ b.created_at | date:'medium' }}</div>
+        </div>
+
+        <div class="amount">₹ {{ b.grand_total }}</div>
+      </div>
+
+      <div class="items">
+        <div class="item" *ngFor="let i of b.items">
+          <span>{{ i.name }} × {{ i.qty }}</span>
+          <span>₹ {{ i.price * i.qty }}</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button (click)="prev()" [disabled]="page === 1">‹</button>
+
+    <button
+      *ngFor="let p of pages"
+      (click)="goTo(p)"
+      [class.active]="p === page">
+      {{ p }}
+    </button>
+
+    <button (click)="next()" [disabled]="page === totalPages">›</button>
+  </div>
+
+  <ng-template #empty>
+    <div class="empty">No bills found</div>
+  </ng-template>
+
+</div>

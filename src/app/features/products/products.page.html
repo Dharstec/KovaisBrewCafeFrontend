@@ -1,0 +1,254 @@
+<div class="product-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>Products</h1>
+      <p>Manage café menu & inventory</p>
+    </div>
+    <button class="btn-primary" (click)="open()">+ Add Product</button>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <input
+      type="text"
+      placeholder="Search products"
+      [(ngModel)]="search"
+      (ngModelChange)="onSearchChange()" />
+
+    <select [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+      <option value="">All Categories</option>
+      <option *ngFor="let c of categories" [value]="c.id">
+        {{ c.name }}
+      </option>
+    </select>
+  </div>
+
+  <!-- PRODUCT GRID -->
+  <div class="product-grid">
+    <div class="product-card" *ngFor="let p of products">
+
+      <div class="product-image">
+        <img [src]="p.image_url" />
+      </div>
+
+      <div class="product-body">
+        <div class="product-title">{{ p.name }}</div>
+
+        <div class="product-price" *ngIf="p.is_sellable && !p.is_manual_price">
+          ₹ {{ p.price }}
+        </div>
+
+        <div class="product-meta">
+          {{ p.category_name }} • {{ p.unit_label || p.base_unit }}
+        </div>
+
+        <div class="tags">
+          <span class="tag sell" *ngIf="p.is_sellable">Sell</span>
+          <span class="tag stock" *ngIf="p.track_stock">Stock</span>
+        </div>
+
+        <div class="stock-info" *ngIf="p.track_stock">
+          <span>Stock: <b>{{ p.current_qty }}</b></span>
+          <span class="low" *ngIf="p.current_qty <= p.min_qty">
+            Low Stock
+          </span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-outline" (click)="edit(p)">Edit</button>
+        <button class="btn-danger" (click)="remove(p.id)">Delete</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-backdrop" *ngIf="show">
+    <div class="modal">
+
+      <div class="modal-header">
+        <h3>{{ form.id ? 'Edit Product' : 'Add Product' }}</h3>
+        <button class="close-btn" (click)="close()">✕</button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" [(ngModel)]="form.name" />
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select [(ngModel)]="form.category_id">
+            <option value="">Select</option>
+            <option *ngFor="let c of categories" [value]="c.id">
+              {{ c.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Sellable</label>
+            <select [(ngModel)]="form.is_sellable" (change)="onBehaviourChange()">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Track Stock</label>
+            <select [(ngModel)]="form.track_stock" (change)="onBehaviourChange()">
+              <option [ngValue]="true">Yes</option>
+              <option [ngValue]="false">No</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="form.is_sellable">
+          <div class="form-group">
+            <label>Manual Price</label>
+            <select [(ngModel)]="form.is_manual_price">
+              <option [ngValue]="false">No</option>
+              <option [ngValue]="true">Yes</option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="!form.is_manual_price">
+            <label>Price</label>
+            <input type="number" [(ngModel)]="form.price" />
+          </div>
+        </div>
+
+        <!-- STOCK SETTINGS -->
+        <div *ngIf="form.track_stock" class="stock-box">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Base Unit</label>
+              <select [(ngModel)]="form.base_unit" (change)="onBaseUnitChange()">
+                <option value="pcs">Pcs</option>
+                <option value="ml">ML</option>
+                <option value="gram">Gram</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Display Unit</label>
+              <select [(ngModel)]="form.unit_label">
+                <option value="piece">Piece</option>
+                <option value="litre">Litre</option>
+                <option value="kg">Kg</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Opening Stock</label>
+              <input type="number" [(ngModel)]="form.current_qty" />
+            </div>
+
+            <div class="form-group">
+              <label>Min Stock</label>
+              <input type="number" [(ngModel)]="form.min_qty" />
+            </div>
+          </div>
+        </div>
+
+        <!-- RECIPE / INGREDIENTS -->
+        <div
+          class="recipe-box"
+          *ngIf="form.id && form.is_sellable">
+
+          <div class="recipe-header">
+            <div>
+              <h4>Ingredients / Recipe</h4>
+              <p>Raw materials used per sale</p>
+            </div>
+            <span class="recipe-badge">Stock Based</span>
+          </div>
+
+          <div class="recipe-table">
+            <div class="recipe-row header">
+              <span>Raw Item</span>
+              <span>Usage Qty</span>
+              <span></span>
+            </div>
+
+            <div
+              class="recipe-row"
+              *ngFor="let r of recipeItems; let i = index">
+
+              <select [(ngModel)]="r.raw_product_id">
+                <option value="">Select stock item</option>
+                <option
+                  *ngFor="let s of stockProducts"
+                  [value]="s.id">
+                  {{ s.name }} ({{ s.base_unit }})
+                </option>
+              </select>
+
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                [(ngModel)]="r.used_qty" />
+
+              <button
+                class="icon-btn danger"
+                (click)="removeRecipe(i)">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-outline add-btn" (click)="addRecipe()">
+            + Add Ingredient
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="text" [(ngModel)]="form.image_url" />
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-outline" (click)="close()">Cancel</button>
+        <button class="btn-primary" (click)="save()">Save</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PAGINATION -->
+<div class="pagination" *ngIf="totalPages > 1">
+
+  <button
+    (click)="changePage(page - 1)"
+    [disabled]="page === 1">
+    <
+  </button>
+
+  <button
+    *ngFor="let p of pages"
+    (click)="changePage(p)"
+    [class.active]="p === page">
+    {{ p }}
+  </button>
+
+  <button
+    (click)="changePage(page + 1)"
+    [disabled]="page === totalPages">
+    >
+  </button>
+
+</div>
+
+
+</div>

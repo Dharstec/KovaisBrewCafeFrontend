@@ -1,0 +1,111 @@
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 22px;
+  background: linear-gradient(90deg, #111827, #1f2937);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+nav a {
+  padding: 8px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #e5e7eb;
+  font-weight: 500;
+  transition: all .2s ease;
+}
+
+nav a:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+/* ACTIVE TAB */
+nav a.active {
+  background: #f59e0b;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* LOGOUT BUTTON */
+.logout {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout:hover {
+  background: #dc2626;
+}
+
+/* ============================
+   MOBILE RESPONSIVE
+   ============================ */
+@media (max-width: 768px) {
+
+  .menu-btn {
+    display: block;
+  }
+
+  nav {
+    position: absolute;
+    top: 60px;
+    right: 16px;
+    background: #111827;
+    flex-direction: column;
+    width: 220px;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.35);
+    display: none;
+  }
+
+  nav.open {
+    display: flex;
+  }
+
+  nav a,
+  .logout {
+    width: 100%;
+    text-align: left;
+  }
+}

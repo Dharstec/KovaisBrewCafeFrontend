@@ -1,0 +1,59 @@
+<div class="attendance-page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h2>Attendance</h2>
+      <p class="subtitle">
+        {{ isAdmin ? 'Manage attendance by date' : "Today's attendance" }}
+      </p>
+    </div>
+
+    <!-- DATE PICKER (ADMIN ONLY) -->
+    <div class="date-picker" *ngIf="isAdmin">
+      <label>Date</label>
+      <input
+        type="date"
+        [(ngModel)]="date"
+        (change)="load()"
+      />
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrapper" *ngIf="list.length; else empty">
+
+    <table>
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let emp of list">
+          <td>{{ emp.name }}</td>
+          <td>
+            <select [(ngModel)]="emp.status">
+              <option value="P">Present</option>
+              <option value="A">Absent</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+
+    </table>
+
+  </div>
+
+  <!-- ACTION -->
+  <div class="actions" *ngIf="list.length">
+    <button (click)="save()">Save Attendance</button>
+  </div>
+
+  <ng-template #empty>
+    <div class="empty">No employees found</div>
+  </ng-template>
+
+</div>

@@ -1,0 +1,41 @@
+<div class="login-wrapper">
+
+  <div class="card">
+
+    <h2 *ngIf="step === 'login'">Login</h2>
+    <h2 *ngIf="step === 'otp'">Admin OTP Verification</h2>
+
+    <div class="error" *ngIf="error">{{ error }}</div>
+
+    <!-- EMAIL -->
+    <input
+      type="email"
+      placeholder="Email"
+      [(ngModel)]="form.email"
+      [disabled]="step === 'otp'"
+    />
+
+    <!-- PASSWORD (ONLY USER) -->
+    <input
+      *ngIf="step === 'login'"
+      type="password"
+      placeholder="Password (Users only)"
+      [(ngModel)]="form.password"
+    />
+
+    <!-- OTP (ONLY ADMIN) -->
+    <input
+      *ngIf="step === 'otp'"
+      type="text"
+      placeholder="Enter OTP"
+      [(ngModel)]="form.otp"
+      maxlength="6"
+    />
+
+    <button (click)="submit()" [disabled]="loading">
+      {{ loading ? 'Please wait...' : (step === 'otp' ? 'Verify OTP' : 'Login') }}
+    </button>
+
+  </div>
+
+</div>
