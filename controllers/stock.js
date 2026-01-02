@@ -16,7 +16,7 @@ exports.getStock = async (req, res) => {
     FROM products p
     INNER JOIN categories c ON c.id = p.category_id
     WHERE p.is_active = true
-      AND c.name = 'Stock Items'
+      AND  (c.name = 'Stock Items' OR p.track_stock = true)
     ORDER BY p.name
   `, []);
 
