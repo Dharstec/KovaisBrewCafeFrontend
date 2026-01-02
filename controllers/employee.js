@@ -58,7 +58,6 @@ exports.getEmployees = async (req, res) => {
       join_date,
       salary_type,
       salary_amount,
-      advance,
       is_active
     FROM employees
     ORDER BY name

@@ -22,16 +22,16 @@ exports.addAdvance = async (req, res) => {
       [employee_id, amount, advance_date, note || null, req.user_id]
     );
 
-    await client.query(
-      `
-      UPDATE employees
-      SET advance = advance + $1
-      WHERE id = $2
-      `,
-      [amount, employee_id]
-    );
+    // await client.query(
+    //   `
+    //   UPDATE employees
+    //   SET advance = advance + $1
+    //   WHERE id = $2
+    //   `,
+    //   [amount, employee_id]
+    // );
 
-    await client.query("COMMIT");
+    // await client.query("COMMIT");
     res.json({ message: "Advance added successfully" });
 
   } catch (err) {
@@ -57,7 +57,7 @@ exports.getAdvanceHistory = async (req, res) => {
       ea.created_at,
       u.user_name AS created_by
     FROM employee_advance ea
-    JOIN users u ON u.id = ea.created_by
+    JOIN users u 
     WHERE ea.employee_id = $1
     ORDER BY ea.advance_date DESC
     `,

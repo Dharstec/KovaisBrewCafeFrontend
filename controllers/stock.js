@@ -2,23 +2,27 @@ const DB = require("../middleware/dbFunctions");
 
 /* ================= CURRENT STOCK ================= */
 exports.getStock = async (req, res) => {
+
   const data = await DB.PostgresAny(`
     SELECT
-      id,
-      name,
-      base_unit,
-      unit_label,
-      ROUND(unit_value)::INTEGER AS unit_value,
-      ROUND(current_qty)::INTEGER AS current_qty,
-      ROUND(min_qty)::INTEGER AS min_qty
-    FROM products
-    WHERE name IN ('Stock Items')
-      AND is_active = true
-    ORDER BY name
-  `);
+      p.id,
+      p.name,
+      c.name AS category_name,
+      p.base_unit,
+      p.unit_label,
+      ROUND(p.unit_value)::INTEGER AS unit_value,
+      ROUND(p.current_qty)::INTEGER AS current_qty,
+      ROUND(p.min_qty)::INTEGER AS min_qty
+    FROM products p
+    INNER JOIN categories c ON c.id = p.category_id
+    WHERE p.is_active = true
+      AND c.name = 'Stock Items'
+    ORDER BY p.name
+  `, []);
 
   res.json(data);
 };
+
 
 
 /* ADD / REDUCE STOCK */
