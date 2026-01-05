@@ -302,24 +302,21 @@ exports.updateBill = async (req, res) => {
   }
 };
 
-/* =========================================================
-   COMPLETE BILL (NO STOCK CHANGE)
-   ========================================================= */
-exports.completeBill = async (req, res) => {
-  try {
-    await DB.PostgresUpdate(
-      "bills",
-      { status: "COMPLETED" },
-      { id: req.params.id }
-    );
+// exports.completeBill = async (req, res) => {
+//   try {
+//     await DB.PostgresUpdate(
+//       "bills",
+//       { status: "COMPLETED" },
+//       { id: req.params.id }
+//     );
 
-    res.json({ message: "Bill completed" });
+//     res.json({ message: "Bill completed" });
 
-  } catch (err) {
-    console.error("Complete bill error:", err);
-    res.status(500).json({ error: err.message });
-  }
-};
+//   } catch (err) {
+//     console.error("Complete bill error:", err);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
 
 exports.completedBills = async (req, res) => {
   try {
@@ -400,3 +397,23 @@ exports.pendingBills = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.completeBill = async (req, res) => {
+  try {
+    await DB.PostgresUpdate(
+      "bills",
+      { status: "COMPLETED" },
+      { id: req.params.id }
+    );
+
+    res.json({ message: "Bill completed" });
+
+  } catch (err) {
+    console.error("Complete bill error:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+

@@ -2,8 +2,6 @@ const DB = require("../middleware/dbFunctions");
 
 /* ================= ADD ADVANCE ================= */
 exports.addAdvance = async (req, res) => {
-  const client = await DB.getClient();
-
   try {
     const { employee_id, amount, advance_date, note } = req.body;
 
@@ -11,58 +9,56 @@ exports.addAdvance = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    await client.query("BEGIN");
+    /* INSERT ADVANCE */
+    await DB.PostgresInsert("employee_advance", {
+      employee_id,
+      amount,
+      advance_date,
+      note: note || null
+    });
 
-    await client.query(
-      `
-      INSERT INTO employee_advance
-        (employee_id, amount, advance_date, note, created_by)
-      VALUES ($1, $2, $3, $4, $5)
-      `,
-      [employee_id, amount, advance_date, note || null, req.user_id]
-    );
-
-    // await client.query(
+    // /* UPDATE EMPLOYEE ADVANCE */
+    // await DB.PostgresAny(
     //   `
     //   UPDATE employees
-    //   SET advance = advance + $1
+    //   SET advance = COALESCE(advance, 0) + $1
     //   WHERE id = $2
     //   `,
     //   [amount, employee_id]
     // );
 
-    // await client.query("COMMIT");
     res.json({ message: "Advance added successfully" });
 
   } catch (err) {
-    await client.query("ROLLBACK");
+    console.error("Add advance error:", err);
     res.status(500).json({ error: err.message });
-
-  } finally {
-    client.release();
   }
 };
 
 /* ================= ADVANCE HISTORY ================= */
 exports.getAdvanceHistory = async (req, res) => {
-  const { employee_id } = req.query;
+  try {
+    const { employee_id } = req.query;
 
-  const data = await DB.PostgresAny(
-    `
-    SELECT
-      ea.id,
-      ea.advance_date,
-      ea.amount,
-      ea.note,
-      ea.created_at,
-      u.user_name AS created_by
-    FROM employee_advance ea
-    JOIN users u 
-    WHERE ea.employee_id = $1
-    ORDER BY ea.advance_date DESC
-    `,
-    [employee_id]
-  );
+    if (!employee_id) {
+      return res.status(400).json({ message: "employee_id is required" });
+    }
 
-  res.json(data);
+    const data = await DB.PostgresAny(
+      `
+      SELECT
+       *
+      FROM employee_advance
+      WHERE employee_id = $1
+      ORDER BY advance_date DESC
+      `,
+      [employee_id]
+    );
+
+    res.json(data);
+
+  } catch (err) {
+    console.error("Advance history error:", err);
+    res.status(500).json({ error: err.message });
+  }
 };

@@ -9,6 +9,7 @@ const dashboard = require("./routes/dashboard");
 const employeeAdvance = require("./routes/employeeAdvance");
 const stock = require("./routes/stock");
 const productRecipeRoutes = require("./routes/productRecipe");
+const coupons = require("./routes/coupon");
 
 module.exports = function (app) {
     app.use("/", indexRoute);
@@ -22,6 +23,7 @@ module.exports = function (app) {
     app.use("/api", employeeAdvance);
     app.use("/api", stock);
     app.use("/api", productRecipeRoutes);
+    app.use("/api", coupons);
 }
 
 

@@ -1,5 +1,8 @@
 const pool = require('../middleware/db');
 
+async function getClient() {
+    return await pool.connect();
+}
 /* DELETE */
 async function PostgresDelete(tableName, condition, conditionValue) {
     const query = `DELETE FROM ${tableName} WHERE ${condition} = $1`;
@@ -100,6 +103,7 @@ async function PostgresUpsert(tableName, values, conflictCols, updateCols) {
 }
 
 module.exports = {
+    getClient,
     PostgresDelete,
     PostgresInsert,
     PostgresBulkInsert,
