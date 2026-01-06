@@ -1,0 +1,82 @@
+<div class="coupon-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>Coupons</h1>
+      <p class="sub">Create and manage discount coupons</p>
+    </div>
+
+    <button class="btn accent" (click)="openCreate()">
+      + Create Coupon
+    </button>
+  </div>
+
+  <!-- SEARCH -->
+  <input
+    class="search"
+    placeholder="Search by coupon code..."
+    [(ngModel)]="search" />
+
+  <!-- LIST -->
+  <div class="coupon-list">
+
+    <div class="coupon-row" *ngFor="let c of filteredCoupons">
+
+      <!-- LEFT -->
+      <div class="left">
+        <div class="code">{{ c.code }}</div>
+
+        <div class="meta">
+          <span *ngIf="c.min_bill_amount">
+            Min ₹{{ c.min_bill_amount }}
+          </span>
+
+          <span *ngIf="c.max_discount">
+            Max ₹{{ c.max_discount }}
+          </span>
+
+          <span *ngIf="c.valid_to">
+            Valid till {{ c.valid_to | date:'dd MMM yyyy' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- CENTER -->
+      <div class="discount">
+        {{ c.discount_type === 'PERCENT'
+          ? c.discount_value + '% OFF'
+          : '₹ ' + c.discount_value + ' OFF' }}
+      </div>
+
+      <!-- STATUS -->
+      <div class="status">
+        <span
+          class="badge"
+          [class.active]="c.is_active"
+          [class.inactive]="!c.is_active">
+          {{ c.is_active ? 'Active' : 'Inactive' }}
+        </span>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="actions">
+        <button class="ghost" (click)="openEdit(c)">
+          Edit
+        </button>
+        <button class="ghost danger" (click)="confirmDelete(c)">
+          Delete
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<app-coupon-form-modal
+  *ngIf="showModal"
+  [coupon]="selectedCoupon"
+  (close)="closeModal()"
+  (saved)="reload()" />

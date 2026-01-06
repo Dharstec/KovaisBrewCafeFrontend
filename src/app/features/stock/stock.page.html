@@ -2,9 +2,17 @@
 
   <!-- HEADER -->
   <div class="header">
-    <div>
+    <div class="title">
       <h1>Stock Management</h1>
       <p class="subtitle">Add / reduce daily stock</p>
+    </div>
+
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Search product..."
+        [(ngModel)]="searchTerm"
+      />
     </div>
   </div>
 
@@ -25,7 +33,7 @@
       </thead>
 
       <tbody>
-        <tr *ngFor="let p of stocks">
+        <tr *ngFor="let p of filteredStocks">
 
           <td class="name">{{ p.name }}</td>
 

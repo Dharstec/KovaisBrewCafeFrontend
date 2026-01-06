@@ -1,69 +1,47 @@
 <header class="topbar">
 
-  <div class="left">
-    <div class="logo">☕ <span>Kovai's Brew Café</span></div>
-    <button class="menu-btn" (click)="toggleMenu()">☰</button>
-  </div>
+   <div class="left">
+      <div class="logo">☕ <span>Kovai's Brew Café</span></div>
+      <button class="menu-btn" (click)="toggleMenu()">☰</button>
+   </div>
 
-  <nav [class.open]="menuOpen">
+   <nav [class.open]="menuOpen">
 
-    <a *ngIf="menu.Dashboard"
-       routerLink="/dashboard"
-       routerLinkActive="active"
-       [routerLinkActiveOptions]="{ exact: true }"
-       (click)="menuOpen = false">
-       Dashboard
-    </a>
+      <a *ngIf="menu.Dashboard" routerLink="/dashboard" routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">
+         Dashboard
+      </a>
 
-    <a *ngIf="menu.Billing"
-       routerLink="/billing"
-       routerLinkActive="active"
-       (click)="menuOpen = false">
-       Billing
-    </a>
+      <a *ngIf="menu.Billing" routerLink="/billing" routerLinkActive="active" (click)="menuOpen = false">
+         Billing
+      </a>
 
-    <a *ngIf="menu.Billing"
-       routerLink="/pending"
-       routerLinkActive="active"
-       (click)="menuOpen = false">
-       Pending
-    </a>
+      <a *ngIf="menu.Billing" routerLink="/pending" routerLinkActive="active" (click)="menuOpen = false">
+         Pending
+      </a>
 
-    <a *ngIf="menu.Billing"
-       routerLink="/completed"
-       routerLinkActive="active"
-       (click)="menuOpen = false">
-       Completed
-    </a>
+      <a *ngIf="menu.Billing" routerLink="/completed" routerLinkActive="active" (click)="menuOpen = false">
+         Completed
+      </a>
 
-    <a *ngIf="menu.Material"
-       routerLink="/products"
-       routerLinkActive="active"
-       (click)="menuOpen = false">
-       Products
-    </a>
-     <a 
-       routerLink="/stock"
-       routerLinkActive="active"
-       (click)="menuOpen = false">
-       Stock
-    </a>
+      <a *ngIf="menu.Material" routerLink="/products" routerLinkActive="active" (click)="menuOpen = false">
+         Products
+      </a>
 
-    <a *ngIf="isAdmin"
-       routerLink="/attendance"
-       routerLinkActive="active"
-       (click)="menuOpen = false">
-       Attendance
-    </a>
+      <a routerLink="/stock" routerLinkActive="active" (click)="menuOpen = false">
+         Stock
+      </a>
 
-    <a *ngIf="isAdmin"
-       routerLink="/advance"
-       routerLinkActive="active"
-       (click)="menuOpen = false">
-       Advance
-    </a>
 
-    <button class="logout" (click)="logout()">Logout</button>
+      <a *ngIf="isAdmin" routerLink="/coupons" routerLinkActive="active" (click)="menuOpen = false">
+         Coupons
+      </a>
 
-  </nav>
+      <a *ngIf="isAdmin" routerLink="/advance" routerLinkActive="active" (click)="menuOpen = false">
+         Advance
+      </a>
+
+      <button class="logout" (click)="logout()">Logout</button>
+
+   </nav>
 </header>

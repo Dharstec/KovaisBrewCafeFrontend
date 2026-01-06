@@ -16,6 +16,7 @@ export class StockPage implements OnInit {
   private http = inject(HttpClient);
 
   stocks: any[] = [];
+  searchTerm: string = '';
 
   ngOnInit() {
     this.loadStock();
@@ -33,6 +34,16 @@ export class StockPage implements OnInit {
       });
   }
 
+  get filteredStocks() {
+    if (!this.searchTerm) {
+      return this.stocks;
+    }
+
+    return this.stocks.filter(p =>
+      p.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
+  }
+
   updateStock(p: any) {
 
     if (!p.change_qty || p.change_qty === 0) {
@@ -42,7 +53,6 @@ export class StockPage implements OnInit {
 
     let qty = Number(p.change_qty);
 
-    // wastage always negative
     if (p.reason === 'WASTAGE' && qty > 0) {
       qty = -qty;
     }

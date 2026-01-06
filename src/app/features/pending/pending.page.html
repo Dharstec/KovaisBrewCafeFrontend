@@ -1,0 +1,69 @@
+<div class="pending-page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>Pending Bills</h1>
+      <p class="sub">
+        Double-click a bill to continue billing
+      </p>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="bill-grid" *ngIf="bills.length; else empty">
+
+    <div
+      class="bill-card"
+      *ngFor="let b of bills"
+      (dblclick)="edit(b)"
+      tabindex="0"
+    >
+
+      <!-- TOP -->
+      <div class="card-top">
+        <div class="bill-info">
+          <div class="bill-id">Bill #{{ b.id }}</div>
+          <div class="bill-date">
+            {{ b.created_at | date:'dd MMM yyyy, hh:mm a' }}
+          </div>
+        </div>
+
+        <div class="bill-amount">
+          ₹ {{ b.grand_total }}
+        </div>
+      </div>
+
+      <!-- ITEMS -->
+      <div class="items">
+        <div class="item" *ngFor="let i of b.items">
+          <span class="name">
+            {{ i.name }} × {{ i.qty }}
+          </span>
+          <span class="price">
+            ₹ {{ i.price * i.qty }}
+          </span>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="card-footer">
+        <span class="hint">
+          Double-click to open
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- EMPTY -->
+  <ng-template #empty>
+    <div class="empty-state">
+      <div class="icon">🧾</div>
+      <h3>No Pending Bills</h3>
+      <p>All bills are completed</p>
+    </div>
+  </ng-template>
+
+</div>

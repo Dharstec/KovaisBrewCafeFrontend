@@ -67,11 +67,18 @@ export const routes: Routes = [
       import('./features/advance/employee-advance.page')
         .then(m => m.EmployeeAdvancePage)
   },
-   {
+  {
     path: 'stock',
     canActivate: [authGuard],
     loadComponent: () =>
       import('./features/stock/stock.page')
         .then(m => m.StockPage)
+  },
+  {
+    path: 'coupons',
+    loadComponent: () =>
+      import('./features/coupon/coupon-list.page')
+        .then(m => m.CouponListPage)
   }
+
 ];

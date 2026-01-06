@@ -33,13 +33,20 @@ export class BillingPage implements OnInit {
   customerName = '';
   paymentMethod = '';
 
+  /* ===== COUPON STATE ===== */
+  couponCode = '';
+  couponDiscount = 0;
+  couponApplied = false;
+
   /* ================= INIT ================= */
   ngOnInit() {
     this.productApi.getAllBilling()
       .subscribe((res: any[]) => this.products = res);
 
-    this.store.cart$
-      .subscribe(c => this.cart = c);
+    this.store.cart$.subscribe(c => {
+      this.cart = c;
+      this.resetCoupon(); // 🔥 cart change = reset coupon
+    });
 
     this.loadCategories();
   }
@@ -50,7 +57,17 @@ export class BillingPage implements OnInit {
         this.categories = [{ id: 0, name: 'All' }, ...res.data];
       });
   }
- 
+
+  /* ================= DERIVED TOTAL ================= */
+  get subtotal() {
+    return this.store.getTotal();
+  }
+
+  get finalTotal() {
+    const total = this.subtotal - this.couponDiscount;
+    return total > 0 ? total : 0;
+  }
+
   /* ================= FILTER ================= */
   get filteredProducts() {
     let list = this.products;
@@ -73,10 +90,45 @@ export class BillingPage implements OnInit {
       item => item.productId === product.id
     );
 
-    // manual price item only once
     if (product.is_manual_price && existing) return;
-
     this.store.add(product);
+  }
+
+  /* ================= COUPON ================= */
+  applyCoupon() {
+    const billId = this.store.getBillId();
+
+    if (!billId) {
+      this.showError('Save bill before applying coupon');
+      return;
+    }
+
+    if (!this.couponCode.trim()) {
+      this.showError('Enter coupon code');
+      return;
+    }
+
+    this.billApi.applyCoupon(billId, {
+      coupon_code: this.couponCode
+    }).subscribe({
+      next: (res: any) => {
+        this.couponDiscount = Number(res.coupon_discount) || 0;
+        this.couponApplied = true;
+      },
+      error: (err) => {
+        this.showError(err.error?.msg || 'Invalid coupon');
+      }
+    });
+  }
+
+  removeCoupon() {
+    this.resetCoupon();
+  }
+
+  resetCoupon() {
+    this.couponCode = '';
+    this.couponDiscount = 0;
+    this.couponApplied = false;
   }
 
   /* ================= MANUAL PRICE ================= */
@@ -88,18 +140,14 @@ export class BillingPage implements OnInit {
 
   /* ================= SAVE PENDING ================= */
   savePending() {
-
-    // 🔥 snapshot cart (critical)
-    const snapshot = JSON.parse(
-      JSON.stringify(this.store.getItems())
-    );
+    const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
 
     if (!snapshot.length) {
       this.showError('Please add at least one item');
       return;
     }
 
-    const payload = snapshot.map((i: { productId: any; name: any; price: any; qty: any; }) => ({
+    const payload = snapshot.map((i: any) => ({
       productId: Number(i.productId),
       name: i.name,
       price: Number(i.price),
@@ -135,7 +183,9 @@ export class BillingPage implements OnInit {
       return;
     }
 
-    this.billApi.complete(billId).subscribe({
+    this.billApi.complete(billId, {
+      net_total: this.finalTotal
+    }).subscribe({
       next: () => this.clearBill(),
       error: () => this.showError('Failed to complete bill')
     });
@@ -146,6 +196,7 @@ export class BillingPage implements OnInit {
     this.store.clear();
     this.customerName = '';
     this.paymentMethod = '';
+    this.resetCoupon();
   }
 
   trackByProductId(index: number, item: any) {

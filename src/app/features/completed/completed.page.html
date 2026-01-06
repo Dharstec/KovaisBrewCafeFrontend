@@ -1,12 +1,17 @@
-<div class="completed">
+<div class="completed-page">
 
   <!-- HEADER -->
-  <div class="header">
+  <div class="page-header">
     <div class="title">
       <h1>Completed Bills</h1>
-      <p class="subtitle">
-        {{ isAdmin ? 'Filter by date range' : 'Today's completed bills' }}
+      <p class="subtitle" *ngIf="isAdmin">
+       View bills by date range
       </p>
+       <p class="subtitle" *ngIf="!isAdmin">Today's completed bills</p>
+    </div>
+
+    <div class="summary-pill">
+      Total: ₹ {{ grandTotal }}
     </div>
   </div>
 
@@ -22,27 +27,39 @@
       <input type="date" [(ngModel)]="endDate">
     </div>
 
-    <button class="apply" (click)="applyDateFilter()">Apply</button>
+    <button class="btn apply" (click)="applyDateFilter()">
+      Apply Filter
+    </button>
   </div>
 
-  <!-- LIST -->
-  <div class="list" *ngIf="bills.length; else empty">
+  <!-- BILL LIST -->
+  <div class="bill-grid" *ngIf="bills.length; else empty">
 
-    <div class="bill" *ngFor="let b of bills">
+    <div class="bill-card" *ngFor="let b of bills">
 
-      <div class="top">
+      <!-- CARD HEADER -->
+      <div class="card-top">
         <div>
           <div class="bill-no">Bill #{{ b.id }}</div>
-          <div class="date">{{ b.created_at | date:'medium' }}</div>
+          <div class="bill-date">
+            {{ b.created_at | date:'dd MMM yyyy, hh:mm a' }}
+          </div>
         </div>
 
-        <div class="amount">₹ {{ b.grand_total }}</div>
+        <div class="bill-amount">
+          ₹ {{ b.grand_total }}
+        </div>
       </div>
 
+      <!-- ITEMS -->
       <div class="items">
         <div class="item" *ngFor="let i of b.items">
-          <span>{{ i.name }} × {{ i.qty }}</span>
-          <span>₹ {{ i.price * i.qty }}</span>
+          <span class="name">
+            {{ i.name }} × {{ i.qty }}
+          </span>
+          <span class="price">
+            ₹ {{ i.price * i.qty }}
+          </span>
         </div>
       </div>
 
@@ -64,8 +81,13 @@
     <button (click)="next()" [disabled]="page === totalPages">›</button>
   </div>
 
+  <!-- EMPTY -->
   <ng-template #empty>
-    <div class="empty">No bills found</div>
+    <div class="empty-state">
+      <div class="icon">📄</div>
+      <h3>No bills found</h3>
+      <p>Try changing the date range</p>
+    </div>
   </ng-template>
 
 </div>

@@ -24,9 +24,9 @@ export class AuthApi {
   }
 
   isLoggedIn(): boolean {
-    // if (!isPlatformBrowser(this.platformId)) return false;
-    // return !!localStorage.getItem('token');
-    return !!localStorage.getItem('token')
+    if (!isPlatformBrowser(this.platformId)) return false;
+    return !!localStorage.getItem('token');
+    // return !!localStorage.getItem('token')
 
   }
 

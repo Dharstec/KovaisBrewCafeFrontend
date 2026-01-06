@@ -25,7 +25,7 @@ export class CompletedPage implements OnInit {
 
   /* PAGINATION */
   page = 1;
-  limit = 6;
+  limit = 20;
   totalPages = 1;
   pages: number[] = [];
 

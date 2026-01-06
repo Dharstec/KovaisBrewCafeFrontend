@@ -1,0 +1,33 @@
+<div class="overlay">
+  <div class="modal">
+
+    <h2>{{ coupon ? 'Edit Coupon' : 'Create Coupon' }}</h2>
+
+    <input placeholder="Code" [(ngModel)]="form.code" />
+
+    <select [(ngModel)]="form.discount_type">
+      <option value="">Discount Type</option>
+      <option value="AMOUNT">Amount (₹)</option>
+      <option value="PERCENT">Percent (%)</option>
+    </select>
+
+    <input type="number" placeholder="Discount Value" [(ngModel)]="form.discount_value" />
+    <input type="number" placeholder="Min Bill" [(ngModel)]="form.min_bill_amount" />
+    <input type="number" placeholder="Max Discount" [(ngModel)]="form.max_discount" />
+
+    <div class="row">
+      <input type="date" [(ngModel)]="form.valid_from" />
+      <input type="date" [(ngModel)]="form.valid_to" />
+    </div>
+
+    <label>
+      <input type="checkbox" [(ngModel)]="form.is_active" /> Active
+    </label>
+
+    <div class="actions">
+      <button (click)="save()">Save</button>
+      <button class="ghost" (click)="close.emit()">Cancel</button>
+    </div>
+
+  </div>
+</div>

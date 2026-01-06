@@ -23,27 +23,33 @@ export class BillApi {
     return this.http.get<any[]>(`${environment.apiUrl}/bills/${id}`);
   }
 
-  complete(id: number) {
-    return this.http.post(`${environment.apiUrl}/complete/${id}`, {});
+  complete(id: number, body: any) {
+    return this.http.post(`${environment.apiUrl}/bill/complete/${id}`, body);
   }
 
-completed(
-  startDate?: string,
-  endDate?: string,
-  page = 1,
-  limit = 6
-) {
-  return this.http.get<any>(
-    `${environment.apiUrl}/completed`,
-    {
-      params: {
-        ...(startDate && { start_date: startDate }),
-        ...(endDate && { end_date: endDate }),
-        page,
-        limit
+  applyCoupon(id: number, body: any) {
+    return this.http.post(`${environment.apiUrl}/apply/${id}`, body);
+  }
+
+
+
+  completed(
+    startDate?: string,
+    endDate?: string,
+    page = 1,
+    limit = 6
+  ) {
+    return this.http.get<any>(
+      `${environment.apiUrl}/completed`,
+      {
+        params: {
+          ...(startDate && { start_date: startDate }),
+          ...(endDate && { end_date: endDate }),
+          page,
+          limit
+        }
       }
-    }
-  );
-}
+    );
+  }
 
 }
