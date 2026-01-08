@@ -372,8 +372,8 @@ exports.completedBills = async (req, res) => {
     const summary = await DB.PostgresAny(
       `
       SELECT
-        SUM(CASE WHEN payment_mode = 'CASH' THEN net_total ELSE 0 END) AS cash_total,
-        SUM(CASE WHEN payment_mode = 'UPI' THEN net_total ELSE 0 END) AS upi_total,
+        SUM(CASE WHEN payment_mode = 'CASH' THEN grand_total ELSE 0 END) AS cash_total,
+        SUM(CASE WHEN payment_mode = 'UPI' THEN grand_total ELSE 0 END) AS upi_total,
         SUM(net_total) AS grand_total
       FROM bills
       ${where}
