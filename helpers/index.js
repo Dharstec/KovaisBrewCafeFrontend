@@ -1,14 +1,20 @@
 
 const recipients = ['gokuldsp01@gmail.com']
-function generateSearchString(search, columns, tableAliases = {}) {
-    if (!search || !columns || !columns.length) return '';
-    const sanitized = search.replace(/'/g, "''").toLowerCase();
-    const conditions = columns.map(col => {
-        const field = tableAliases[col] ? `${tableAliases[col]}.${col}` : col;
-        return `LOWER(${field}) LIKE '%${sanitized}%'`;
-    });
-    return `AND (${conditions.join(' OR ')})`;
-}
+const generateSearchString = (searchTerm, columns = []) => {
+  if (!searchTerm) return '';
+
+  const escaped = searchTerm.replace(/'/g, "''");
+
+  const conditions = columns.map(col => {
+    if (col === 'amount') {
+      return `CAST(${col} AS TEXT) ILIKE '%${escaped}%'`;
+    }
+    return `LOWER(${col}) LIKE '%${escaped.toLowerCase()}%'`;
+  });
+
+  return ` AND (${conditions.join(' OR ')})`;
+};
+
 
 function sanitizeValue(val) {
     if (typeof val === 'number' || typeof val === 'boolean') return val;
