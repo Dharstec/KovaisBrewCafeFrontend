@@ -372,9 +372,9 @@ exports.completedBills = async (req, res) => {
     const summary = await DB.PostgresAny(
       `
       SELECT
-        SUM(CASE WHEN payment_mode = 'CASH' THEN total_amount ELSE 0 END) AS cash_total,
-        SUM(CASE WHEN payment_mode = 'UPI' THEN total_amount ELSE 0 END) AS upi_total,
-        SUM(total_amount) AS grand_total
+        SUM(CASE WHEN payment_mode = 'CASH' THEN net_total ELSE 0 END) AS cash_total,
+        SUM(CASE WHEN payment_mode = 'UPI' THEN net_total ELSE 0 END) AS upi_total,
+        SUM(net_total) AS grand_total
       FROM bills
       ${where}
       `,
@@ -416,10 +416,14 @@ exports.pendingBills = async (req, res) => {
 };
 
 exports.completeBill = async (req, res) => {
+  console.log(req.body)
   try {
     await DB.PostgresUpdate(
       "bills",
-      { status: "COMPLETED" },
+      {
+        payment_mode: req.body.payment_mode,
+        status: "COMPLETED"
+      },
       { id: req.params.id }
     );
 
