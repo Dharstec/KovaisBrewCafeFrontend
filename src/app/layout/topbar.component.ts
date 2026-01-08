@@ -9,7 +9,7 @@ import { AuthApi } from '../core/api/auth.api';
   imports: [
     CommonModule,
     RouterLink,
-    RouterLinkActive   // 🔥 REQUIRED
+    RouterLinkActive  
   ],
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss']

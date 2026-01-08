@@ -79,6 +79,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/coupon/coupon-list.page')
         .then(m => m.CouponListPage)
+  },
+  {
+    path: 'expenses',
+    loadComponent: () => 
+      import('./features/spendPage/spend.page')
+        .then(m => m.SpendPage)
   }
 
 ];

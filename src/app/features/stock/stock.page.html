@@ -15,6 +15,12 @@
       />
     </div>
   </div>
+<div class="filter-badge" *ngIf="filterType">
+  Showing:
+  <strong>
+    {{ filterType === 'low' ? 'Low Stock' : 'Out of Stock' }}
+  </strong>
+</div>
 
   <!-- STOCK TABLE -->
   <div class="table-wrap">

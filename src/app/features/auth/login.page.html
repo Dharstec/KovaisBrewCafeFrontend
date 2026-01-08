@@ -1,40 +1,67 @@
 <div class="login-wrapper">
 
-  <div class="card">
+  <div class="login-card">
 
-    <h2 *ngIf="step === 'login'">Login</h2>
-    <h2 *ngIf="step === 'otp'">Admin OTP Verification</h2>
+    <!-- LEFT BRAND PANEL -->
+    <div class="brand-panel">
+      <img src="assets/cafe_logo.jpeg" class="logo" alt="Logo" />
+      <h1>Kovai Brew Café</h1>
+      <p>Secure Admin & User Login</p>
+    </div>
 
-    <div class="error" *ngIf="error">{{ error }}</div>
+    <!-- RIGHT FORM PANEL -->
+    <div class="form-panel">
 
-    <!-- EMAIL -->
-    <input
-      type="email"
-      placeholder="Email"
-      [(ngModel)]="form.email"
-      [disabled]="step === 'otp'"
-    />
+      <h2 *ngIf="step === 'login'">Welcome Back</h2>
+      <h2 *ngIf="step === 'otp'">OTP Verification</h2>
 
-    <!-- PASSWORD (ONLY USER) -->
-    <input
-      *ngIf="step === 'login'"
-      type="password"
-      placeholder="Password (Users only)"
-      [(ngModel)]="form.password"
-    />
+      <p class="subtitle" *ngIf="step === 'login'">
+        Sign in to continue
+      </p>
 
-    <!-- OTP (ONLY ADMIN) -->
-    <input
-      *ngIf="step === 'otp'"
-      type="text"
-      placeholder="Enter OTP"
-      [(ngModel)]="form.otp"
-      maxlength="6"
-    />
+      <p class="subtitle" *ngIf="step === 'otp'">
+        Enter the OTP sent to your email
+      </p>
 
-    <button (click)="submit()" [disabled]="loading">
-      {{ loading ? 'Please wait...' : (step === 'otp' ? 'Verify OTP' : 'Login') }}
-    </button>
+      <div class="error" *ngIf="error">{{ error }}</div>
+
+      <!-- EMAIL -->
+      <div class="field">
+        <label>Email</label>
+        <input
+          type="email"
+          placeholder="kovaisbrewcafe@company.com"
+          [(ngModel)]="form.email"
+          [disabled]="step === 'otp'"
+        />
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="field" *ngIf="step === 'login'">
+        <label>Password</label>
+        <input
+          type="password"
+          placeholder="Enter password"
+          [(ngModel)]="form.password"
+        />
+      </div>
+
+      <!-- OTP -->
+      <div class="field" *ngIf="step === 'otp'">
+        <label>OTP</label>
+        <input
+          type="text"
+          placeholder="6-digit OTP"
+          maxlength="6"
+          [(ngModel)]="form.otp"
+        />
+      </div>
+
+      <button (click)="submit()" [disabled]="loading">
+        {{ loading ? 'Processing...' : (step === 'otp' ? 'Verify OTP' : 'Login') }}
+      </button>
+
+    </div>
 
   </div>
 

@@ -7,7 +7,7 @@
   </div>
 
   <!-- SALES -->
-  <div class="cards">
+  <div class="cards" *ngIf="isAdmin">
     <div class="card accent">
       <h4>Today Sales</h4>
       <p>₹ {{ data.today_sales }}</p>
@@ -25,7 +25,7 @@
   </div>
 
   <!-- MASTER -->
-  <div class="cards">
+  <div class="cards" *ngIf="isAdmin">
     <div class="card">
       <h4>Products</h4>
       <p>{{ data.products }}</p>
@@ -43,7 +43,7 @@
   </div>
 
   <!-- ATTENDANCE -->
-  <div class="cards">
+  <div class="cards" *ngIf="isAdmin">
     <div class="card success">
       <h4>Present Today</h4>
       <p>{{ data.attendance.present }}</p>
@@ -62,15 +62,20 @@
       <p>{{ data.stock.total_items }}</p>
     </div>
 
-    <div class="card warn">
-      <h4>Low Stock</h4>
-      <p>{{ data.stock.low_stock }}</p>
-    </div>
-
-    <div class="card danger">
-      <h4>Out of Stock</h4>
-      <p>{{ data.stock.out_of_stock }}</p>
-    </div>
+  <div class="card warn" style="cursor: pointer;"
+       [routerLink]="['/stock']"
+       [queryParams]="{ filter: 'low' }">
+    <h4>Low Stock</h4>
+    <p>{{ data.stock.low_stock }}</p>
   </div>
+
+  <div class="card danger" style="cursor: pointer;"
+       [routerLink]="['/stock']"
+       [queryParams]="{ filter: 'out' }">
+    <h4>Out of Stock</h4>
+    <p>{{ data.stock.out_of_stock }}</p>
+  </div>
+
+</div>
 
 </div>

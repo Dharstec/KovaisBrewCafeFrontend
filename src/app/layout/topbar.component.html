@@ -7,7 +7,7 @@
 
    <nav [class.open]="menuOpen">
 
-      <a *ngIf="menu.Dashboard" routerLink="/dashboard" routerLinkActive="active"
+      <a  *ngIf="menu.Billing" routerLink="/dashboard" routerLinkActive="active"
          [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">
          Dashboard
       </a>
@@ -32,7 +32,9 @@
          Stock
       </a>
 
-
+      <a routerLink="/expenses" routerLinkActive="active" (click)="menuOpen = false">
+         Daily Spend
+      </a>
       <a *ngIf="isAdmin" routerLink="/coupons" routerLinkActive="active" (click)="menuOpen = false">
          Coupons
       </a>

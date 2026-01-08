@@ -2,17 +2,22 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardApi } from '../../core/api/dashboard.api';
 import { DashboardSummary } from '../../core/models/dashboard.model';
+import { RouterModule } from '@angular/router';  
+import { AuthApi } from '../../core/api/auth.api';
 
 @Component({
   standalone: true,
   selector: 'app-dashboard',
-  imports: [CommonModule],
+  imports: [CommonModule,RouterModule],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss']
 })
 export class DashboardPage implements OnInit {
+  auth = inject(AuthApi);
 
   private api = inject(DashboardApi);
+
+  isAdmin = this.auth.isAdmin();
 
   data: DashboardSummary = {
     today_sales: 0,

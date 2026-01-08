@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -12,17 +13,24 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./stock.page.scss']
 })
 export class StockPage implements OnInit {
+  private route = inject(ActivatedRoute);
 
   private http = inject(HttpClient);
 
-  stocks: any[] = [];
-  searchTerm: string = '';
+ stocks: any[] = [];
+  filtered: any[] = [];
+  searchTerm = '';
+  filterType: 'low' | 'out' | null = null;
+
 
   ngOnInit() {
-    this.loadStock();
+      this.route.queryParams.subscribe(params => {
+      this.filterType = params['filter'] || null;
+      this.loadStock();
+    });
   }
 
-  loadStock() {
+loadStock() {
     this.http
       .get<any[]>(`${environment.apiUrl}/stock`)
       .subscribe(res => {
@@ -31,15 +39,29 @@ export class StockPage implements OnInit {
           change_qty: null,
           reason: 'DAILY_REFILL'
         }));
+
+        this.applyFilter();
       });
   }
 
-  get filteredStocks() {
-    if (!this.searchTerm) {
-      return this.stocks;
+  applyFilter() {
+    if (this.filterType === 'low') {
+      this.filtered = this.stocks.filter(
+        p => p.current_qty <= p.min_qty && p.current_qty > 0
+      );
+    } else if (this.filterType === 'out') {
+      this.filtered = this.stocks.filter(
+        p => p.current_qty === 0
+      );
+    } else {
+      this.filtered = this.stocks;
     }
+  }
 
-    return this.stocks.filter(p =>
+  get filteredStocks() {
+    if (!this.searchTerm) return this.filtered;
+
+    return this.filtered.filter(p =>
       p.name.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
   }

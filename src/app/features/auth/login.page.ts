@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-
 import { AuthApi } from '../../core/api/auth.api';
 
 @Component({
@@ -19,7 +18,7 @@ export class LoginPage {
 
   step: 'login' | 'otp' = 'login';
 
-  form: any = {
+  form = {
     email: '',
     password: '',
     otp: ''
@@ -34,14 +33,8 @@ export class LoginPage {
 
     const payload =
       this.step === 'login'
-        ? {
-          email: this.form.email,
-          password: this.form.password,
-        }
-        : {
-          email: this.form.email,
-          otp: this.form.otp,
-        };
+        ? { email: this.form.email, password: this.form.password }
+        : { email: this.form.email, otp: this.form.otp };
 
     this.authApi.login(payload).subscribe({
       next: (res: any) => {
