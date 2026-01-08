@@ -326,7 +326,7 @@ exports.completedBills = async (req, res) => {
     const pageSize = Number(limit);
     const offset = (pageNo - 1) * pageSize;
 
-    let where = `WHERE status='COMPLETED'`;
+    let where = `WHERE status = 'COMPLETED'`;
     const params = [];
 
     if (start_date && end_date) {
@@ -334,6 +334,7 @@ exports.completedBills = async (req, res) => {
       where += ` AND DATE(created_at) BETWEEN $1 AND $2`;
     }
 
+    /* ---------- BILL LIST ---------- */
     const bills = await DB.PostgresAny(
       `
       SELECT *
@@ -361,15 +362,30 @@ exports.completedBills = async (req, res) => {
       );
     }
 
+    /* ---------- COUNT ---------- */
     const count = await DB.PostgresAny(
       `SELECT COUNT(*) AS total FROM bills ${where}`,
+      params
+    );
+
+    /* ---------- PAYMENT SUMMARY ---------- */
+    const summary = await DB.PostgresAny(
+      `
+      SELECT
+        SUM(CASE WHEN payment_mode = 'CASH' THEN total_amount ELSE 0 END) AS cash_total,
+        SUM(CASE WHEN payment_mode = 'UPI' THEN total_amount ELSE 0 END) AS upi_total,
+        SUM(total_amount) AS grand_total
+      FROM bills
+      ${where}
+      `,
       params
     );
 
     res.json({
       data: bills,
       total: Number(count[0].total),
-      totalPages: Math.ceil(Number(count[0].total) / pageSize)
+      totalPages: Math.ceil(Number(count[0].total) / pageSize),
+      summary: summary[0]   // 👈 IMPORTANT
     });
 
   } catch (err) {
@@ -377,6 +393,7 @@ exports.completedBills = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 exports.pendingBills = async (req, res) => {
   try {
