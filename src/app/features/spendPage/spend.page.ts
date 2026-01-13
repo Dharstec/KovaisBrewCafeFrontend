@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SpendService } from '../../core/api/spend.api';
+import { AuthApi } from '../../core/api/auth.api';
 
 @Component({
   standalone: true,
@@ -10,33 +11,39 @@ import { SpendService } from '../../core/api/spend.api';
   templateUrl: './spend.page.html',
   styleUrls: ['./spend.page.scss']
 })
-export class SpendPage implements OnInit {
+export class SpendPage  {
+  auth = inject(AuthApi);
+
+  isAdmin = this.auth.isAdmin();
 
   spendList: any[] = [];
   totalSpent = 0;
   totalCount = 0;
   totalPages: number[] = [];
+  maxDate = '';
 
   params = {
     page: 1,
     pageSize: 10,
     sortColumn: 'date',
     sortOrder: 'DESC' as 'ASC' | 'DESC',
-    searchTerm: ''
+    searchTerm: '',
   };
 
   form: any = {
     reason: '',
     amount: '',
-    date: ''
+    date: '',
+    payment_mode: 'CASH'
   };
 
   showForm = false;
   isEdit = false;
 
-  constructor(private spendApi: SpendService) {}
+  constructor(private spendApi: SpendService) { }
 
   ngOnInit() {
+    this.setTodayDate();   
     this.loadSpend();
   }
 
@@ -73,15 +80,29 @@ export class SpendPage implements OnInit {
 
   openAdd() {
     this.resetForm();
+    this.form.date = this.maxDate;
     this.isEdit = false;
     this.showForm = true;
   }
 
+  setTodayDate() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+
+    this.maxDate = `${yyyy}-${mm}-${dd}`;
+
+    this.form.date = this.maxDate;
+  }
+
   openEdit(item: any) {
     this.form = {
+      id:item.id,
       reason: item.reason,
       amount: item.amount,
-      date: this.toInputDate(item.spent_date)
+      date: this.toInputDate(item.spent_date),
+      payment_mode: item.payment_mode || 'CASH'
     };
     this.isEdit = true;
     this.showForm = true;
@@ -112,8 +133,14 @@ export class SpendPage implements OnInit {
   }
 
   resetForm() {
-    this.form = { id: null, reason: '', amount: '', date: '' };
+    this.form = {
+      reason: '',
+      amount: '',
+      date: this.maxDate,
+      payment_mode: 'CASH'
+    };
   }
+
 
   toInputDate(ddmmyyyy: string) {
     const [dd, mm, yyyy] = ddmmyyyy.split('-');

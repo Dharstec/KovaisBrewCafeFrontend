@@ -1,4 +1,4 @@
-import { ApplicationConfig, inject } from '@angular/core';
+import { ApplicationConfig, inject, isDevMode } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import {
   provideHttpClient,
@@ -7,44 +7,40 @@ import {
 } from '@angular/common/http';
 import { routes } from './app.routes';
 import { catchError, throwError } from 'rxjs';
+import { provideServiceWorker } from '@angular/service-worker';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-
-    provideHttpClient(
-      withInterceptors([
+    provideHttpClient(withInterceptors([
         (req, next) => {
-          const router = inject(Router);
-
-          let token: string | null = null;
-
-          // ✅ SAFE localStorage access
-          if (typeof window !== 'undefined') {
-            token = localStorage.getItem('token');
-          }
-
-          const authReq = token
-            ? req.clone({
-                setHeaders: {
-                  Authorization: `Bearer ${token}`,
-                },
-              })
-            : req;
-
-          return next(authReq).pipe(
-            catchError((error: HttpErrorResponse) => {
-              if (error.status === 401 || error.status === 403) {
-                if (typeof window !== 'undefined') {
-                  localStorage.clear();
+            const router = inject(Router);
+            let token: string | null = null;
+            // ✅ SAFE localStorage access
+            if (typeof window !== 'undefined') {
+                token = localStorage.getItem('token');
+            }
+            const authReq = token
+                ? req.clone({
+                    setHeaders: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                : req;
+            return next(authReq).pipe(catchError((error: HttpErrorResponse) => {
+                if (error.status === 401 || error.status === 403) {
+                    if (typeof window !== 'undefined') {
+                        localStorage.clear();
+                    }
+                    router.navigate(['/login']);
                 }
-                router.navigate(['/login']);
-              }
-              return throwError(() => error);
-            })
-          );
+                return throwError(() => error);
+            }));
         },
-      ])
-    ),
-  ],
+    ])),
+    provideServiceWorker('ngsw-worker.js', {
+        enabled: !isDevMode(),
+        registrationStrategy: 'registerWhenStable:30000'
+    })
+],
 };

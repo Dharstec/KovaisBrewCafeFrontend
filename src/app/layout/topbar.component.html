@@ -7,7 +7,7 @@
 
    <nav [class.open]="menuOpen">
 
-      <a  *ngIf="menu.Billing" routerLink="/dashboard" routerLinkActive="active"
+      <a *ngIf="menu.Billing" routerLink="/dashboard" routerLinkActive="active"
          [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">
          Dashboard
       </a>
@@ -42,6 +42,11 @@
       <a *ngIf="isAdmin" routerLink="/advance" routerLinkActive="active" (click)="menuOpen = false">
          Advance
       </a>
+
+      <button class="btn install" *ngIf="showInstallBtn" (click)="installApp()">
+         Install App
+      </button>
+
 
       <button class="logout" (click)="logout()">Logout</button>
 

@@ -10,9 +10,18 @@
        <p class="subtitle" *ngIf="!isAdmin">Today's completed bills</p>
     </div>
 
-    <div class="summary-pill">
-      Total: ₹ {{ grandTotal }}
-    </div>
+  <div class="summary-pill" *ngIf="isAdmin">
+  Cash : ₹ {{ cashTotal }}
+</div>
+
+<div class="summary-pill" *ngIf="isAdmin">
+  UPI : ₹ {{ upiTotal }}
+</div>
+
+<div class="summary-pill" *ngIf="isAdmin">
+  Total : ₹ {{ grandTotal }}
+</div>
+
   </div>
 
   <!-- DATE FILTER (ADMIN ONLY) -->
@@ -46,7 +55,7 @@
           </div>
         </div>
 
-        <div class="bill-amount">
+        <div class="bill-amount" >
           ₹ {{ b.grand_total }}
         </div>
       </div>

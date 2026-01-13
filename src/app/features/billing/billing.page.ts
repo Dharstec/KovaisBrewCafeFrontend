@@ -168,6 +168,10 @@ export class BillingPage implements OnInit {
       });
     }
   }
+onImgError(event: Event) {
+  (event.target as HTMLImageElement).src = 'assets/NoImage.webp';
+}
+
 
   /* ================= COMPLETE BILL ================= */
   completeBill() {
@@ -184,7 +188,8 @@ export class BillingPage implements OnInit {
     }
 
     this.billApi.complete(billId, {
-      net_total: this.finalTotal
+      net_total: this.finalTotal,
+      payment_mode: this.paymentMethod
     }).subscribe({
       next: () => this.clearBill(),
       error: () => this.showError('Failed to complete bill')

@@ -9,17 +9,12 @@
         <span class="sub">Select products</span>
       </div>
 
-      <input
-        class="search"
-        placeholder="Search product..."
-        [(ngModel)]="searchText" />
+      <input class="search" placeholder="Search product..." [(ngModel)]="searchText" />
     </div>
 
     <!-- CATEGORY -->
     <div class="categories">
-      <button
-        *ngFor="let c of categories"
-        [class.active]="selectedCategory === c.name"
+      <button *ngFor="let c of categories" [class.active]="selectedCategory === c.name"
         (click)="selectedCategory = c.name">
         {{ c.name }}
       </button>
@@ -27,13 +22,11 @@
 
     <!-- PRODUCTS -->
     <div class="products">
-      <div
-        class="product-card"
-        *ngFor="let p of filteredProducts"
-        (click)="addProduct(p)">
+      <div class="product-card" *ngFor="let p of filteredProducts" (click)="addProduct(p)">
 
         <div class="image">
-          <img [src]="p.image_url || 'assets/coffee.png'" />
+          <img [src]="p.image_url" loading="lazy" decoding="async" width="80" height="80"
+            (error)="onImgError($event)" />
         </div>
 
         <div class="info">
@@ -62,9 +55,7 @@
 
     <!-- OPTIONAL -->
     <div class="optional-fields">
-      <input
-        placeholder="Customer Name (optional)"
-        [(ngModel)]="customerName" />
+      <input placeholder="Customer Name (optional)" [(ngModel)]="customerName" />
 
       <select [(ngModel)]="paymentMethod">
         <option value="">Payment Method (required)</option>
@@ -76,9 +67,7 @@
     <!-- CART -->
     <div class="cart" *ngIf="cart.length; else empty">
 
-      <div
-        class="cart-item"
-        *ngFor="let i of cart; trackBy: trackByProductId">
+      <div class="cart-item" *ngFor="let i of cart; trackBy: trackByProductId">
 
         <div class="row">
           <div class="item-name">{{ i.name }}</div>
@@ -92,23 +81,18 @@
 
             <span *ngIf="!i.is_manual_price">{{ i.price }}</span>
 
-            <input
-              *ngIf="i.is_manual_price"
-              type="number"
-              [ngModel]="i.price"
+            <input *ngIf="i.is_manual_price" type="number" [ngModel]="i.price"
               (ngModelChange)="updateManualPrice(i, $event)" />
           </div>
 
           <div class="qty">
-            <button
-              (click)="$event.stopPropagation(); store.update(i.productId, i.qty - 1)">
+            <button (click)="$event.stopPropagation(); store.update(i.productId, i.qty - 1)">
               −
             </button>
 
             <span>{{ i.qty }}</span>
 
-            <button
-              (click)="$event.stopPropagation(); store.update(i.productId, i.qty + 1)"
+            <button (click)="$event.stopPropagation(); store.update(i.productId, i.qty + 1)"
               [disabled]="i.is_manual_price">
               +
             </button>
@@ -123,53 +107,44 @@
     </ng-template>
 
     <!-- SUMMARY -->
-<!-- SUMMARY -->
-<div class="summary">
+    <!-- SUMMARY -->
+    <div class="summary">
 
-  <div>
-    <span>Subtotal</span>
-    <span>₹ {{ subtotal }}</span>
-  </div>
+      <div>
+        <span>Subtotal</span>
+        <span>₹ {{ subtotal }}</span>
+      </div>
 
-  <!-- SHOW COUPON ONLY AFTER PAYMENT METHOD -->
-  <div class="coupon" *ngIf="paymentMethod">
+      <!-- SHOW COUPON ONLY AFTER PAYMENT METHOD -->
+      <div class="coupon" *ngIf="paymentMethod">
 
-    <input
-      placeholder="Coupon code"
-      [(ngModel)]="couponCode"
-      [disabled]="couponApplied" />
+        <input placeholder="Coupon code" [(ngModel)]="couponCode" [disabled]="couponApplied" />
 
-    <button
-      class="btn small"
-      *ngIf="!couponApplied"
-      (click)="applyCoupon()">
-      Apply
-    </button>
+        <button class="btn small" *ngIf="!couponApplied" (click)="applyCoupon()">
+          Apply
+        </button>
 
-    <button
-      class="btn small danger"
-      *ngIf="couponApplied"
-      (click)="removeCoupon()">
-      Remove
-    </button>
+        <button class="btn small danger" *ngIf="couponApplied" (click)="removeCoupon()">
+          Remove
+        </button>
 
-    <div class="coupon-msg success" *ngIf="couponApplied">
-      Coupon applied (₹ {{ couponDiscount }} off)
+        <div class="coupon-msg success" *ngIf="couponApplied">
+          Coupon applied (₹ {{ couponDiscount }} off)
+        </div>
+      </div>
+
+      <!-- DISCOUNT LINE -->
+      <div *ngIf="couponApplied">
+        <span>Discount</span>
+        <span>- ₹ {{ couponDiscount }}</span>
+      </div>
+
+      <div class="total">
+        <span>Total</span>
+        <span>₹ {{ finalTotal }}</span>
+      </div>
+
     </div>
-  </div>
-
-  <!-- DISCOUNT LINE -->
-  <div *ngIf="couponApplied">
-    <span>Discount</span>
-    <span>- ₹ {{ couponDiscount }}</span>
-  </div>
-
-  <div class="total">
-    <span>Total</span>
-    <span>₹ {{ finalTotal }}</span>
-  </div>
-
-</div>
 
 
     <!-- ACTIONS -->
@@ -177,11 +152,7 @@
       Save Pending
     </button>
 
-    <button
-      class="btn accent"
-      *ngIf="store.getBillId()"
-      [disabled]="!paymentMethod"
-      (click)="completeBill()">
+    <button class="btn accent" *ngIf="store.getBillId()" [disabled]="!paymentMethod" (click)="completeBill()">
       Complete Bill
     </button>
 

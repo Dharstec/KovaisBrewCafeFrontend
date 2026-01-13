@@ -7,7 +7,7 @@
       <p>Spend Management</p>
     </div>
 
-    <div class="kpi-card">
+    <div class="kpi-card" *ngIf="isAdmin">
       <span>This Month Spend</span>
       <h2>₹ {{ totalSpent }}</h2>
     </div>
@@ -15,11 +15,7 @@
 
   <!-- ACTION BAR -->
   <div class="action-bar">
-    <input
-      class="search"
-      placeholder="Search by reason / amount"
-      [(ngModel)]="params.searchTerm"
-      (input)="search()" />
+    <input class="search" placeholder="Search by reason / amount" [(ngModel)]="params.searchTerm" (input)="search()" />
 
     <button class="btn-add" (click)="openAdd()">+ Add Spend</button>
   </div>
@@ -29,18 +25,20 @@
     <table>
       <thead>
         <tr>
-          <th>Date</th>
-          <th>Reason</th>
-          <th class="right">Amount</th>
+          <th class="center">Date</th>
+          <th class="center">Name</th>
+          <th class="center">Payment Type</th>
+          <th class="center">Amount</th>
           <th class="center">Actions</th>
         </tr>
       </thead>
 
       <tbody>
         <tr *ngFor="let s of spendList">
-          <td>{{ s.spent_date }}</td>
-          <td>{{ s.reason }}</td>
-          <td class="right">₹ {{ s.amount }}</td>
+          <td class="center">{{ s.spent_date }}</td>
+          <td class="center">{{ s.reason }}</td>
+          <td class="center">{{ s.payment_mode }}</td>
+          <td class="center">₹ {{ s.amount }}</td>
           <td class="center">
             <button class="btn-link" (click)="openEdit(s)">Edit</button>
             <button class="btn-link danger" (click)="deleteSpend(s.id)">Delete</button>
@@ -56,36 +54,23 @@
 
   <!-- PAGINATION -->
   <div class="pagination" *ngIf="totalCount > params.pageSize">
-    <button
-      class="page-btn"
-      [disabled]="params.page === 1"
-      (click)="changePage(params.page - 1)">
-      < Prev
-    </button>
+    <button class="page-btn" [disabled]="params.page === 1" (click)="changePage(params.page - 1)">
+      < Prev </button>
 
-    <button
-      class="page-btn"
-      *ngFor="let p of totalPages"
-      [class.active]="p === params.page"
-      (click)="changePage(p)">
-      {{ p }}
-    </button>
+        <button class="page-btn" *ngFor="let p of totalPages" [class.active]="p === params.page"
+          (click)="changePage(p)">
+          {{ p }}
+        </button>
 
-    <button
-      class="page-btn"
-      [disabled]="params.page === totalPages.length"
-      (click)="changePage(params.page + 1)">
-      Next >
-    </button>
+        <button class="page-btn" [disabled]="params.page === totalPages.length" (click)="changePage(params.page + 1)">
+          Next >
+        </button>
 
-    <select
-      class="page-size"
-      [(ngModel)]="params.pageSize"
-      (change)="search()">
-      <option [value]="5">5</option>
-      <option [value]="10">10</option>
-      <option [value]="20">20</option>
-    </select>
+        <select class="page-size" [(ngModel)]="params.pageSize" (change)="search()">
+          <option [value]="5">5</option>
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+        </select>
   </div>
 
   <!-- OVERLAY -->
@@ -93,29 +78,43 @@
 
   <!-- DRAWER -->
   <div class="drawer" *ngIf="showForm">
-    <h3>{{ isEdit ? 'Edit Spend' : 'Add Spend' }}</h3>
-
-    <div class="field">
-      <label>Reason</label>
-      <input [(ngModel)]="form.reason" />
+    <div class="drawer-header">
+      <h3>{{ isEdit ? 'Edit Spend' : 'Add Spend' }}</h3>
+      <button class="close-btn" (click)="closeForm()">✕</button>
     </div>
 
-    <div class="field">
-      <label>Amount</label>
-      <input type="number" [(ngModel)]="form.amount" />
-    </div>
+    <div class="drawer-body">
+      <div class="field">
+        <label>Name</label>
+        <input placeholder="Eg: Milk purchase" [(ngModel)]="form.reason" />
+      </div>
 
-    <div class="field">
-      <label>Date</label>
-      <input type="date" [(ngModel)]="form.date" />
+      <div class="field">
+        <label>Amount</label>
+        <input type="number" placeholder="₹ Amount" [(ngModel)]="form.amount" />
+      </div>
+
+      <div class="field">
+        <label>Date</label>
+        <input type="date" [(ngModel)]="form.date" [max]="maxDate" />
+      </div>
+      <div class="field">
+        <label>Payment Mode</label>
+        <select [(ngModel)]="form.payment_mode">
+          <option value="CASH">Cash</option>
+          <option value="UPI">UPI</option>
+        </select>
+      </div>
+
     </div>
 
     <div class="drawer-actions">
-      <button class="btn-save" (click)="isEdit ? update() : save()">
-        {{ isEdit ? 'Update' : 'Save' }}
-      </button>
       <button class="btn-cancel" (click)="closeForm()">Cancel</button>
+      <button class="btn-save" (click)="isEdit ? update() : save()">
+        {{ isEdit ? 'Update Spend' : 'Save Spend' }}
+      </button>
     </div>
   </div>
+
 
 </div>

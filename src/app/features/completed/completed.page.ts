@@ -29,9 +29,12 @@ export class CompletedPage implements OnInit {
   totalPages = 1;
   pages: number[] = [];
 
+
+  cashTotal = 0;
+  upiTotal = 0;
   grandTotal = 0;
 
-  constructor(private api: BillApi) {}
+  constructor(private api: BillApi) { }
 
   ngOnInit() {
 
@@ -44,27 +47,28 @@ export class CompletedPage implements OnInit {
     this.loadBills();
   }
 
-  loadBills() {
-    this.api.completed(
-      this.startDate,
-      this.endDate,
-      this.page,
-      this.limit
-    ).subscribe(res => {
-      this.bills = res.data;
-      this.totalPages = res.totalPages;
+ loadBills() {
+  this.api.completed(
+    this.startDate,
+    this.endDate,
+    this.page,
+    this.limit
+  ).subscribe(res => {
 
-      this.pages = Array.from(
-        { length: this.totalPages },
-        (_, i) => i + 1
-      );
+    this.bills = res.data;
+    this.totalPages = res.totalPages;
 
-      this.grandTotal = this.bills.reduce(
-        (sum: number, b: any) => sum + Number(b.grand_total),
-        0
-      );
-    });
-  }
+    this.pages = Array.from(
+      { length: this.totalPages },
+      (_, i) => i + 1
+    );
+
+    /* ✅ PAYMENT TOTALS */
+    this.cashTotal = Number(res.summary?.cash_total || 0);
+    this.upiTotal = Number(res.summary?.upi_total || 0);
+    this.grandTotal = Number(res.summary?.grand_total || 0);
+  });
+}
 
   /* ADMIN ONLY */
   applyDateFilter() {
