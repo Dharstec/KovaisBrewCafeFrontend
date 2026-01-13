@@ -19,6 +19,7 @@ export class BillingPage implements OnInit {
   store = inject(BillingStore);
   productApi = inject(ProductApi);
   billApi = inject(BillApi);
+  LOW_STOCK_DEFAULT = 5;
 
   /* ================= STATE ================= */
   products: any[] = [];
@@ -49,7 +50,34 @@ export class BillingPage implements OnInit {
     });
 
     this.loadCategories();
+
+    // 🔥 AUTO SYNC OFFLINE BILLS
+    window.addEventListener('online', () => {
+      this.syncOfflineBills();
+    });
   }
+
+  syncOfflineBills() {
+    const offlineBills = JSON.parse(
+      localStorage.getItem('offlineBills') || '[]'
+    );
+
+    if (!offlineBills.length) return;
+
+    offlineBills.forEach((bill: any) => {
+      this.billApi.create(bill.payload).subscribe({
+        next: () => {
+          // success → remove stored bills
+          localStorage.removeItem('offlineBills');
+        },
+        error: () => {
+          // keep it, try again later
+          console.warn('Offline bill sync failed');
+        }
+      });
+    });
+  }
+
 
   loadCategories() {
     this.productApi.getAllCategoriesBilling()
@@ -154,6 +182,25 @@ export class BillingPage implements OnInit {
       qty: Number(i.qty)
     }));
 
+    // 🔥 OFFLINE → SAVE LOCALLY (DO NOT HIT API)
+    if (!navigator.onLine) {
+      const pendingBills = JSON.parse(
+        localStorage.getItem('offlineBills') || '[]'
+      );
+
+      pendingBills.push({
+        payload,
+        createdAt: new Date().toISOString()
+      });
+
+      localStorage.setItem('offlineBills', JSON.stringify(pendingBills));
+
+      this.clearBill();
+      this.showError('No internet. Bill saved locally');
+      return;
+    }
+
+    // 🔁 EXISTING FLOW (UNCHANGED)
     const billId = this.store.getBillId();
 
     if (billId) {
@@ -168,9 +215,28 @@ export class BillingPage implements OnInit {
       });
     }
   }
-onImgError(event: Event) {
-  (event.target as HTMLImageElement).src = 'assets/NoImage.webp';
-}
+
+  onImgError(event: Event) {
+    (event.target as HTMLImageElement).src = 'assets/NoImage.webp';
+  }
+
+  getIntQty(qty: any): number {
+    return Math.floor(Number(qty || 0));
+  }
+  isOutOfStock(p: any) {
+    return p.track_stock && this.getIntQty(p.current_qty) === 0;
+  }
+
+  isLowStock(p: any) {
+    if (!p.track_stock) return false;
+
+    const qty = this.getIntQty(p.current_qty);
+    const min = p.min_qty > 0
+      ? this.getIntQty(p.min_qty)
+      : this.LOW_STOCK_DEFAULT;
+
+    return qty > 0 && qty <= min;
+  }
 
 
   /* ================= COMPLETE BILL ================= */
@@ -187,14 +253,32 @@ onImgError(event: Event) {
       return;
     }
 
-    this.billApi.complete(billId, {
-      net_total: this.finalTotal,
-      payment_mode: this.paymentMethod
-    }).subscribe({
-      next: () => this.clearBill(),
-      error: () => this.showError('Failed to complete bill')
+    // 🔥 TAKE CURRENT CART SNAPSHOT
+    const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
+
+    const payload = snapshot.map((i: any) => ({
+      productId: Number(i.productId),
+      name: i.name,
+      price: Number(i.price),
+      qty: Number(i.qty)
+    }));
+
+    // 🔥 ONLY THIS CONDITION CHANGE:
+    // If bill exists → update items → then complete
+    this.billApi.update(billId, payload).subscribe({
+      next: () => {
+        this.billApi.complete(billId, {
+          net_total: this.finalTotal,
+          payment_mode: this.paymentMethod
+        }).subscribe({
+          next: () => this.clearBill(),
+          error: () => this.showError('Failed to complete bill')
+        });
+      },
+      error: () => this.showError('Failed to update bill')
     });
   }
+
 
   /* ================= HELPERS ================= */
   clearBill() {

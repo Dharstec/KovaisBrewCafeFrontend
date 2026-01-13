@@ -22,7 +22,18 @@
 
     <!-- PRODUCTS -->
     <div class="products">
-      <div class="product-card" *ngFor="let p of filteredProducts" (click)="addProduct(p)">
+      <div class="product-card" *ngFor="let p of filteredProducts" [class.out-stock]="isOutOfStock(p)"
+        (click)="isOutOfStock(p) ? null : addProduct(p)">
+        <!-- OUT OF STOCK BADGE -->
+        <div class="badge out" *ngIf="isOutOfStock(p)">
+          OUT OF STOCK
+        </div>
+
+        <!-- LOW STOCK BADGE -->
+        <div class="badge low" *ngIf="isLowStock(p)">
+          LOW ({{ getIntQty(p.current_qty) }})
+        </div>
+
 
         <div class="image">
           <img [src]="p.image_url" loading="lazy" decoding="async" width="80" height="80"

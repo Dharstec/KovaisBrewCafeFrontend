@@ -10,7 +10,9 @@
 .left {
   flex: 2.4;
   padding: 18px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // 🔥 important
 }
 
 /* ================= HEADER ================= */
@@ -86,6 +88,10 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
+  scroll-behavior: smooth;
+  flex: 1; // 🔥 take remaining height
+  overflow-y: auto; // 🔥 scroll here
+  padding-right: 4px; // avoid scrollbar overlap
 }
 
 /* PRODUCT CARD */
@@ -337,6 +343,41 @@
   font-weight: 600;
   margin-bottom: 10px;
 }
+
+.product-card {
+  position: relative;
+}
+
+/* COMMON BADGE */
+.badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  z-index: 2;
+}
+
+/* OUT OF STOCK */
+.badge.out {
+  background: #dc2626; // red
+  color: #fff;
+}
+
+/* LOW STOCK */
+.badge.low {
+  background: #f59e0b; // amber
+  color: #fff;
+}
+
+/* OUT OF STOCK CARD FEEL */
+.product-card.out-stock {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 
 /* ================= MOBILE ================= */
 @media (max-width: 768px) {
