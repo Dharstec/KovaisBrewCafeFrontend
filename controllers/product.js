@@ -15,6 +15,9 @@ exports.getAllProductsBilling = async (req, res) => {
         p.image_url,
         p.category_id,
         p.is_manual_price,
+        p.track_stock,
+        p.current_qty,
+        p.min_qty,
         c.name AS category
       FROM products p
       JOIN categories c ON c.id = p.category_id

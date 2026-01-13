@@ -20,7 +20,7 @@ const getAllRecords = async (req, res) => {
             : '';
 
         const currentDate = new Date();
-        const currentMonth = currentDate.getMonth() + 1; 
+        const currentMonth = currentDate.getMonth() + 1;
         const currentYear = currentDate.getFullYear();
 
         const startOfMonth = new Date(currentYear, currentMonth - 1, 1);
@@ -34,6 +34,12 @@ const getAllRecords = async (req, res) => {
         `;
 
         const totalSpentThisMonth = await POSTGRESQLService.PostgresAny(totalSpendQuery, [startOfMonth, endOfMonth]);
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+
+        const startDate = req.query.startDate || new Date(year, month, 1).toISOString().slice(0, 10);
+        const endDate = req.query.endDate || new Date(year, month + 1, 0).toISOString().slice(0, 10);
 
         const query = `
     SELECT 
@@ -41,13 +47,13 @@ const getAllRecords = async (req, res) => {
         *, 
         COUNT(*) OVER() AS total_count
     FROM ${TABLE_SPENT}
-    WHERE 1=1
+    WHERE date BETWEEN $3 AND $4
     ${searchConditions}
     ORDER BY ${sortColumn} ${sortOrder}
     LIMIT $1 OFFSET $2
 `;
 
-        const data = await POSTGRESQLService.PostgresAny(query, [pageSize, offset]);
+        const data = await POSTGRESQLService.PostgresAny(query, [pageSize, offset, startDate, endDate]);
 
         res.json({
             status: 'success',
