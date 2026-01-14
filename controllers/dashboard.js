@@ -93,23 +93,14 @@ exports.getDashboardSummary = async (req, res) => {
 exports.getHourlyItemSales = async (req, res) => {
   try {
     const data = await DB.PostgresAny(`
+      SET TIME ZONE 'Asia/Kolkata';
+
       SELECT
         p.name AS item_name,
 
-        TO_CHAR(
-          DATE_TRUNC(
-            'hour',
-            b.created_at AT TIME ZONE 'Asia/Kolkata'
-          ),
-          'HH24:00'
-        ) || ' - ' ||
-        TO_CHAR(
-          DATE_TRUNC(
-            'hour',
-            b.created_at AT TIME ZONE 'Asia/Kolkata'
-          ) + INTERVAL '1 hour',
-          'HH24:00'
-        ) AS time_range,
+        TO_CHAR(DATE_TRUNC('hour', b.created_at), 'HH24:00') || ' - ' ||
+        TO_CHAR(DATE_TRUNC('hour', b.created_at) + INTERVAL '1 hour', 'HH24:00')
+          AS time_range,
 
         SUM(bi.qty)::INT AS total_count
 
@@ -117,14 +108,14 @@ exports.getHourlyItemSales = async (req, res) => {
       JOIN bills b ON b.id = bi.bill_id
       JOIN products p ON p.id = bi.product_id
 
-      WHERE DATE(b.created_at AT TIME ZONE 'Asia/Kolkata') = CURRENT_DATE
+      WHERE DATE(b.created_at) = CURRENT_DATE
 
       GROUP BY
         p.name,
-        DATE_TRUNC('hour', b.created_at AT TIME ZONE 'Asia/Kolkata')
+        DATE_TRUNC('hour', b.created_at)
 
       ORDER BY
-        DATE_TRUNC('hour', b.created_at AT TIME ZONE 'Asia/Kolkata')
+        DATE_TRUNC('hour', b.created_at);
     `);
 
     res.json(data);
@@ -133,6 +124,7 @@ exports.getHourlyItemSales = async (req, res) => {
     res.status(500).json({ message: 'Hourly sales failed' });
   }
 };
+
 
 
 
