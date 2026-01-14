@@ -132,6 +132,7 @@ exports.getHourlyItemSales = async (req, res) => {
 };
 
 
+
 exports.getItemSalesChart = async (req, res) => {
   try {
     const data = await DB.PostgresAny(`
