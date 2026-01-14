@@ -97,17 +97,11 @@ exports.getHourlyItemSales = async (req, res) => {
         p.name AS item_name,
 
         TO_CHAR(
-          DATE_TRUNC(
-            'hour',
-            b.created_at AT TIME ZONE 'Asia/Kolkata'
-          ),
+          DATE_TRUNC('hour', b.created_at),
           'HH24:00'
         ) || ' - ' ||
         TO_CHAR(
-          DATE_TRUNC(
-            'hour',
-            b.created_at AT TIME ZONE 'Asia/Kolkata'
-          ) + INTERVAL '1 hour',
+          DATE_TRUNC('hour', b.created_at) + INTERVAL '1 hour',
           'HH24:00'
         ) AS time_range,
 
@@ -118,15 +112,16 @@ exports.getHourlyItemSales = async (req, res) => {
       JOIN products p ON p.id = bi.product_id
 
       WHERE
-        b.created_at AT TIME ZONE 'Asia/Kolkata' >= DATE_TRUNC('day', NOW())
-        AND b.created_at AT TIME ZONE 'Asia/Kolkata' <  DATE_TRUNC('day', NOW()) + INTERVAL '1 day'
+        b.status = 'COMPLETED'
+        AND b.created_at >= DATE_TRUNC('day', NOW())
+        AND b.created_at <  DATE_TRUNC('day', NOW()) + INTERVAL '1 day'
 
       GROUP BY
         p.name,
-        DATE_TRUNC('hour', b.created_at AT TIME ZONE 'Asia/Kolkata')
+        DATE_TRUNC('hour', b.created_at)
 
       ORDER BY
-        DATE_TRUNC('hour', b.created_at AT TIME ZONE 'Asia/Kolkata');
+        DATE_TRUNC('hour', b.created_at);
     `);
 
     res.json(data);
@@ -135,6 +130,7 @@ exports.getHourlyItemSales = async (req, res) => {
     res.status(500).json({ message: 'Hourly sales failed' });
   }
 };
+
 
 
 
