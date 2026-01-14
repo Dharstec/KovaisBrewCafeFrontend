@@ -92,37 +92,42 @@ exports.getDashboardSummary = async (req, res) => {
 
 exports.getHourlyItemSales = async (req, res) => {
   try {
-    const data = await DB.PostgresAny(`
-      SELECT
-        COALESCE(p.name, bi.product_name) AS item_name,
+    const data = await DB.PostgresAny(`SELECT
+  COALESCE(p.name, bi.product_name) AS item_name,
 
-        TO_CHAR(
-          DATE_TRUNC('hour', b.created_at),
-          'HH24:00'
-        ) || ' - ' ||
-        TO_CHAR(
-          DATE_TRUNC('hour', b.created_at) + INTERVAL '1 hour',
-          'HH24:00'
-        ) AS time_range,
+  TO_CHAR(
+    DATE_TRUNC(
+      'hour',
+      b.created_at + INTERVAL '5 hours 30 minutes'
+    ),
+    'HH24:00'
+  ) || ' - ' ||
+  TO_CHAR(
+    DATE_TRUNC(
+      'hour',
+      b.created_at + INTERVAL '5 hours 30 minutes'
+    ) + INTERVAL '1 hour',
+    'HH24:00'
+  ) AS time_range,
 
-        SUM(bi.qty)::INT AS total_count
+  SUM(bi.qty)::INT AS total_count
 
-      FROM bill_items bi
-      JOIN bills b ON b.id = bi.bill_id
-      LEFT JOIN products p ON p.id = bi.product_id
+FROM bill_items bi
+JOIN bills b ON b.id = bi.bill_id
+LEFT JOIN products p ON p.id = bi.product_id
 
-      WHERE
-        b.status = 'COMPLETED'
-        AND b.created_at >= DATE_TRUNC('day', NOW())
-        AND b.created_at <  DATE_TRUNC('day', NOW()) + INTERVAL '1 day'
+WHERE
+  b.status = 'COMPLETED'
+  AND (b.created_at + INTERVAL '5 hours 30 minutes')::DATE =
+      (NOW() + INTERVAL '5 hours 30 minutes')::DATE
 
-      GROUP BY
-        item_name,
-        DATE_TRUNC('hour', b.created_at)
+GROUP BY
+  item_name,
+  DATE_TRUNC('hour', b.created_at + INTERVAL '5 hours 30 minutes')
 
-      ORDER BY
-        DATE_TRUNC('hour', b.created_at);
-    `);
+ORDER BY
+  DATE_TRUNC('hour', b.created_at + INTERVAL '5 hours 30 minutes');
+`);
 
     res.json(data);
   } catch (err) {
