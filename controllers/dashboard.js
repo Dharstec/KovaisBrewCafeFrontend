@@ -95,24 +95,45 @@ exports.getHourlyItemSales = async (req, res) => {
     const data = await DB.PostgresAny(`
       SELECT
         p.name AS item_name,
-        TO_CHAR(DATE_TRUNC('hour', b.created_at), 'HH24:00') || ' - ' ||
-        TO_CHAR(DATE_TRUNC('hour', b.created_at) + INTERVAL '1 hour', 'HH24:00')
-          AS time_range,
-        SUM(bi.qty) AS total_count
+
+        TO_CHAR(
+          DATE_TRUNC(
+            'hour',
+            b.created_at AT TIME ZONE 'Asia/Kolkata'
+          ),
+          'HH24:00'
+        ) || ' - ' ||
+        TO_CHAR(
+          DATE_TRUNC(
+            'hour',
+            b.created_at AT TIME ZONE 'Asia/Kolkata'
+          ) + INTERVAL '1 hour',
+          'HH24:00'
+        ) AS time_range,
+
+        SUM(bi.qty)::INT AS total_count
+
       FROM bill_items bi
       JOIN bills b ON b.id = bi.bill_id
       JOIN products p ON p.id = bi.product_id
-      WHERE DATE(b.created_at) = CURRENT_DATE
-      GROUP BY item_name, DATE_TRUNC('hour', b.created_at)
-      ORDER BY DATE_TRUNC('hour', b.created_at)
+
+      WHERE DATE(b.created_at AT TIME ZONE 'Asia/Kolkata') = CURRENT_DATE
+
+      GROUP BY
+        p.name,
+        DATE_TRUNC('hour', b.created_at AT TIME ZONE 'Asia/Kolkata')
+
+      ORDER BY
+        DATE_TRUNC('hour', b.created_at AT TIME ZONE 'Asia/Kolkata')
     `);
 
     res.json(data);
   } catch (err) {
-    console.error(err);
+    console.error('Hourly sales failed:', err);
     res.status(500).json({ message: 'Hourly sales failed' });
   }
 };
+
 
 
 exports.getItemSalesChart = async (req, res) => {
