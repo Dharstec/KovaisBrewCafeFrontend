@@ -4,64 +4,64 @@ exports.getDashboardSummary = async (req, res) => {
   try {
 
     /* ===============================
-       SALES & BILLING (TODAY)
-       =============================== */
+      SALES & BILLING (TODAY)
+      =============================== */
     const sales = await DB.PostgresAny(`
-      SELECT 
-        COUNT(*) AS total_bills,
-        COALESCE(SUM(grand_total), 0) AS total_sales
-      FROM bills
-      WHERE DATE(created_at) = CURRENT_DATE
-    `);
+        SELECT 
+          COUNT(*) AS total_bills,
+          COALESCE(SUM(grand_total), 0) AS total_sales
+        FROM bills
+        WHERE DATE(created_at) = CURRENT_DATE
+      `);
 
     const pendingBills = await DB.PostgresAny(`
-      SELECT COUNT(*) AS pending
-      FROM bills
-      WHERE status = 'PENDING'
-    `);
+        SELECT COUNT(*) AS pending
+        FROM bills
+        WHERE status = 'PENDING'
+      `);
 
     /* ===============================
-       MASTER COUNTS
-       =============================== */
+      MASTER COUNTS
+      =============================== */
     const products = await DB.PostgresAny(`
-      SELECT COUNT(*) FROM products WHERE is_active = true
-    `);
+        SELECT COUNT(*) FROM products WHERE is_active = true
+      `);
 
     const categories = await DB.PostgresAny(`
-      SELECT COUNT(*) FROM categories WHERE status = true
-    `);
+        SELECT COUNT(*) FROM categories WHERE status = true
+      `);
 
     const employees = await DB.PostgresAny(`
-      SELECT COUNT(*) FROM employees WHERE is_active = true
-    `);
+        SELECT COUNT(*) FROM employees WHERE is_active = true
+      `);
 
     /* ===============================
-       ATTENDANCE (TODAY)
-       =============================== */
+      ATTENDANCE (TODAY)
+      =============================== */
     const attendance = await DB.PostgresAny(`
-      SELECT
-        COUNT(*) FILTER (WHERE status = 'P') AS present,
-        COUNT(*) FILTER (WHERE status = 'A') AS absent
-      FROM attendance
-      WHERE date = CURRENT_DATE
-    `);
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'P') AS present,
+          COUNT(*) FILTER (WHERE status = 'A') AS absent
+        FROM attendance
+        WHERE date = CURRENT_DATE
+      `);
 
     /* ===============================
-       STOCK SUMMARY (FIXED)
-       =============================== */
+      STOCK SUMMARY (FIXED)
+      =============================== */
     const stock = await DB.PostgresAny(`
-      SELECT
-        COUNT(*) AS total_items,
-        COUNT(*) FILTER (
-          WHERE current_qty <= min_qty AND current_qty > 0
-        ) AS low_stock,
-        COUNT(*) FILTER (
-          WHERE current_qty <= 0
-        ) AS out_of_stock
-      FROM products
-      WHERE track_stock = true
-        AND is_active = true
-    `);
+        SELECT
+          COUNT(*) AS total_items,
+          COUNT(*) FILTER (
+            WHERE current_qty <= min_qty AND current_qty > 0
+          ) AS low_stock,
+          COUNT(*) FILTER (
+            WHERE current_qty <= 0
+          ) AS out_of_stock
+        FROM products
+        WHERE track_stock = true
+          AND is_active = true
+      `);
 
     res.json({
       today_sales: Number(sales[0].total_sales),
@@ -89,3 +89,50 @@ exports.getDashboardSummary = async (req, res) => {
     res.status(500).json({ message: "Dashboard load failed" });
   }
 };
+
+exports.getHourlyItemSales = async (req, res) => {
+  try {
+    const data = await DB.PostgresAny(`
+      SELECT
+        p.name AS item_name,
+        TO_CHAR(DATE_TRUNC('hour', b.created_at), 'HH24:00') || ' - ' ||
+        TO_CHAR(DATE_TRUNC('hour', b.created_at) + INTERVAL '1 hour', 'HH24:00')
+          AS time_range,
+        SUM(bi.qty) AS total_count
+      FROM bill_items bi
+      JOIN bills b ON b.id = bi.bill_id
+      JOIN products p ON p.id = bi.product_id
+      WHERE DATE(b.created_at) = CURRENT_DATE
+      GROUP BY item_name, DATE_TRUNC('hour', b.created_at)
+      ORDER BY DATE_TRUNC('hour', b.created_at)
+    `);
+
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Hourly sales failed' });
+  }
+};
+
+
+exports.getItemSalesChart = async (req, res) => {
+  try {
+    const data = await DB.PostgresAny(`
+      SELECT
+        p.name AS item_name,
+        SUM(bi.qty) AS total_count
+      FROM bill_items bi
+      JOIN bills b ON b.id = bi.bill_id
+      JOIN products p ON p.id = bi.product_id
+      WHERE DATE(b.created_at) = CURRENT_DATE
+      GROUP BY item_name
+      ORDER BY total_count DESC
+    `);
+
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Item chart failed" });
+  }
+};
+
