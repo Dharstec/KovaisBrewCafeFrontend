@@ -94,7 +94,7 @@ exports.getHourlyItemSales = async (req, res) => {
   try {
     const data = await DB.PostgresAny(`
       SELECT
-        p.name AS item_name,
+        COALESCE(p.name, bi.product_name) AS item_name,
 
         TO_CHAR(
           DATE_TRUNC('hour', b.created_at),
@@ -109,7 +109,7 @@ exports.getHourlyItemSales = async (req, res) => {
 
       FROM bill_items bi
       JOIN bills b ON b.id = bi.bill_id
-      JOIN products p ON p.id = bi.product_id
+      LEFT JOIN products p ON p.id = bi.product_id
 
       WHERE
         b.status = 'COMPLETED'
@@ -117,7 +117,7 @@ exports.getHourlyItemSales = async (req, res) => {
         AND b.created_at <  DATE_TRUNC('day', NOW()) + INTERVAL '1 day'
 
       GROUP BY
-        p.name,
+        item_name,
         DATE_TRUNC('hour', b.created_at)
 
       ORDER BY
@@ -130,10 +130,6 @@ exports.getHourlyItemSales = async (req, res) => {
     res.status(500).json({ message: 'Hourly sales failed' });
   }
 };
-
-
-
-
 
 
 exports.getItemSalesChart = async (req, res) => {
