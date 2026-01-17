@@ -127,7 +127,7 @@ const saveOtpToDB = async (user_id, otp_code) => {
 };
 
 const verifyOtpFromUser = async (user_id, otp_code) => {
-    const query = `SELECT id FROM users WHERE id = $1 AND otp_code = $2 AND AND expires_at AT TIME ZONE 'UTC' > NOW()`;
+    const query = `SELECT id FROM users WHERE id = $1 AND otp_code = $2 AND expires_at AT TIME ZONE 'UTC' > NOW()`;
     const result = await POSTGRESQLService.PostgresAny(query, [user_id, otp_code]);
     return result.length > 0;
 };
