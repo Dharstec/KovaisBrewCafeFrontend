@@ -8,6 +8,7 @@ import {
 import { routes } from './app.routes';
 import { catchError, throwError } from 'rxjs';
 import { provideServiceWorker } from '@angular/service-worker';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -41,6 +42,8 @@ export const appConfig: ApplicationConfig = {
         provideServiceWorker('ngsw-worker.js', {
             enabled: true, // TEMPORARY force enable
             registrationStrategy: 'registerWhenStable:30000'
-        })
+        }),
+        provideCharts(withDefaultRegisterables()) // ✅ REQUIRED
+
     ],
 };

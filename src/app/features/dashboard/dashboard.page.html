@@ -24,6 +24,35 @@
     </div>
   </div>
 
+  <!-- ======================
+       ADMIN CHARTS
+       ====================== -->
+  <div *ngIf="isAdmin" class="charts-grid">
+
+    <!-- HOUR BASED CHART -->
+    <div class="chart-card">
+      <h3>Hourly Item Sales</h3>
+      <canvas
+        baseChart
+        [data]="hourChartData"
+        [options]="chartOptions"
+        chartType="line">
+      </canvas>
+    </div>
+
+    <!-- ITEM BASED CHART -->
+    <div class="chart-card">
+      <h3>Total Sales by Item</h3>
+      <canvas
+        baseChart
+        [data]="itemChartData"
+        [options]="chartOptions"
+        chartType="bar">
+      </canvas>
+    </div>
+
+  </div>
+
   <!-- MASTER -->
   <div class="cards" *ngIf="isAdmin">
     <div class="card">
@@ -62,20 +91,21 @@
       <p>{{ data.stock.total_items }}</p>
     </div>
 
-  <div class="card warn" style="cursor: pointer;"
-       [routerLink]="['/stock']"
-       [queryParams]="{ filter: 'low' }">
-    <h4>Low Stock</h4>
-    <p>{{ data.stock.low_stock }}</p>
-  </div>
+    <div class="card warn"
+         style="cursor:pointer"
+         [routerLink]="['/stock']"
+         [queryParams]="{ filter: 'low' }">
+      <h4>Low Stock</h4>
+      <p>{{ data.stock.low_stock }}</p>
+    </div>
 
-  <div class="card danger" style="cursor: pointer;"
-       [routerLink]="['/stock']"
-       [queryParams]="{ filter: 'out' }">
-    <h4>Out of Stock</h4>
-    <p>{{ data.stock.out_of_stock }}</p>
+    <div class="card danger"
+         style="cursor:pointer"
+         [routerLink]="['/stock']"
+         [queryParams]="{ filter: 'out' }">
+      <h4>Out of Stock</h4>
+      <p>{{ data.stock.out_of_stock }}</p>
+    </div>
   </div>
-
-</div>
 
 </div>

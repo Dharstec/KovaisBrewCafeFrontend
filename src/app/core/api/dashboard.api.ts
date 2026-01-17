@@ -13,4 +13,10 @@ export class DashboardApi {
   getSummary() {
     return this.http.get<DashboardSummary>(`${environment.apiUrl}/dashboard/summary`);
   }
+  getHourlyItemSales() {
+    return this.http.get<any[]>(`${environment.apiUrl}/dashboard/hourly_sales`);
+  }
+  getItemSalesChart() {
+    return this.http.get<any[]>(`${environment.apiUrl}/dashboard/sales_chart`);
+  }
 }
