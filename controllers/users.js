@@ -120,14 +120,14 @@ const login = async (req, res) => {
 
 
 const saveOtpToDB = async (user_id, otp_code) => {
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     const query = `UPDATE ${TABLE_USERS} set otp_code = $1,expires_at = $2 WHERE id = $3`;
     const data = await POSTGRESQLService.PostgresAny(query, [otp_code, expiresAt, user_id]);
     return data;
 };
 
 const verifyOtpFromUser = async (user_id, otp_code) => {
-    const query = `SELECT id FROM users WHERE id = $1 AND otp_code = $2 AND expires_at > NOW()`;
+    const query = `SELECT id FROM users WHERE id = $1 AND otp_code = $2 AND AND expires_at AT TIME ZONE 'UTC' > NOW()`;
     const result = await POSTGRESQLService.PostgresAny(query, [user_id, otp_code]);
     return result.length > 0;
 };
