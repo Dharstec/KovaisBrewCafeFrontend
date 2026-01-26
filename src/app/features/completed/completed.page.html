@@ -55,8 +55,15 @@
           </div>
         </div>
 
-        <div class="bill-amount" >
-          ₹ {{ b.grand_total }}
+        <div class="amount-block">
+          <div class="bill-amount">
+            ₹ {{ b.grand_total }}
+          </div>
+
+          <div class="customer-name" *ngIf="b.customer_name">
+            👤 {{ b.customer_name }}
+          </div>
+
         </div>
       </div>
 

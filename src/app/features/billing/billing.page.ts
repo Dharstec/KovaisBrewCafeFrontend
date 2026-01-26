@@ -171,7 +171,7 @@ export class BillingPage implements OnInit, OnDestroy {
     }
 
     const payload = {
-      customer_name: this.customerName?.trim() || 'Walk-in',
+      customer_name: this.customerName?.trim() || '',
       items: snapshot.map((i: any) => ({
         productId: Number(i.productId),
         name: i.name,

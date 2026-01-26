@@ -54,7 +54,7 @@ export class BillingStore {
   /* ================= LOAD EXISTING BILL ================= */
   load(items: any[], billId: number, name: string) {
     this.billId = billId;
-    this.customerName = name?.trim() || 'Walk-in';
+    this.customerName = name?.trim() || '';
     this.cartSubject.next(
       items.map(i => ({
         productId: i.productId,
