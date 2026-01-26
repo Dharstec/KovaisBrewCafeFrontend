@@ -52,7 +52,7 @@ const query = `SELECT
   ${searchConditions}
   ORDER BY ${sortColumn} ${sortOrder}
   LIMIT $1 OFFSET $2`;
-        const data = await POSTGRESQLService.PostgresAny(query, [pageSize, offset, startDate, endDate]);
+        const data = await POSTGRESQLService.PostgresAny(query, [pageSize, offset]);
 
         res.json({
             status: 'success',
