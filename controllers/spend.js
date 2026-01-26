@@ -43,19 +43,15 @@ const getAllRecords = async (req, res) => {
         const startDate = new Date(year, month, 1).toISOString().slice(0, 10);
         const endDate = new Date(year, month + 1, 0).toISOString().slice(0, 10);
 
-const query = `
-  SELECT 
+const query = `SELECT 
     TO_CHAR(date, 'DD-MM-YYYY') AS spent_date,
     *,
     COUNT(*) OVER() AS total_count
   FROM ${TABLE_SPENT}
-  WHERE date::date BETWEEN $3::date AND $4::date
+  WHERE date::date = CURRENT_DATE
   ${searchConditions}
   ORDER BY ${sortColumn} ${sortOrder}
-  LIMIT $1 OFFSET $2
-`;
-
-
+  LIMIT $1 OFFSET $2`;
         const data = await POSTGRESQLService.PostgresAny(query, [pageSize, offset, startDate, endDate]);
 
         res.json({
