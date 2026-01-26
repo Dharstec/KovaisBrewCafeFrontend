@@ -4,133 +4,195 @@ const DB = require("../middleware/dbFunctions");
    CREATE BILL (PENDING) + REDUCE STOCK (DIRECT + RECIPE)
    ========================================================= */
 exports.createBill = async (req, res) => {
+  const client = await DB.getClient(); // pg client
+
   try {
-    const { items } = req.body;
+    const { items, customer_name } = req.body;
 
     if (!Array.isArray(items) || !items.length) {
-      return res.status(400).json({ msg: "Items array required" });
+      return res.status(400).json({
+        code: "INVALID_ITEMS",
+        message: "Items array required"
+      });
     }
 
-    /* 1️⃣ Create pending bill */
-    const bill = await DB.PostgresInsert("bills", {
-      status: "PENDING",
-      grand_total: 0
-    });
+    await client.query("BEGIN");
 
-    let total = 0;
-
+    /* ===============================
+       1️⃣ PRE-VALIDATE STOCK (NO DB CHANGE)
+       =============================== */
     for (const i of items) {
       if (!i.productId || !i.name || !i.price || !i.qty) {
-        return res.status(400).json({ msg: "Invalid item data" });
+        throw {
+          code: "INVALID_ITEM_DATA",
+          message: "Invalid item data",
+          product: i.name
+        };
       }
 
-      /* 2️⃣ Insert bill item */
-      await DB.PostgresInsert("bill_items", {
-        bill_id: bill.id,
-        product_id: i.productId,
-        product_name: i.name,
-        price: i.price,
-        qty: i.qty
-      });
-
-      total += Number(i.price) * Number(i.qty);
-
-      /* 3️⃣ DIRECT STOCK (sellable stock items) */
-      const product = await DB.PostgresAny(
+      /* DIRECT STOCK */
+      const product = await client.query(
         `SELECT track_stock, current_qty
          FROM products
          WHERE id = $1`,
         [i.productId]
       );
 
-      if (product.length && product[0].track_stock) {
-        const newQty =
-          Number(product[0].current_qty) - Number(i.qty);
-
-        if (newQty < 0) {
-          return res.status(400).json({
-            msg: `Insufficient stock for ${i.name}`
-          });
+      if (product.rows.length && product.rows[0].track_stock) {
+        if (product.rows[0].current_qty < i.qty) {
+          throw {
+            code: "INSUFFICIENT_STOCK",
+            product: i.name,
+            required: i.qty,
+            available: product.rows[0].current_qty
+          };
         }
-
-        await DB.PostgresUpdate(
-          "products",
-          { current_qty: newQty },
-          { id: i.productId }
-        );
-
-        await DB.PostgresInsert("stock_logs", {
-          product_id: i.productId,
-          change_qty: -i.qty,
-          action: "SALE",
-          reference_id: bill.id,
-          note: `Pending bill #${bill.id}`
-        });
       }
 
-      /* 4️⃣ RECIPE BASED STOCK (Egg Maggi, Chicken Maggi) */
-      const recipes = await DB.PostgresAny(
-        `
-        SELECT raw_product_id, used_qty
-        FROM product_recipes
-        WHERE sale_product_id = $1
-        `,
+      /* RECIPE STOCK */
+      const recipes = await client.query(
+        `SELECT raw_product_id, used_qty
+         FROM product_recipes
+         WHERE sale_product_id = $1`,
         [i.productId]
       );
 
-      for (const r of recipes) {
-        const totalUsed =
-          Number(r.used_qty) * Number(i.qty);
+      for (const r of recipes.rows) {
+        const totalUsed = r.used_qty * i.qty;
 
-        const raw = await DB.PostgresAny(
-          `
-          SELECT current_qty
-          FROM products
-          WHERE id = $1
-            AND track_stock = true
-          `,
+        const raw = await client.query(
+          `SELECT current_qty, name
+           FROM products
+           WHERE id = $1
+             AND track_stock = true`,
           [r.raw_product_id]
         );
 
-        if (!raw.length || raw[0].current_qty < totalUsed) {
-          return res.status(400).json({
-            msg: "Insufficient raw material stock"
-          });
+        if (!raw.rows.length || raw.rows[0].current_qty < totalUsed) {
+          throw {
+            code: "INSUFFICIENT_RAW_STOCK",
+            product: i.name,
+            raw_material: raw.rows[0]?.name || "Unknown",
+            required: totalUsed,
+            available: raw.rows[0]?.current_qty || 0
+          };
         }
-
-        await DB.PostgresUpdate(
-          "products",
-          { current_qty: raw[0].current_qty - totalUsed },
-          { id: r.raw_product_id }
-        );
-
-        await DB.PostgresInsert("stock_logs", {
-          product_id: r.raw_product_id,
-          change_qty: -totalUsed,
-          action: "USAGE",
-          reference_id: bill.id,
-          note: `Recipe usage for ${i.name}`
-        });
       }
     }
 
-    /* 5️⃣ Update bill total */
-    await DB.PostgresUpdate(
-      "bills",
-      { grand_total: total },
-      { id: bill.id }
+    /* ===============================
+       2️⃣ CREATE BILL (SAFE NOW)
+       =============================== */
+    const billRes = await client.query(
+      `INSERT INTO bills (customer_name, status, grand_total)
+       VALUES ($1, 'PENDING', 0)
+       RETURNING id`,
+      [customer_name]
     );
 
+    const billId = billRes.rows[0].id;
+    let total = 0;
+
+    /* ===============================
+       3️⃣ INSERT ITEMS + DEDUCT STOCK
+       =============================== */
+    for (const i of items) {
+      await client.query(
+        `INSERT INTO bill_items
+         (bill_id, product_id, product_name, price, qty)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [billId, i.productId, i.name, i.price, i.qty]
+      );
+
+      total += i.price * i.qty;
+
+      /* DIRECT STOCK */
+      const product = await client.query(
+        `SELECT track_stock, current_qty
+         FROM products WHERE id=$1`,
+        [i.productId]
+      );
+
+      if (product.rows.length && product.rows[0].track_stock) {
+        await client.query(
+          `UPDATE products
+           SET current_qty = current_qty - $1
+           WHERE id = $2`,
+          [i.qty, i.productId]
+        );
+
+        await client.query(
+          `INSERT INTO stock_logs
+           (product_id, change_qty, action, reference_id, note)
+           VALUES ($1,$2,'SALE',$3,$4)`,
+          [i.productId, -i.qty, billId, `Pending bill #${billId}`]
+        );
+      }
+
+      /* RECIPE STOCK */
+      const recipes = await client.query(
+        `SELECT raw_product_id, used_qty
+         FROM product_recipes
+         WHERE sale_product_id=$1`,
+        [i.productId]
+      );
+
+      for (const r of recipes.rows) {
+        const used = r.used_qty * i.qty;
+
+        await client.query(
+          `UPDATE products
+           SET current_qty = current_qty - $1
+           WHERE id = $2`,
+          [used, r.raw_product_id]
+        );
+
+        await client.query(
+          `INSERT INTO stock_logs
+           (product_id, change_qty, action, reference_id, note)
+           VALUES ($1,$2,'USAGE',$3,$4)`,
+          [
+            r.raw_product_id,
+            -used,
+            billId,
+            `Recipe usage for ${i.name}`
+          ]
+        );
+      }
+    }
+
+    /* ===============================
+       4️⃣ UPDATE BILL TOTAL
+       =============================== */
+    await client.query(
+      `UPDATE bills SET grand_total=$1 WHERE id=$2`,
+      [total, billId]
+    );
+
+    await client.query("COMMIT");
+
     res.json({
-      bill_id: bill.id,
+      bill_id: billId,
       grand_total: total
     });
 
   } catch (err) {
+    await client.query("ROLLBACK");
+
     console.error("Create bill error:", err);
-    res.status(500).json({ error: err.message });
+
+    res.status(400).json({
+      success: false,
+      code: err.code || "BILL_FAILED",
+      message: err.message || "Bill creation failed",
+      details: err
+    });
+
+  } finally {
+    client.release();
   }
 };
+
 
 /* =========================================================
    UPDATE PENDING BILL (RESTORE + APPLY STOCK)
@@ -138,7 +200,7 @@ exports.createBill = async (req, res) => {
 exports.updateBill = async (req, res) => {
   try {
     const billId = Number(req.params.id);
-    const { items } = req.body;
+    const { items, customer_name } = req.body;
 
     if (!Array.isArray(items) || !items.length) {
       return res.status(400).json({ msg: "Items required" });
@@ -157,12 +219,10 @@ exports.updateBill = async (req, res) => {
 
     /* 2️⃣ RESTORE DIRECT STOCK */
     const oldItems = await DB.PostgresAny(
-      `
-      SELECT bi.product_id, bi.qty, p.track_stock
+      `SELECT bi.product_id, bi.qty, p.track_stock
       FROM bill_items bi
       JOIN products p ON p.id = bi.product_id
-      WHERE bi.bill_id = $1
-      `,
+      WHERE bi.bill_id = $1`,
       [billId]
     );
 
@@ -286,7 +346,7 @@ exports.updateBill = async (req, res) => {
     /* 6️⃣ UPDATE TOTAL */
     await DB.PostgresUpdate(
       "bills",
-      { grand_total: total },
+      { grand_total: total, customer_name: customer_name },
       { id: billId }
     );
 
@@ -416,11 +476,11 @@ exports.pendingBills = async (req, res) => {
 };
 
 exports.completeBill = async (req, res) => {
-  console.log(req.body)
   try {
     await DB.PostgresUpdate(
       "bills",
       {
+        customer_name: req.body.customer_name,
         payment_mode: req.body.payment_mode,
         status: "COMPLETED"
       },

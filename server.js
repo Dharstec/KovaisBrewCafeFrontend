@@ -27,9 +27,9 @@ app.use((req, res, next) => {
 
 app.use((err, req, res, next) => {
     if (err.status >= 400 && err.status < 500) {
-        logger.warn(err.message, { stack: err.stack });
+        console.error(err.message, { stack: err.stack });
     } else if (err.status >= 500) {
-        logger.error(err.message, { stack: err.stack });
+        console.error(err.message, { stack: err.stack });
     }
     res.status(err.status || 500).send(err.message || 'Internal Server Error');
 });
