@@ -38,8 +38,10 @@ const getAllRecords = async (req, res) => {
         const year = today.getFullYear();
         const month = today.getMonth();
 
-        const startDate = req.query.startDate || new Date(year, month, 1).toISOString().slice(0, 10);
-        const endDate = req.query.endDate || new Date(year, month + 1, 0).toISOString().slice(0, 10);
+        // const startDate = req?.query?.startDate || new Date(year, month, 1).toISOString().slice(0, 10);
+        // const endDate = req?.query?.endDate || new Date(year, month + 1, 0).toISOString().slice(0, 10);
+        const startDate = new Date(year, month, 1).toISOString().slice(0, 10);
+        const endDate = new Date(year, month + 1, 0).toISOString().slice(0, 10);
 
         const query = `
     SELECT 
