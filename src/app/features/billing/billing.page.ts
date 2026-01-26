@@ -1,10 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { BillingStore } from '../../core/state/billing.store';
 import { ProductApi } from '../../core/api/product.api';
 import { BillApi } from '../../core/api/bill.api';
+
 
 @Component({
   standalone: true,
@@ -13,8 +14,16 @@ import { BillApi } from '../../core/api/bill.api';
   templateUrl: './billing.page.html',
   styleUrls: ['./billing.page.scss']
 })
-export class BillingPage implements OnInit {
+export class BillingPage implements OnInit, OnDestroy {
 
+  private onlineHandler = () => {
+    this.isOnlineStatus = true;
+  };
+
+  private offlineHandler = () => {
+    this.isOnlineStatus = false;
+    this.showError('You are offline');
+  };
   /* ================= DEPENDENCIES ================= */
   store = inject(BillingStore);
   productApi = inject(ProductApi);
@@ -31,16 +40,24 @@ export class BillingPage implements OnInit {
 
   errorMsg = '';
 
-  customerName = '';
+  customerName: string = '';
   paymentMethod = '';
 
   /* ===== COUPON STATE ===== */
   couponCode = '';
   couponDiscount = 0;
   couponApplied = false;
+  isOnlineStatus: boolean = navigator.onLine;
 
   /* ================= INIT ================= */
   ngOnInit() {
+    this.isOnlineStatus = navigator.onLine;
+
+    window.addEventListener('online', this.onlineHandler);
+    window.addEventListener('offline', this.offlineHandler);
+
+    this.customerName = this.store.getCustomerName();
+
     this.productApi.getAllBilling()
       .subscribe((res: any[]) => this.products = res);
 
@@ -50,32 +67,6 @@ export class BillingPage implements OnInit {
     });
 
     this.loadCategories();
-
-    // 🔥 AUTO SYNC OFFLINE BILLS
-    window.addEventListener('online', () => {
-      this.syncOfflineBills();
-    });
-  }
-
-  syncOfflineBills() {
-    const offlineBills = JSON.parse(
-      localStorage.getItem('offlineBills') || '[]'
-    );
-
-    if (!offlineBills.length) return;
-
-    offlineBills.forEach((bill: any) => {
-      this.billApi.create(bill.payload).subscribe({
-        next: () => {
-          // success → remove stored bills
-          localStorage.removeItem('offlineBills');
-        },
-        error: () => {
-          // keep it, try again later
-          console.warn('Offline bill sync failed');
-        }
-      });
-    });
   }
 
 
@@ -124,6 +115,10 @@ export class BillingPage implements OnInit {
 
   /* ================= COUPON ================= */
   applyCoupon() {
+    if (!navigator.onLine) {
+      this.showError('Internet required to apply coupon');
+      return;
+    }
     const billId = this.store.getBillId();
 
     if (!billId) {
@@ -175,30 +170,21 @@ export class BillingPage implements OnInit {
       return;
     }
 
-    const payload = snapshot.map((i: any) => ({
-      productId: Number(i.productId),
-      name: i.name,
-      price: Number(i.price),
-      qty: Number(i.qty)
-    }));
+    const payload = {
+      customer_name: this.customerName?.trim() || 'Walk-in',
+      items: snapshot.map((i: any) => ({
+        productId: Number(i.productId),
+        name: i.name,
+        price: Number(i.price),
+        qty: Number(i.qty)
+      }))
+    };
 
-    // 🔥 OFFLINE → SAVE LOCALLY (DO NOT HIT API)
     if (!navigator.onLine) {
-      const pendingBills = JSON.parse(
-        localStorage.getItem('offlineBills') || '[]'
-      );
-
-      pendingBills.push({
-        payload,
-        createdAt: new Date().toISOString()
-      });
-
-      localStorage.setItem('offlineBills', JSON.stringify(pendingBills));
-
-      this.clearBill();
-      this.showError('No internet. Bill saved locally');
+      this.showError('No internet connection. Please connect and try again');
       return;
     }
+
 
     // 🔁 EXISTING FLOW (UNCHANGED)
     const billId = this.store.getBillId();
@@ -206,12 +192,12 @@ export class BillingPage implements OnInit {
     if (billId) {
       this.billApi.update(billId, payload).subscribe({
         next: () => this.clearBill(),
-        error: () => this.showError('Failed to update bill')
+        error: (err) => this.showError(err?.error?.message || 'Failed to update bill')
       });
     } else {
       this.billApi.create(payload).subscribe({
         next: () => this.clearBill(),
-        error: () => this.showError('Failed to create bill')
+        error: (err) => this.showError(err?.error?.message || 'Failed to create bill')
       });
     }
   }
@@ -241,6 +227,10 @@ export class BillingPage implements OnInit {
 
   /* ================= COMPLETE BILL ================= */
   completeBill() {
+    if (!navigator.onLine) {
+      this.showError('No internet connection. Cannot complete bill');
+      return;
+    }
     const billId = this.store.getBillId();
 
     if (!billId) {
@@ -268,7 +258,8 @@ export class BillingPage implements OnInit {
     this.billApi.update(billId, payload).subscribe({
       next: () => {
         this.billApi.complete(billId, {
-          net_total: this.finalTotal,
+          customer_name: this.customerName,
+          grand_total: this.finalTotal,
           payment_mode: this.paymentMethod
         }).subscribe({
           next: () => this.clearBill(),
@@ -295,5 +286,10 @@ export class BillingPage implements OnInit {
   showError(msg: string) {
     this.errorMsg = msg;
     setTimeout(() => (this.errorMsg = ''), 2500);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('online', this.onlineHandler);
+    window.removeEventListener('offline', this.offlineHandler);
   }
 }

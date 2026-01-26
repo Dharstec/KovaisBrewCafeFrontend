@@ -8,6 +8,7 @@ export class BillingStore {
   cart$ = this.cartSubject.asObservable();
 
   private billId: number | null = null;
+  private customerName: string = '';
 
   /* ================= ADD PRODUCT ================= */
   add(product: any) {
@@ -51,8 +52,9 @@ export class BillingStore {
   }
 
   /* ================= LOAD EXISTING BILL ================= */
-  load(items: any[], billId: number) {
+  load(items: any[], billId: number, name: string) {
     this.billId = billId;
+    this.customerName = name?.trim() || 'Walk-in';
     this.cartSubject.next(
       items.map(i => ({
         productId: i.productId,
@@ -79,12 +81,17 @@ export class BillingStore {
     return this.billId;
   }
 
+  getCustomerName(): string {
+    return this.customerName;
+  }
+
   setBillId(id: number) {
     this.billId = id;
   }
 
   clear() {
     this.billId = null;
+    this.customerName = '';
     this.cartSubject.next([]);
   }
 }

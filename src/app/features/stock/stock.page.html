@@ -8,19 +8,15 @@
     </div>
 
     <div class="search-bar">
-      <input
-        type="text"
-        placeholder="Search product..."
-        [(ngModel)]="searchTerm"
-      />
+      <input type="text" placeholder="Search product..." [(ngModel)]="searchTerm" />
     </div>
   </div>
-<div class="filter-badge" *ngIf="filterType">
-  Showing:
-  <strong>
-    {{ filterType === 'low' ? 'Low Stock' : 'Out of Stock' }}
-  </strong>
-</div>
+  <div class="filter-badge" *ngIf="filterType">
+    Showing:
+    <strong>
+      {{ filterType === 'low' ? 'Low Stock' : 'Out of Stock' }}
+    </strong>
+  </div>
 
   <!-- STOCK TABLE -->
   <div class="table-wrap">
@@ -57,18 +53,15 @@
           <td>{{ p.min_qty }}</td>
 
           <td>
-            <input
-              type="number"
-              [(ngModel)]="p.change_qty"
-              placeholder="+ / - qty"
-            />
+            <input type="number" [(ngModel)]="p.change_qty" placeholder="+ / - qty" />
           </td>
 
           <td>
             <select [(ngModel)]="p.reason">
-              <option value="DAILY_REFILL">Daily Refill</option>
-              <option value="WASTAGE">Wastage</option>
-              <option value="ADJUSTMENT">Adjustment</option>
+              <option value="DAILY_REFILL">REFILL</option>
+              <option value="USAGE">USAGE</option>
+              <option value="WASTAGE">WASTAGE</option>
+              <option value="ADJUSTMENT">ADJUSTMENT</option>
             </select>
           </td>
 

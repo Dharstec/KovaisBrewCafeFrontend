@@ -13,12 +13,7 @@
   <!-- LIST -->
   <div class="bill-grid" *ngIf="bills.length; else empty">
 
-    <div
-      class="bill-card"
-      *ngFor="let b of bills"
-      (dblclick)="edit(b)"
-      tabindex="0"
-    >
+    <div class="bill-card" *ngFor="let b of bills" (dblclick)="edit(b)" tabindex="0">
 
       <!-- TOP -->
       <div class="card-top">
@@ -27,11 +22,20 @@
           <div class="bill-date">
             {{ b.created_at | date:'dd MMM yyyy, hh:mm a' }}
           </div>
+
         </div>
 
-        <div class="bill-amount">
-          ₹ {{ b.grand_total }}
+        <div class="amount-block">
+          <div class="bill-amount">
+            ₹ {{ b.grand_total }}
+          </div>
+
+          <div class="customer-name" *ngIf="b.customer_name">
+            👤 {{ b.customer_name }}
+          </div>
+
         </div>
+
       </div>
 
       <!-- ITEMS -->

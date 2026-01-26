@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 export class  SpendService {
 
   private http = inject(HttpClient);
-  private API = `${environment.apiUrl}/spend`;
+  private API = `${environment.apiUrl}/shop_spend`;
 
   /* =============================
      GET ALL SPEND (LIST PAGE)

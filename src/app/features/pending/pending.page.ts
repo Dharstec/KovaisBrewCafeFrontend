@@ -33,7 +33,8 @@ export class PendingPage {
         price: Number(i.price),
         qty: Number(i.qty)
       })),
-      bill.id
+      bill.id,
+      bill.customer_name
     );
 
     this.router.navigate(['/billing']);

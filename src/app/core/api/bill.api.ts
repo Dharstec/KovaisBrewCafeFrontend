@@ -7,12 +7,12 @@ export class BillApi {
 
   private http = inject(HttpClient);
 
-  create(items: any[]) {
-    return this.http.post(`${environment.apiUrl}/bills`, { items });
+create(payload: { customer_name: string; items: any[] }) {
+    return this.http.post(`${environment.apiUrl}/bills`, payload);
   }
 
-  update(id: number, items: any[]) {
-    return this.http.put(`${environment.apiUrl}/bills/${id}`, { items });
+  update(id: number, payload: { customer_name: string; items: any[] }) {
+    return this.http.put(`${environment.apiUrl}/bills/${id}`, payload);
   }
 
   pending() {
