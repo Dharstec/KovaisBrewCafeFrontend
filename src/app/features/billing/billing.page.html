@@ -160,13 +160,15 @@
 
     <!-- ACTIONS -->
 
-    <button class="btn dark" (click)="savePending()" [disabled]="!isOnlineStatus">
-      Save Pending
+    <button class="btn dark" (click)="savePending()" [disabled]="isSaving">
+      <span *ngIf="!isSaving">Save Pending</span>
+      <span *ngIf="isSaving">Saving...</span>
     </button>
 
-    <button class="btn accent" *ngIf="store.getBillId()" [disabled]="!isOnlineStatus ||!paymentMethod"
+    <button class="btn accent" *ngIf="store.getBillId()" [disabled]="!paymentMethod || isCompleting"
       (click)="completeBill()">
-      Complete Bill
+      <span *ngIf="!isCompleting">Complete Bill</span>
+      <span *ngIf="isCompleting">Completing...</span>
     </button>
 
   </aside>

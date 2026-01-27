@@ -48,7 +48,8 @@ export class BillingPage implements OnInit, OnDestroy {
   couponDiscount = 0;
   couponApplied = false;
   isOnlineStatus: boolean = navigator.onLine;
-
+  isSaving = false;
+  isCompleting = false;
   /* ================= INIT ================= */
   ngOnInit() {
     this.isOnlineStatus = navigator.onLine;
@@ -185,19 +186,32 @@ export class BillingPage implements OnInit, OnDestroy {
       return;
     }
 
+    this.isSaving = true; // 🔥 START LOADER
 
     // 🔁 EXISTING FLOW (UNCHANGED)
     const billId = this.store.getBillId();
 
     if (billId) {
       this.billApi.update(billId, payload).subscribe({
-        next: () => this.clearBill(),
-        error: (err) => this.showError(err?.error?.message || 'Failed to update bill')
+        next: () => {
+          this.isSaving = false;
+          this.clearBill();
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.showError(err?.error?.message || 'Failed to update bill');
+        }
       });
     } else {
       this.billApi.create(payload).subscribe({
-        next: () => this.clearBill(),
-        error: (err) => this.showError(err?.error?.message || 'Failed to create bill')
+        next: () => {
+          this.isSaving = false;
+          this.clearBill();
+        },
+        error: (err) => {
+          this.isSaving = false;
+          this.showError(err?.error?.message || 'Failed to create bill');
+        }
       });
     }
   }
@@ -246,12 +260,16 @@ export class BillingPage implements OnInit, OnDestroy {
     // 🔥 TAKE CURRENT CART SNAPSHOT
     const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
 
-    const payload = snapshot.map((i: any) => ({
-      productId: Number(i.productId),
-      name: i.name,
-      price: Number(i.price),
-      qty: Number(i.qty)
-    }));
+    const payload = {
+      customer_name: this.customerName,
+      items: snapshot.map((i: any) => ({
+        productId: Number(i.productId),
+        name: i.name,
+        price: Number(i.price),
+        qty: Number(i.qty)
+      }))
+    }
+    this.isCompleting = true; // 🔥 START LOADER
 
     // 🔥 ONLY THIS CONDITION CHANGE:
     // If bill exists → update items → then complete
@@ -262,11 +280,20 @@ export class BillingPage implements OnInit, OnDestroy {
           grand_total: this.finalTotal,
           payment_mode: this.paymentMethod
         }).subscribe({
-          next: () => this.clearBill(),
-          error: () => this.showError('Failed to complete bill')
+          next: () => {
+            this.isCompleting = false;
+            this.clearBill();
+          },
+          error: () => {
+            this.isCompleting = false;
+            this.showError('Failed to complete bill');
+          }
         });
       },
-      error: () => this.showError('Failed to update bill')
+      error: () => {
+        this.isCompleting = false;
+        this.showError('Failed to update bill');
+      }
     });
   }
 

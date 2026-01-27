@@ -378,6 +378,13 @@
   cursor: not-allowed;
 }
 
+.btn span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+
 
 /* ================= MOBILE ================= */
 @media (max-width: 768px) {
