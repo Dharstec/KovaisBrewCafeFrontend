@@ -154,6 +154,43 @@ exports.getItemSalesChart = async (req, res) => {
 };
 
 /* ─────────────────────────────────────────
+   GET /dashboard/daily_spend?date=YYYY-MM-DD
+   Total daily spend + breakdown by reason
+   ───────────────────────────────────────── */
+exports.getDailySpend = async (req, res) => {
+  try {
+    const date = resolveDate(req);
+    const dateExpr = date ? `$1::date` : `CURRENT_DATE`;
+    const params   = date ? [date] : [];
+
+    const total = await DB.PostgresAny(`
+      SELECT COALESCE(SUM(amount), 0) AS total_spend
+      FROM spent
+      WHERE date::date = ${dateExpr}
+    `, params);
+
+    const breakdown = await DB.PostgresAny(`
+      SELECT
+        reason,
+        COALESCE(SUM(amount), 0) AS total,
+        COUNT(*)::INT             AS count
+      FROM spent
+      WHERE date::date = ${dateExpr}
+      GROUP BY reason
+      ORDER BY total DESC
+    `, params);
+
+    res.json({
+      total_spend: Number(total[0].total_spend),
+      breakdown
+    });
+  } catch (err) {
+    console.error('Daily spend failed:', err);
+    res.status(500).json({ message: 'Daily spend failed' });
+  }
+};
+
+/* ─────────────────────────────────────────
    GET /dashboard/payment_breakdown?date=YYYY-MM-DD
    Cash vs UPI counts & amounts
    ───────────────────────────────────────── */
