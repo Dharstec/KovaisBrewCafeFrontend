@@ -180,9 +180,17 @@ exports.getDailySpend = async (req, res) => {
       ORDER BY total DESC
     `, params);
 
+    const records = await DB.PostgresAny(`
+      SELECT id, reason, amount, TO_CHAR(created_at, 'HH12:MI AM') AS time
+      FROM spent
+      WHERE date::date = ${dateExpr}
+      ORDER BY created_at DESC
+    `, params);
+
     res.json({
       total_spend: Number(total[0].total_spend),
-      breakdown
+      breakdown,
+      records
     });
   } catch (err) {
     console.error('Daily spend failed:', err);
