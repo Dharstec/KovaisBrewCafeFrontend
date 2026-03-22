@@ -4,10 +4,12 @@ const {
   getAllRecords,
   addRecord,
   updateRecord,
-  deleteRecord
+  deleteRecord,
+  getUniqueReasons
 } = require('../controllers/spend.js');
 const { verifyToken } = require("../middleware/auth.js");
 
+router.get('/shop_spend/reasons', verifyToken, getUniqueReasons);
 router.get('/shop_spend', verifyToken, getAllRecords);
 router.post('/shop_spend', verifyToken, addRecord);
 router.put('/shop_spend/:id', verifyToken, updateRecord);

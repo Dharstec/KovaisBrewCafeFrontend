@@ -96,6 +96,17 @@ const updateRecord = async (req, res) => {
     }
 };
 
+const getUniqueReasons = async (req, res) => {
+    try {
+        const data = await POSTGRESQLService.PostgresAny(
+            `SELECT DISTINCT reason FROM ${TABLE_SPENT} WHERE reason IS NOT NULL AND reason <> '' ORDER BY reason ASC`
+        );
+        res.json(data.map((r) => r.reason));
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: err.message });
+    }
+};
+
 const deleteRecord = async (req, res) => {
     try {
         await POSTGRESQLService.PostgresDelete(TABLE_SPENT, 'id', req.params.id);
@@ -109,5 +120,6 @@ module.exports = {
     getAllRecords,
     addRecord,
     updateRecord,
-    deleteRecord
+    deleteRecord,
+    getUniqueReasons
 };
