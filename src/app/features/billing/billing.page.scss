@@ -15,6 +15,39 @@ $success:  #16a34a;
 $danger:   #dc2626;
 $warn:     #d97706;
 
+/* ── Banner rows (outside .pos) ── */
+.offline-banner,
+.sync-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 20px;
+
+  svg {
+    width: 16px; height: 16px;
+    stroke: currentColor; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+}
+
+.offline-banner {
+  background: #431407;
+  border-bottom: 1px solid #7c2d12;
+  color: #fed7aa;
+}
+
+.sync-banner {
+  background: #1e3a5f;
+  border-bottom: 1px solid #1d4ed8;
+  color: #bfdbfe;
+  svg { animation: spin 1.2s linear infinite; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ── Root layout ── */
 .pos {
   display: flex;
@@ -25,22 +58,6 @@ $warn:     #d97706;
   position: relative;
 }
 
-/* ── Offline mode dim ── */
-.pos.offline .left,
-.pos.offline .right { opacity: .85; pointer-events: none; }
-
-/* ── Offline Banner ── */
-.offline-banner {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  background: $danger;
-  color: #fff;
-  text-align: center;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 600;
-}
 
 /* ════════════════════════════════════════════════════
    LEFT — PRODUCT CATALOGUE
@@ -833,4 +850,15 @@ $warn:     #d97706;
   .products-grid { grid-template-columns: repeat(2, 1fr); }
 
   .action-btn { height: 46px; font-size: 14px; }
+}
+
+/* ── Success banner (inside cart) ── */
+.success-banner {
+  background: rgba(16, 185, 129, .12);
+  border: 1px solid rgba(16, 185, 129, .3);
+  border-radius: 8px;
+  color: #6ee7b7;
+  font-size: 13px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
 }

@@ -7,12 +7,19 @@ export class BillApi {
 
   private http = inject(HttpClient);
 
-create(payload: { customer_name: string; items: any[] }) {
-    return this.http.post(`${environment.apiUrl}/bills`, payload);
+  create(payload: { customer_name: string; items: any[]; local_id?: string }) {
+    return this.http.post<any>(`${environment.apiUrl}/bills`, payload);
   }
 
   update(id: number, payload: { customer_name: string; items: any[] }) {
     return this.http.put(`${environment.apiUrl}/bills/${id}`, payload);
+  }
+
+  syncOffline(payload: {
+    customer_name: string; items: any[]; payment_mode: string;
+    grand_total: number; discount_amount?: number; local_id: string;
+  }) {
+    return this.http.post<any>(`${environment.apiUrl}/bills/sync`, payload);
   }
 
   pending() {
@@ -31,25 +38,17 @@ create(payload: { customer_name: string; items: any[] }) {
     return this.http.post(`${environment.apiUrl}/apply/${id}`, body);
   }
 
-
-
-  completed(
-    startDate?: string,
-    endDate?: string,
-    page = 1,
-    limit = 6
-  ) {
+  completed(startDate?: string, endDate?: string, page = 1, limit = 6) {
     return this.http.get<any>(
       `${environment.apiUrl}/completed`,
       {
         params: {
           ...(startDate && { start_date: startDate }),
-          ...(endDate && { end_date: endDate }),
+          ...(endDate   && { end_date:   endDate   }),
           page,
           limit
         }
       }
     );
   }
-
 }

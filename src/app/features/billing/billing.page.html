@@ -1,9 +1,14 @@
-<div class="pos" [class.offline]="!isOnlineStatus">
+<!-- ══ OFFLINE BANNER — outside .pos so it doesn't break the flex layout ══ -->
+<div class="offline-banner" *ngIf="!isOnlineStatus">
+  <svg viewBox="0 0 24 24"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
+  Offline — bills will save locally and sync when reconnected
+</div>
+<div class="sync-banner" *ngIf="isOnlineStatus && syncPending > 0">
+  <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+  Syncing {{ syncPending }} offline bill{{ syncPending > 1 ? 's' : '' }}…
+</div>
 
-  <!-- ══ OFFLINE BANNER ══ -->
-  <div class="offline-banner" *ngIf="!isOnlineStatus">
-    <span>⚠️ You are offline — bill saving is disabled</span>
-  </div>
+<div class="pos">
 
   <!-- ══════════════════════════════════════
        LEFT — Product Catalogue
@@ -109,6 +114,11 @@
     <!-- ── Error Message ── -->
     <div class="err-banner" *ngIf="errorMsg">
       <span>⚠️ {{ errorMsg }}</span>
+    </div>
+
+    <!-- ── Success Message ── -->
+    <div class="success-banner" *ngIf="successMsg">
+      <span>✅ {{ successMsg }}</span>
     </div>
 
     <!-- ── Customer & Payment ── -->
@@ -225,12 +235,10 @@
         <div class="coupon-success" *ngIf="couponApplied">
           ✅ Coupon applied — ₹{{ couponDiscount }} off
         </div>
-      </div>
-
-      <!-- Discount line -->
-      <div class="total-row discount" *ngIf="couponApplied">
-        <span>Discount</span>
-        <span class="disc-val">− ₹ {{ couponDiscount | number:'1.2-2' }}</span>
+        <div class="total-row discount" *ngIf="couponApplied">
+          <span>Coupon Discount</span>
+          <span class="disc-val">− ₹ {{ couponDiscount | number:'1.2-2' }}</span>
+        </div>
       </div>
 
       <!-- Grand Total -->
@@ -255,8 +263,8 @@
 
       <button
         class="action-btn complete"
-        *ngIf="store.getBillId()"
-        [disabled]="!paymentMethod || isCompleting || !cart.length"
+        *ngIf="cart.length"
+        [disabled]="!paymentMethod || isCompleting"
         (click)="completeBill()">
         <span class="btn-spinner" *ngIf="isCompleting"></span>
         <span *ngIf="!isCompleting">✅ Complete Bill</span>
