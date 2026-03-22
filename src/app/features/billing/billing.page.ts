@@ -50,6 +50,7 @@ export class BillingPage implements OnInit, OnDestroy {
   isOnlineStatus: boolean = navigator.onLine;
   isSaving = false;
   isCompleting = false;
+  showCart = false;   // mobile tab toggle
   /* ================= INIT ================= */
   ngOnInit() {
     this.isOnlineStatus = navigator.onLine;
@@ -112,6 +113,9 @@ export class BillingPage implements OnInit, OnDestroy {
 
     if (product.is_manual_price && existing) return;
     this.store.add(product);
+
+    // On mobile: auto-switch to cart tab after adding
+    if (window.innerWidth <= 900) this.showCart = true;
   }
 
   /* ================= COUPON ================= */

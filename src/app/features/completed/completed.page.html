@@ -4,24 +4,24 @@
   <div class="page-header">
     <div class="title">
       <h1>Completed Bills</h1>
-      <p class="subtitle" *ngIf="isAdmin">
-       View bills by date range
-      </p>
-       <p class="subtitle" *ngIf="!isAdmin">Today's completed bills</p>
+      <p class="subtitle" *ngIf="isAdmin">View bills by date range</p>
+      <p class="subtitle" *ngIf="!isAdmin">Today's completed bills</p>
     </div>
 
-  <div class="summary-pill" *ngIf="isAdmin">
-  Cash : ₹ {{ cashTotal }}
-</div>
-
-<div class="summary-pill" *ngIf="isAdmin">
-  UPI : ₹ {{ upiTotal }}
-</div>
-
-<div class="summary-pill" *ngIf="isAdmin">
-  Total : ₹ {{ grandTotal }}
-</div>
-
+    <div class="header-pills">
+      <div class="summary-pill cash" *ngIf="isAdmin">
+        <span class="pill-label">Cash</span>
+        <span class="pill-val">₹ {{ cashTotal | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-pill upi" *ngIf="isAdmin">
+        <span class="pill-label">UPI</span>
+        <span class="pill-val">₹ {{ upiTotal | number:'1.2-2' }}</span>
+      </div>
+      <div class="summary-pill total" *ngIf="isAdmin">
+        <span class="pill-label">Total</span>
+        <span class="pill-val">₹ {{ grandTotal | number:'1.2-2' }}</span>
+      </div>
+    </div>
   </div>
 
   <!-- DATE FILTER (ADMIN ONLY) -->
@@ -53,30 +53,39 @@
           <div class="bill-date">
             {{ b.created_at | date:'dd MMM yyyy, hh:mm a' }}
           </div>
-        </div>
-
-        <div class="amount-block">
-          <div class="bill-amount">
-            ₹ {{ b.grand_total }}
-          </div>
-
           <div class="customer-name" *ngIf="b.customer_name">
             👤 {{ b.customer_name }}
           </div>
+        </div>
 
+        <div class="amount-block">
+          <div class="bill-amount">₹ {{ b.grand_total | number:'1.2-2' }}</div>
+
+          <span class="pay-badge"
+                [class.cash]="b.payment_mode === 'CASH'"
+                [class.upi]="b.payment_mode === 'UPI'">
+            {{ b.payment_mode }}
+          </span>
+
+          <div class="discount-note" *ngIf="b.discount_amount > 0">
+            🏷 -₹{{ b.discount_amount }} off
+          </div>
         </div>
       </div>
 
       <!-- ITEMS -->
       <div class="items">
         <div class="item" *ngFor="let i of b.items">
-          <span class="name">
-            {{ i.name }} × {{ i.qty }}
-          </span>
-          <span class="price">
-            ₹ {{ i.price * i.qty }}
-          </span>
+          <span class="name">{{ i.name }} × {{ i.qty }}</span>
+          <span class="price">₹ {{ i.price * i.qty | number:'1.2-2' }}</span>
         </div>
+      </div>
+
+      <!-- PRINT BUTTON -->
+      <div class="card-footer">
+        <button class="btn-print" (click)="printBill(b)">
+          🖨 Print Receipt
+        </button>
       </div>
 
     </div>
@@ -106,4 +115,53 @@
     </div>
   </ng-template>
 
+</div>
+
+<!-- ════════════════════════════════════
+     PRINT RECEIPT OVERLAY (hidden, print only)
+     ════════════════════════════════════ -->
+<div class="print-receipt-wrap" id="printArea" *ngIf="printBillData">
+  <div class="print-receipt">
+    <div class="shop-name">☕ Kovai's Brew Café</div>
+    <div class="shop-sub">Bill Receipt</div>
+    <div class="divider-dashed"></div>
+
+    <table>
+      <tr><td>Bill #</td><td class="right">{{ printBillData.id }}</td></tr>
+      <tr><td>Date</td><td class="right">{{ printBillData.created_at | date:'dd MMM yyyy, hh:mm a' }}</td></tr>
+      <tr *ngIf="printBillData.customer_name">
+        <td>Customer</td><td class="right">{{ printBillData.customer_name }}</td>
+      </tr>
+      <tr><td>Payment</td><td class="right">{{ printBillData.payment_mode }}</td></tr>
+    </table>
+
+    <div class="divider-dashed"></div>
+
+    <table class="items-table">
+      <thead><tr><th>Item</th><th>Qty</th><th class="right">Amt</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let i of printBillData.items">
+          <td>{{ i.name }}</td>
+          <td>{{ i.qty }}</td>
+          <td class="right">₹{{ i.price * i.qty | number:'1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="divider-dashed"></div>
+
+    <table>
+      <tr *ngIf="printBillData.discount_amount > 0">
+        <td>Discount</td>
+        <td class="right">-₹{{ printBillData.discount_amount | number:'1.2-2' }}</td>
+      </tr>
+      <tr class="total-row">
+        <td><strong>TOTAL</strong></td>
+        <td class="right"><strong>₹{{ printBillData.grand_total | number:'1.2-2' }}</strong></td>
+      </tr>
+    </table>
+
+    <div class="divider-dashed"></div>
+    <div class="thank-you">Thank You! Visit Again 😊</div>
+  </div>
 </div>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { ActivatedRoute } from '@angular/router';
+import { AuthApi } from '../../core/api/auth.api';
 
 @Component({
   standalone: true,
@@ -13,48 +14,67 @@ import { ActivatedRoute } from '@angular/router';
   styleUrls: ['./stock.page.scss']
 })
 export class StockPage implements OnInit {
+
   private route = inject(ActivatedRoute);
-
   private http = inject(HttpClient);
+  private auth = inject(AuthApi);
 
- stocks: any[] = [];
+  isAdmin: boolean = false;
+
+  stocks: any[] = [];
   filtered: any[] = [];
   searchTerm = '';
   filterType: 'low' | 'out' | null = null;
 
+  /* ==============================
+     INIT
+     ============================== */
+  ngOnInit(): void {
 
-  ngOnInit() {
-      this.route.queryParams.subscribe(params => {
+    this.isAdmin = this.auth.isAdmin();
+
+    this.route.queryParams.subscribe(params => {
       this.filterType = params['filter'] || null;
       this.loadStock();
     });
   }
 
-loadStock() {
+  /* ==============================
+     LOAD STOCK
+     ============================== */
+  loadStock(): void {
     this.http
       .get<any[]>(`${environment.apiUrl}/stock`)
-      .subscribe(res => {
-        this.stocks = res.map(p => ({
-          ...p,
-          change_qty: null,
-          reason: 'DAILY_REFILL'
-        }));
-
-        this.applyFilter();
+      .subscribe({
+        next: res => {
+          this.stocks = res.map(p => ({
+            ...p,
+            change_qty: null,
+            reason: 'DAILY_REFILL'
+          }));
+          this.applyFilter();
+        },
+        error: () => alert('Failed to load stock')
       });
   }
 
-  applyFilter() {
+  /* ==============================
+     FILTER
+     ============================== */
+  applyFilter(): void {
+
     if (this.filterType === 'low') {
       this.filtered = this.stocks.filter(
         p => p.current_qty <= p.min_qty && p.current_qty > 0
       );
+
     } else if (this.filterType === 'out') {
       this.filtered = this.stocks.filter(
         p => p.current_qty === 0
       );
+
     } else {
-      this.filtered = this.stocks;
+      this.filtered = [...this.stocks];
     }
   }
 
@@ -66,76 +86,87 @@ loadStock() {
     );
   }
 
- updateStock(p: any) {
+  /* ==============================
+     UPDATE STOCK
+     ============================== */
+  updateStock(p: any): void {
 
-  if (!p.change_qty || p.change_qty === 0) {
-    alert('Enter quantity');
-    return;
-  }
-
-  let qty = Number(p.change_qty);
-  const oldStock = p.current_qty;
-
-  // 🔁 normalize qty based on reason
-  if (p.reason === 'USAGE' || p.reason === 'WASTAGE') {
-    if (qty > 0) qty = -qty;
-  }
-
-  if (p.reason === 'DAILY_REFILL') {
-    if (qty < 0) qty = Math.abs(qty);
-  }
-
-  if (p.reason === 'ADJUSTMENT') {
-    // adjustment = final stock - current stock
-    qty = qty - oldStock;
-  }
-
-  const newStock = oldStock + qty;
-
-  // ❌ prevent negative stock (optional safety)
-  if (newStock < 0) {
-    alert('Stock cannot go below zero');
-    return;
-  }
-
-  /* ✅ CONFIRMATION */
-  const confirmed = confirm(
-    `Are you sure you want to ${p.reason} stock?\n\n` +
-    `Product : ${p.name}\n` +
-    `Change Qty    : ${qty}\n\n` +
-    `Stock will change:\n` +
-    `FROM : ${oldStock}\n` +
-    `TO   : ${newStock}`
-  );
-
-  if (!confirmed) return;
-
-  /* ✅ API CALL */
-  this.http.post(
-    `${environment.apiUrl}/stock/adjust`,
-    {
-      product_id: p.id,
-      change_qty: qty,
-      reason: p.reason
+    if (!p.change_qty || p.change_qty === 0) {
+      alert('Enter quantity');
+      return;
     }
-  ).subscribe({
-    next: (res: any) => {
 
-      // update UI
-      p.current_qty = newStock;
-      p.change_qty = null;
-
-      /* ✅ AFTER UPDATE INFO */
-      alert(
-        `Stock updated successfully\n\n` +
-        `${p.name}\n` +
-        `Stock changed from ${oldStock} → ${newStock}`
-      );
-    },
-    error: err => {
-      alert(err.error?.message || 'Stock update failed');
+    /* 🔒 FRONTEND SECURITY */
+    if (!this.isAdmin && p.reason !== 'DAILY_REFILL') {
+      alert('You are not authorized to perform this action');
+      return;
     }
-  });
-}
 
+    let qty = Number(p.change_qty);
+    const oldStock = p.current_qty;
+
+    /* ======================
+       NORMALIZE LOGIC
+       ====================== */
+
+    // REFILL → always positive
+    if (p.reason === 'DAILY_REFILL') {
+      qty = Math.abs(qty);
+    }
+
+    // USAGE / WASTAGE → always negative
+    if (p.reason === 'USAGE' || p.reason === 'WASTAGE') {
+      qty = -Math.abs(qty);
+    }
+
+    // ADJUSTMENT → allow +/- freely
+    // (no conversion needed)
+
+    const newStock = oldStock + qty;
+
+    if (newStock < 0) {
+      alert('Stock cannot go below zero');
+      return;
+    }
+
+    /* ======================
+       CONFIRMATION
+       ====================== */
+    const confirmed = confirm(
+      `Are you sure you want to ${p.reason} stock?\n\n` +
+      `Product : ${p.name}\n` +
+      `Change Qty : ${qty}\n\n` +
+      `FROM : ${oldStock}\n` +
+      `TO   : ${newStock}`
+    );
+
+    if (!confirmed) return;
+
+    /* ======================
+       API CALL
+       ====================== */
+    this.http.post(
+      `${environment.apiUrl}/stock/adjust`,
+      {
+        product_id: p.id,
+        change_qty: qty,
+        reason: p.reason
+      }
+    ).subscribe({
+      next: () => {
+
+        p.current_qty = newStock;
+        p.change_qty = null;
+
+        alert(
+          `Stock updated successfully\n\n` +
+          `${p.name}\n` +
+          `Stock changed from ${oldStock} → ${newStock}`
+        );
+      },
+      error: err => {
+        alert(err.error?.message || 'Stock update failed');
+      }
+    });
+  }
 }

@@ -114,18 +114,39 @@ select {
   cursor: pointer;
 }
 
+/* FILTER BADGE */
+.filter-badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 6px 14px;
+  background: #fff7ed;
+  color: #d97706;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* MOBILE */
 @media (max-width: 768px) {
+  .stock-page { padding: 16px; }
+
   .header {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
   }
 
-  .search-bar {
-    width: 100%;
-  }
+  .search-bar { width: 100%; }
 
-  .title h1 {
-    font-size: 22px;
-  }
+  .title h1 { font-size: 22px; }
+
+  .table-wrap { border-radius: 10px; }
+
+  th, td { padding: 10px 10px; font-size: 12px; }
+
+  .name { font-weight: 600; }
+
+  input, select { height: 34px; font-size: 12px; }
+
+  .update { padding: 7px 12px; font-size: 12px; width: 100%; }
 }

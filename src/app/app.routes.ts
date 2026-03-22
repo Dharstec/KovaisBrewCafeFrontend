@@ -82,9 +82,18 @@ export const routes: Routes = [
   },
   {
     path: 'expenses',
-    loadComponent: () => 
+    loadComponent: () =>
       import('./features/spendPage/spend.page')
         .then(m => m.SpendPage)
+  },
+
+  /* 📊 REPORTS — Admin only */
+  {
+    path: 'reports',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/reports/reports.page')
+        .then(m => m.ReportsPage)
   }
 
 ];

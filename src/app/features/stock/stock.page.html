@@ -56,15 +56,20 @@
             <input type="number" [(ngModel)]="p.change_qty" placeholder="+ / - qty" />
           </td>
 
-          <td>
-            <select [(ngModel)]="p.reason">
-              <option value="DAILY_REFILL">REFILL</option>
-              <option value="USAGE">USAGE</option>
-              <option value="WASTAGE">WASTAGE</option>
-              <option value="ADJUSTMENT">ADJUSTMENT</option>
-            </select>
-          </td>
+<td>
+  <!-- ADMIN -->
+  <select *ngIf="isAdmin" [(ngModel)]="p.reason">
+    <option value="DAILY_REFILL">REFILL</option>
+    <option value="USAGE">USAGE</option>
+    <option value="WASTAGE">WASTAGE</option>
+    <option value="ADJUSTMENT">ADJUSTMENT</option>
+  </select>
 
+  <!-- NON ADMIN -->
+  <select *ngIf="!isAdmin" [(ngModel)]="p.reason">
+    <option value="DAILY_REFILL">REFILL</option>
+  </select>
+</td>
           <td>
             <button class="update" (click)="updateStock(p)">
               Update

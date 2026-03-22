@@ -243,3 +243,44 @@ select {
   border: none;
   cursor: pointer;
 }
+
+/* OVERLAY */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .spend-layout { padding: 16px; }
+
+  .page-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    h1 { font-size: 20px; }
+  }
+
+  .kpi-card { width: 100%; padding: 12px 16px; }
+
+  .action-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .search { width: 100%; }
+  .btn-add { width: 100%; text-align: center; padding: 12px; }
+
+  table { min-width: 520px; }
+  .card { overflow-x: auto; }
+
+  .drawer { width: 100%; top: auto; height: 85vh; border-radius: 20px 20px 0 0; }
+
+  .pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

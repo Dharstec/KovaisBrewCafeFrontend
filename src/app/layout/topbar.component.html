@@ -2,53 +2,69 @@
 
    <div class="left">
       <div class="logo">☕ <span>Kovai's Brew Café</span></div>
-      <button class="menu-btn" (click)="toggleMenu()">☰</button>
+      <button class="menu-btn" (click)="toggleMenu()" [attr.aria-label]="menuOpen ? 'Close menu' : 'Open menu'">
+         <span class="hamburger" [class.open]="menuOpen">
+            <span></span><span></span><span></span>
+         </span>
+      </button>
    </div>
 
    <nav [class.open]="menuOpen">
 
       <a *ngIf="menu.Billing" routerLink="/dashboard" routerLinkActive="active"
          [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">
-         Dashboard
+         📊 Dashboard
       </a>
 
       <a *ngIf="menu.Billing" routerLink="/billing" routerLinkActive="active" (click)="menuOpen = false">
-         Billing
+         🧾 Billing
       </a>
 
       <a *ngIf="menu.Billing" routerLink="/pending" routerLinkActive="active" (click)="menuOpen = false">
-         Pending
+         ⏳ Pending
       </a>
 
       <a *ngIf="menu.Billing" routerLink="/completed" routerLinkActive="active" (click)="menuOpen = false">
-         Completed
+         ✅ Completed
       </a>
 
       <a *ngIf="menu.Material" routerLink="/products" routerLinkActive="active" (click)="menuOpen = false">
-         Products
+         📦 Products
       </a>
 
       <a routerLink="/stock" routerLinkActive="active" (click)="menuOpen = false">
-         Stock
+         🏪 Stock
       </a>
 
       <a routerLink="/expenses" routerLinkActive="active" (click)="menuOpen = false">
-         Daily Spend
+         💰 Daily Spend
       </a>
+
       <a *ngIf="isAdmin" routerLink="/coupons" routerLinkActive="active" (click)="menuOpen = false">
-         Coupons
+         🎟 Coupons
+      </a>
+
+      <a *ngIf="isAdmin" routerLink="/attendance" routerLinkActive="active" (click)="menuOpen = false">
+         🗓 Attendance
       </a>
 
       <a *ngIf="isAdmin" routerLink="/advance" routerLinkActive="active" (click)="menuOpen = false">
-         Advance
+         💵 Advance
+      </a>
+
+      <a *ngIf="isAdmin" routerLink="/reports" routerLinkActive="active" (click)="menuOpen = false">
+         📑 Reports
       </a>
 
       <button class="btn install" *ngIf="showInstallBtn" (click)="installApp()">
-         Install App
+         ⬇ Install App
       </button>
 
-
-      <button class="logout" (click)="logout()">Logout</button>
+      <button class="logout" (click)="logout()">⏻ Logout</button>
 
    </nav>
+
+   <!-- MOBILE OVERLAY -->
+   <div class="nav-overlay" *ngIf="menuOpen" (click)="menuOpen = false"></div>
+
 </header>

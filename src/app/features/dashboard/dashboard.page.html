@@ -1,110 +1,253 @@
 <div class="dashboard">
 
-  <!-- HEADER -->
-  <div class="header">
-    <h2>Dashboard</h2>
-    <span class="date">Today Overview</span>
-  </div>
+  <!-- ═══════════════════════════════════════
+       HEADER  — date picker + actions
+       ═══════════════════════════════════════ -->
+  <div class="db-header">
 
-  <!-- SALES -->
-  <div class="cards" *ngIf="isAdmin">
-    <div class="card accent">
-      <h4>Today Sales</h4>
-      <p>₹ {{ data.today_sales }}</p>
+    <div class="db-title">
+      <h2>Dashboard</h2>
+      <span class="db-date-label">{{ displayDate }}</span>
     </div>
 
-    <div class="card">
-      <h4>Today Bills</h4>
-      <p>{{ data.today_bills }}</p>
-    </div>
+    <div class="db-controls">
 
-    <div class="card warn">
-      <h4>Pending Bills</h4>
-      <p>{{ data.pending_bills }}</p>
-    </div>
-  </div>
+      <!-- Date Picker -->
+      <div class="date-picker-wrap">
+        <span class="dp-icon">📅</span>
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="selectedDate"
+          [max]="todayStr"
+          (change)="onDateChange()"
+        />
+      </div>
 
-  <!-- ======================
-       ADMIN CHARTS
-       ====================== -->
-  <div *ngIf="isAdmin" class="charts-grid">
+      <!-- Today shortcut -->
+      <button class="btn-today" (click)="goToday()" *ngIf="!isToday">
+        Today
+      </button>
 
-    <!-- HOUR BASED CHART -->
-    <div class="chart-card">
-      <h3>Hourly Item Sales</h3>
-      <canvas
-        baseChart
-        [data]="hourChartData"
-        [options]="chartOptions"
-        chartType="line">
-      </canvas>
-    </div>
+      <!-- Refresh -->
+      <button class="btn-refresh" (click)="refresh()" title="Refresh">
+        🔄
+      </button>
 
-    <!-- ITEM BASED CHART -->
-    <div class="chart-card">
-      <h3>Total Sales by Item</h3>
-      <canvas
-        baseChart
-        [data]="itemChartData"
-        [options]="chartOptions"
-        chartType="bar">
-      </canvas>
-    </div>
-
-  </div>
-
-  <!-- MASTER -->
-  <div class="cards" *ngIf="isAdmin">
-    <div class="card">
-      <h4>Products</h4>
-      <p>{{ data.products }}</p>
-    </div>
-
-    <div class="card">
-      <h4>Categories</h4>
-      <p>{{ data.categories }}</p>
-    </div>
-
-    <div class="card">
-      <h4>Employees</h4>
-      <p>{{ data.employees }}</p>
     </div>
   </div>
 
-  <!-- ATTENDANCE -->
-  <div class="cards" *ngIf="isAdmin">
-    <div class="card success">
-      <h4>Present Today</h4>
-      <p>{{ data.attendance.present }}</p>
-    </div>
+  <!-- ═══════════════════════════════════════
+       KPI CARDS — Sales & Billing
+       ═══════════════════════════════════════ -->
+  <div class="kpi-section" *ngIf="isAdmin">
+    <div class="section-label">Sales Overview</div>
+    <div class="cards">
 
-    <div class="card danger">
-      <h4>Absent Today</h4>
-      <p>{{ data.attendance.absent }}</p>
+      <div class="card accent">
+        <div class="card-icon">💰</div>
+        <div class="card-body">
+          <div class="card-title">Total Sales</div>
+          <div class="card-value">₹ {{ data.today_sales | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <div class="card cash">
+        <div class="card-icon">💵</div>
+        <div class="card-body">
+          <div class="card-title">Cash Sales</div>
+          <div class="card-value">₹ {{ data.cash_total | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <div class="card upi">
+        <div class="card-icon">📲</div>
+        <div class="card-body">
+          <div class="card-title">UPI Sales</div>
+          <div class="card-value">₹ {{ data.upi_total | number:'1.2-2' }}</div>
+        </div>
+      </div>
+
+      <div class="card bills">
+        <div class="card-icon">🧾</div>
+        <div class="card-body">
+          <div class="card-title">Bills Completed</div>
+          <div class="card-value">{{ data.today_bills }}</div>
+        </div>
+      </div>
+
+      <div class="card pending" [routerLink]="['/pending']" style="cursor:pointer">
+        <div class="card-icon">⏳</div>
+        <div class="card-body">
+          <div class="card-title">Pending Bills</div>
+          <div class="card-value">{{ data.pending_bills }}</div>
+          <div class="card-link">View →</div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- STOCK SUMMARY -->
-  <div class="cards">
-    <div class="card">
-      <h4>Total Stock Items</h4>
-      <p>{{ data.stock.total_items }}</p>
+  <!-- ═══════════════════════════════════════
+       CHARTS — 3 charts
+       ═══════════════════════════════════════ -->
+  <div *ngIf="isAdmin">
+
+    <!-- Row 1: Hourly line + Payment doughnut -->
+    <div class="section-label">Sales Analytics</div>
+    <div class="charts-row">
+
+      <!-- CHART 1: Hourly Sales (Line) -->
+      <div class="chart-card wide">
+        <div class="chart-head">
+          <div>
+            <h3>Hourly Item Sales</h3>
+            <p class="chart-sub">Units sold per hour</p>
+          </div>
+        </div>
+        <div class="chart-body" *ngIf="hasHourData; else noHour">
+          <canvas baseChart
+            [data]="hourChartData"
+            [options]="hourChartOptions"
+            chartType="line">
+          </canvas>
+        </div>
+        <ng-template #noHour>
+          <div class="chart-empty">📈 No hourly data for this date</div>
+        </ng-template>
+      </div>
+
+      <!-- CHART 3: Payment Breakdown (Doughnut) -->
+      <div class="chart-card narrow">
+        <div class="chart-head">
+          <div>
+            <h3>Payment Mode</h3>
+            <p class="chart-sub">Cash vs UPI split</p>
+          </div>
+        </div>
+        <div class="chart-body doughnut" *ngIf="hasPayData; else noPay">
+          <canvas baseChart
+            [data]="payChartData"
+            [options]="payChartOptions"
+            chartType="doughnut">
+          </canvas>
+        </div>
+        <ng-template #noPay>
+          <div class="chart-empty">🍩 No payment data for this date</div>
+        </ng-template>
+      </div>
+
     </div>
 
-    <div class="card warn"
-         style="cursor:pointer"
-         [routerLink]="['/stock']"
-         [queryParams]="{ filter: 'low' }">
-      <h4>Low Stock</h4>
-      <p>{{ data.stock.low_stock }}</p>
+    <!-- Row 2: Item Sales Bar (full width) -->
+    <div class="charts-row single">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <h3>Items Sold</h3>
+            <p class="chart-sub">Total units per product</p>
+          </div>
+        </div>
+        <div class="chart-body bar" *ngIf="hasItemData; else noItem">
+          <canvas baseChart
+            [data]="itemChartData"
+            [options]="itemChartOptions"
+            chartType="bar">
+          </canvas>
+        </div>
+        <ng-template #noItem>
+          <div class="chart-empty">📊 No sales data for this date</div>
+        </ng-template>
+      </div>
     </div>
 
-    <div class="card danger"
-         style="cursor:pointer"
-         [routerLink]="['/stock']"
-         [queryParams]="{ filter: 'out' }">
-      <h4>Out of Stock</h4>
-      <p>{{ data.stock.out_of_stock }}</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       KPI CARDS — Master & HR (Admin)
+       ═══════════════════════════════════════ -->
+  <div class="kpi-section" *ngIf="isAdmin">
+    <div class="section-label">Business Snapshot</div>
+    <div class="cards">
+
+      <div class="card neutral">
+        <div class="card-icon">📦</div>
+        <div class="card-body">
+          <div class="card-title">Products</div>
+          <div class="card-value">{{ data.products }}</div>
+        </div>
+      </div>
+
+      <div class="card neutral">
+        <div class="card-icon">🗂</div>
+        <div class="card-body">
+          <div class="card-title">Categories</div>
+          <div class="card-value">{{ data.categories }}</div>
+        </div>
+      </div>
+
+      <div class="card neutral">
+        <div class="card-icon">👷</div>
+        <div class="card-body">
+          <div class="card-title">Employees</div>
+          <div class="card-value">{{ data.employees }}</div>
+        </div>
+      </div>
+
+      <div class="card success" [routerLink]="['/attendance']" style="cursor:pointer">
+        <div class="card-icon">✅</div>
+        <div class="card-body">
+          <div class="card-title">Present Today</div>
+          <div class="card-value">{{ data.attendance.present }}</div>
+        </div>
+      </div>
+
+      <div class="card danger" [routerLink]="['/attendance']" style="cursor:pointer">
+        <div class="card-icon">❌</div>
+        <div class="card-body">
+          <div class="card-title">Absent Today</div>
+          <div class="card-value">{{ data.attendance.absent }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       KPI CARDS — Stock
+       ═══════════════════════════════════════ -->
+  <div class="kpi-section">
+    <div class="section-label">Stock Status</div>
+    <div class="cards">
+
+      <div class="card neutral">
+        <div class="card-icon">🏪</div>
+        <div class="card-body">
+          <div class="card-title">Tracked Items</div>
+          <div class="card-value">{{ data.stock.total_items }}</div>
+        </div>
+      </div>
+
+      <div class="card warn" style="cursor:pointer"
+           [routerLink]="['/stock']" [queryParams]="{ filter: 'low' }">
+        <div class="card-icon">⚠️</div>
+        <div class="card-body">
+          <div class="card-title">Low Stock</div>
+          <div class="card-value">{{ data.stock.low_stock }}</div>
+          <div class="card-link">View →</div>
+        </div>
+      </div>
+
+      <div class="card danger" style="cursor:pointer"
+           [routerLink]="['/stock']" [queryParams]="{ filter: 'out' }">
+        <div class="card-icon">🚫</div>
+        <div class="card-body">
+          <div class="card-title">Out of Stock</div>
+          <div class="card-value">{{ data.stock.out_of_stock }}</div>
+          <div class="card-link">View →</div>
+        </div>
+      </div>
+
     </div>
   </div>
 

@@ -1,109 +1,182 @@
-<div class="pos">
+<div class="pos" [class.offline]="!isOnlineStatus">
 
-  <!-- LEFT -->
-  <section class="left">
+  <!-- ══ OFFLINE BANNER ══ -->
+  <div class="offline-banner" *ngIf="!isOnlineStatus">
+    <span>⚠️ You are offline — bill saving is disabled</span>
+  </div>
 
-    <div class="header">
-      <div>
-        <h1>Checkout</h1>
-        <span class="sub">Select products</span>
+  <!-- ══════════════════════════════════════
+       LEFT — Product Catalogue
+       ══════════════════════════════════════ -->
+  <section class="left" [class.show]="!showCart">
+
+    <!-- Header -->
+    <div class="left-header">
+      <div class="left-title">
+        <h1>New Order</h1>
+        <span class="left-sub">Select items to add to cart</span>
       </div>
-
-      <input class="search" placeholder="Search product..." [(ngModel)]="searchText" />
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input
+          class="search-input"
+          placeholder="Search products…"
+          [(ngModel)]="searchText"
+          autocomplete="off"
+        />
+        <button class="search-clear" *ngIf="searchText" (click)="searchText=''">✕</button>
+      </div>
     </div>
 
-    <!-- CATEGORY -->
-    <div class="categories">
-      <button *ngFor="let c of categories" [class.active]="selectedCategory === c.name"
+    <!-- Category Tabs -->
+    <div class="category-bar">
+      <button
+        *ngFor="let c of categories"
+        class="cat-btn"
+        [class.active]="selectedCategory === c.name"
         (click)="selectedCategory = c.name">
         {{ c.name }}
       </button>
     </div>
 
-    <!-- PRODUCTS -->
-    <div class="products">
-      <div class="product-card" *ngFor="let p of filteredProducts" [class.out-stock]="isOutOfStock(p)"
+    <!-- Product Grid -->
+    <div class="products-grid">
+
+      <div
+        class="prod-card"
+        *ngFor="let p of filteredProducts"
+        [class.out-of-stock]="isOutOfStock(p)"
         (click)="isOutOfStock(p) ? null : addProduct(p)">
-        <!-- OUT OF STOCK BADGE -->
-        <div class="badge out" *ngIf="isOutOfStock(p)">
-          OUT OF STOCK
+
+        <!-- Badges -->
+        <div class="prod-badge out" *ngIf="isOutOfStock(p)">OUT OF STOCK</div>
+        <div class="prod-badge low" *ngIf="isLowStock(p) && !isOutOfStock(p)">
+          LOW STOCK · {{ getIntQty(p.current_qty) }}
         </div>
 
-        <!-- LOW STOCK BADGE -->
-        <div class="badge low" *ngIf="isLowStock(p)">
-          LOW ({{ getIntQty(p.current_qty) }})
+        <!-- Image -->
+        <div class="prod-img">
+          <img
+            [src]="p.image_url"
+            loading="lazy"
+            decoding="async"
+            width="100" height="100"
+            (error)="onImgError($event)"
+            [alt]="p.name"
+          />
         </div>
 
-
-        <div class="image">
-          <img [src]="p.image_url" loading="lazy" decoding="async" width="80" height="80"
-            (error)="onImgError($event)" />
+        <!-- Info -->
+        <div class="prod-info">
+          <div class="prod-name">{{ p.name }}</div>
+          <div class="prod-price" *ngIf="!p.is_manual_price">₹ {{ p.price }}</div>
+          <div class="prod-price manual" *ngIf="p.is_manual_price">Custom Price</div>
         </div>
 
-        <div class="info">
-          <div class="name">{{ p.name }}</div>
-
-          <div class="price" *ngIf="!p.is_manual_price">
-            ₹ {{ p.price }}
-          </div>
-
-          <div class="price manual" *ngIf="p.is_manual_price">
-            Manual Price
-          </div>
-        </div>
+        <!-- Add indicator -->
+        <div class="prod-add" *ngIf="!isOutOfStock(p)">+</div>
 
       </div>
+
+      <!-- Empty search result -->
+      <div class="products-empty" *ngIf="filteredProducts.length === 0">
+        <div class="pe-icon">🔍</div>
+        <p>No products found for "{{ searchText || selectedCategory }}"</p>
+      </div>
+
     </div>
 
   </section>
 
-  <!-- RIGHT -->
-  <aside class="right">
+  <!-- ══════════════════════════════════════
+       RIGHT — Order Summary / Cart
+       ══════════════════════════════════════ -->
+  <aside class="right" [class.show]="showCart">
 
-    <h2>Order Summary</h2>
-
-    <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
-
-    <!-- OPTIONAL -->
-    <div class="optional-fields">
-      <input placeholder="Customer Name (optional)" [(ngModel)]="customerName" />
-
-      <select [(ngModel)]="paymentMethod">
-        <option value="">Payment Method (required)</option>
-        <option value="CASH">Cash</option>
-        <option value="UPI">UPI</option>
-      </select>
+    <!-- ── Cart Header ── -->
+    <div class="cart-header">
+      <div>
+        <h2>Order Summary</h2>
+        <span class="cart-count" *ngIf="cart.length">
+          {{ cart.length }} item{{ cart.length > 1 ? 's' : '' }}
+        </span>
+      </div>
+      <button class="clear-btn" *ngIf="cart.length" (click)="clearBill()" title="Clear cart">
+        🗑 Clear
+      </button>
     </div>
 
-    <!-- CART -->
-    <div class="cart" *ngIf="cart.length; else empty">
+    <!-- ── Error Message ── -->
+    <div class="err-banner" *ngIf="errorMsg">
+      <span>⚠️ {{ errorMsg }}</span>
+    </div>
 
+    <!-- ── Customer & Payment ── -->
+    <div class="order-meta">
+      <div class="meta-field">
+        <label>👤 Customer Name</label>
+        <input
+          placeholder="Optional — e.g. Table 4"
+          [(ngModel)]="customerName"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="meta-field">
+        <label>💳 Payment Method <span class="required">*</span></label>
+        <div class="pay-options">
+          <button
+            class="pay-btn"
+            [class.active]="paymentMethod === 'CASH'"
+            (click)="paymentMethod = 'CASH'">
+            💵 Cash
+          </button>
+          <button
+            class="pay-btn"
+            [class.active]="paymentMethod === 'UPI'"
+            (click)="paymentMethod = 'UPI'">
+            📲 UPI
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Cart Items ── -->
+    <div class="cart-items" *ngIf="cart.length; else emptyCart">
       <div class="cart-item" *ngFor="let i of cart; trackBy: trackByProductId">
 
-        <div class="row">
-          <div class="item-name">{{ i.name }}</div>
-          <div class="line-total">₹ {{ i.price * i.qty }}</div>
+        <div class="ci-top">
+          <div class="ci-name">{{ i.name }}</div>
+          <div class="ci-total">₹ {{ i.price * i.qty | number:'1.2-2' }}</div>
         </div>
 
-        <div class="row controls">
+        <div class="ci-bottom">
 
-          <div class="price-row">
-            <span>₹</span>
-
-            <span *ngIf="!i.is_manual_price">{{ i.price }}</span>
-
-            <input *ngIf="i.is_manual_price" type="number" [ngModel]="i.price"
-              (ngModelChange)="updateManualPrice(i, $event)" />
+          <!-- Price -->
+          <div class="ci-price">
+            <span class="ci-price-label">₹</span>
+            <span *ngIf="!i.is_manual_price" class="ci-price-val">{{ i.price }}</span>
+            <input
+              *ngIf="i.is_manual_price"
+              class="ci-price-input"
+              type="number"
+              [ngModel]="i.price"
+              (ngModelChange)="updateManualPrice(i, $event)"
+              placeholder="Enter price"
+            />
           </div>
 
-          <div class="qty">
-            <button (click)="$event.stopPropagation(); store.update(i.productId, i.qty - 1)">
+          <!-- Qty Controls -->
+          <div class="ci-qty">
+            <button
+              class="qty-btn minus"
+              (click)="$event.stopPropagation(); store.update(i.productId, i.qty - 1)">
               −
             </button>
-
-            <span>{{ i.qty }}</span>
-
-            <button (click)="$event.stopPropagation(); store.update(i.productId, i.qty + 1)"
+            <span class="qty-val">{{ i.qty }}</span>
+            <button
+              class="qty-btn plus"
+              (click)="$event.stopPropagation(); store.update(i.productId, i.qty + 1)"
               [disabled]="i.is_manual_price">
               +
             </button>
@@ -113,64 +186,102 @@
       </div>
     </div>
 
-    <ng-template #empty>
-      <p class="empty">No items added</p>
+    <!-- ── Empty Cart ── -->
+    <ng-template #emptyCart>
+      <div class="cart-empty">
+        <div class="ce-icon">🛒</div>
+        <p>Cart is empty</p>
+        <span>Click products to add them</span>
+      </div>
     </ng-template>
 
-    <!-- SUMMARY -->
-    <!-- SUMMARY -->
-    <div class="summary">
+    <!-- ── Order Totals ── -->
+    <div class="order-totals">
 
-      <div>
+      <div class="total-row">
         <span>Subtotal</span>
-        <span>₹ {{ subtotal }}</span>
+        <span>₹ {{ subtotal | number:'1.2-2' }}</span>
       </div>
 
-      <!-- SHOW COUPON ONLY AFTER PAYMENT METHOD -->
-      <div class="coupon" *ngIf="paymentMethod">
-
-        <input placeholder="Coupon code" [(ngModel)]="couponCode" [disabled]="couponApplied" />
-
-        <button class="btn small" *ngIf="!couponApplied" (click)="applyCoupon()">
-          Apply
-        </button>
-
-        <button class="btn small danger" *ngIf="couponApplied" (click)="removeCoupon()">
-          Remove
-        </button>
-
-        <div class="coupon-msg success" *ngIf="couponApplied">
-          Coupon applied (₹ {{ couponDiscount }} off)
+      <!-- Coupon — only after payment method selected -->
+      <div class="coupon-section" *ngIf="paymentMethod">
+        <div class="coupon-input-row">
+          <div class="coupon-field">
+            <span class="coupon-icon">🎟</span>
+            <input
+              placeholder="Coupon code"
+              [(ngModel)]="couponCode"
+              [disabled]="couponApplied"
+              (keyup.enter)="!couponApplied && applyCoupon()"
+            />
+          </div>
+          <button class="coupon-btn apply" *ngIf="!couponApplied" (click)="applyCoupon()">
+            Apply
+          </button>
+          <button class="coupon-btn remove" *ngIf="couponApplied" (click)="removeCoupon()">
+            Remove
+          </button>
+        </div>
+        <div class="coupon-success" *ngIf="couponApplied">
+          ✅ Coupon applied — ₹{{ couponDiscount }} off
         </div>
       </div>
 
-      <!-- DISCOUNT LINE -->
-      <div *ngIf="couponApplied">
+      <!-- Discount line -->
+      <div class="total-row discount" *ngIf="couponApplied">
         <span>Discount</span>
-        <span>- ₹ {{ couponDiscount }}</span>
+        <span class="disc-val">− ₹ {{ couponDiscount | number:'1.2-2' }}</span>
       </div>
 
-      <div class="total">
-        <span>Total</span>
-        <span>₹ {{ finalTotal }}</span>
+      <!-- Grand Total -->
+      <div class="total-row grand">
+        <span>Grand Total</span>
+        <span class="grand-val">₹ {{ finalTotal | number:'1.2-2' }}</span>
       </div>
 
     </div>
 
+    <!-- ── Action Buttons ── -->
+    <div class="action-btns">
 
-    <!-- ACTIONS -->
+      <button
+        class="action-btn save"
+        (click)="savePending()"
+        [disabled]="isSaving || !cart.length">
+        <span class="btn-spinner" *ngIf="isSaving"></span>
+        <span *ngIf="!isSaving">💾 Save Pending</span>
+        <span *ngIf="isSaving">Saving…</span>
+      </button>
 
-    <button class="btn dark" (click)="savePending()" [disabled]="isSaving">
-      <span *ngIf="!isSaving">Save Pending</span>
-      <span *ngIf="isSaving">Saving...</span>
-    </button>
+      <button
+        class="action-btn complete"
+        *ngIf="store.getBillId()"
+        [disabled]="!paymentMethod || isCompleting || !cart.length"
+        (click)="completeBill()">
+        <span class="btn-spinner" *ngIf="isCompleting"></span>
+        <span *ngIf="!isCompleting">✅ Complete Bill</span>
+        <span *ngIf="isCompleting">Completing…</span>
+      </button>
 
-    <button class="btn accent" *ngIf="store.getBillId()" [disabled]="!paymentMethod || isCompleting"
-      (click)="completeBill()">
-      <span *ngIf="!isCompleting">Complete Bill</span>
-      <span *ngIf="isCompleting">Completing...</span>
-    </button>
+    </div>
+
+    <!-- Bill ID indicator -->
+    <div class="bill-id-badge" *ngIf="store.getBillId()">
+      Bill #{{ store.getBillId() }} — Pending
+    </div>
 
   </aside>
 
+</div>
+
+<!-- ══ MOBILE TAB BAR ══ -->
+<div class="mobile-tabs no-print">
+  <button class="mob-tab" [class.active]="!showCart" (click)="showCart = false">
+    🍽 Menu
+    <span class="mob-tab-count" *ngIf="filteredProducts.length">{{ filteredProducts.length }}</span>
+  </button>
+  <button class="mob-tab" [class.active]="showCart" (click)="showCart = true">
+    🛒 Cart
+    <span class="mob-tab-count cart-dot" *ngIf="cart.length">{{ cart.length }}</span>
+  </button>
 </div>

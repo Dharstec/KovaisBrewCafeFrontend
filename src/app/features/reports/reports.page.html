@@ -1,0 +1,165 @@
+<div class="reports-page">
+
+  <!-- ══ HEADER ══ -->
+  <div class="rp-header no-print">
+    <div class="rp-title">
+      <h1>Sales Report</h1>
+      <p class="subtitle">Filter by date range · Customise columns · Export or Print</p>
+    </div>
+
+    <div class="rp-actions">
+      <button class="btn btn-outline btn-sm" (click)="showColSelector = !showColSelector">
+        ⚙ Columns
+      </button>
+      <button class="btn btn-outline btn-sm" (click)="exportCSV()">
+        ⬇ CSV
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="printReport()">
+        🖨 Print
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ COLUMN SELECTOR PANEL ══ -->
+  <div class="col-panel card no-print" *ngIf="showColSelector">
+    <div class="col-panel-head">
+      <strong>Choose Columns</strong>
+      <label class="select-all">
+        <input type="checkbox" [checked]="allSelected"
+               (change)="toggleAll($any($event.target).checked)" />
+        Select All
+      </label>
+    </div>
+    <div class="col-grid">
+      <label class="col-item" *ngFor="let col of columns">
+        <input type="checkbox" [(ngModel)]="col.visible" />
+        {{ col.label }}
+      </label>
+    </div>
+  </div>
+
+  <!-- ══ FILTER BAR ══ -->
+  <div class="filter-bar card no-print">
+    <div class="field">
+      <label>Start Date</label>
+      <input type="date" [(ngModel)]="startDate" />
+    </div>
+    <div class="field">
+      <label>End Date</label>
+      <input type="date" [(ngModel)]="endDate" />
+    </div>
+    <button class="btn btn-success" (click)="applyFilter()" [disabled]="loading">
+      <span class="spinner" *ngIf="loading"></span>
+      <span *ngIf="!loading">Apply Filter</span>
+      <span *ngIf="loading">Loading...</span>
+    </button>
+  </div>
+
+  <!-- ══ SUMMARY PILLS ══ -->
+  <div class="summary-row no-print" *ngIf="bills.length">
+    <div class="sum-pill cash">
+      <span class="sum-label">Cash</span>
+      <span class="sum-val">₹ {{ cashTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="sum-pill upi">
+      <span class="sum-label">UPI</span>
+      <span class="sum-val">₹ {{ upiTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="sum-pill total">
+      <span class="sum-label">Grand Total</span>
+      <span class="sum-val">₹ {{ grandTotal | number:'1.2-2' }}</span>
+    </div>
+    <div class="sum-pill count">
+      <span class="sum-label">Bills</span>
+      <span class="sum-val">{{ bills.length }}</span>
+    </div>
+  </div>
+
+  <!-- ══ PRINT HEADER (visible only when printing) ══ -->
+  <div class="print-only print-header">
+    <h2>☕ Kovai's Brew Café</h2>
+    <p>Sales Report: {{ startDate }} to {{ endDate }}</p>
+    <div class="print-summary">
+      Cash: ₹{{ cashTotal }} | UPI: ₹{{ upiTotal }} | Total: ₹{{ grandTotal }} | Bills: {{ bills.length }}
+    </div>
+  </div>
+
+  <!-- ══ TABLE ══ -->
+  <div class="table-wrapper" *ngIf="bills.length; else emptyState">
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th class="sno">#</th>
+          <th *ngFor="let col of visibleColumns">{{ col.label }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let bill of bills; let i = index">
+          <td class="sno">{{ (page - 1) * limit + i + 1 }}</td>
+          <td *ngFor="let col of visibleColumns"
+              [class]="'col-' + col.key">
+            <ng-container [ngSwitch]="col.key">
+
+              <!-- Payment mode badge -->
+              <span *ngSwitchCase="'payment_mode'"
+                    class="badge"
+                    [class.badge-cash]="bill.payment_mode === 'CASH'"
+                    [class.badge-upi]="bill.payment_mode === 'UPI'">
+                {{ bill.payment_mode || '—' }}
+              </span>
+
+              <!-- Grand total -->
+              <strong *ngSwitchCase="'grand_total'" class="amount">
+                ₹ {{ bill.grand_total | number:'1.2-2' }}
+              </strong>
+
+              <!-- Default -->
+              <span *ngSwitchDefault>{{ cellValue(bill, col.key) }}</span>
+
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+
+      <!-- TABLE FOOTER TOTALS -->
+      <tfoot *ngIf="bills.length">
+        <tr class="totals-row">
+          <td [attr.colspan]="visibleColumns.length + 1" class="totals-cell">
+            Cash: <strong>₹{{ cashTotal | number:'1.2-2' }}</strong>
+            &nbsp;|&nbsp;
+            UPI: <strong>₹{{ upiTotal | number:'1.2-2' }}</strong>
+            &nbsp;|&nbsp;
+            Grand Total: <strong>₹{{ grandTotal | number:'1.2-2' }}</strong>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- ══ PAGINATION ══ -->
+  <div class="pagination no-print" *ngIf="totalPages > 1">
+    <button (click)="prev()" [disabled]="page === 1">‹ Prev</button>
+
+    <ng-container *ngFor="let p of pages">
+      <button
+        *ngIf="p === 1 || p === totalPages || (p >= page - 2 && p <= page + 2)"
+        (click)="goTo(p)"
+        [class.active]="p === page">
+        {{ p }}
+      </button>
+      <span *ngIf="p === page - 3 || p === page + 3" class="ellipsis">…</span>
+    </ng-container>
+
+    <button (click)="next()" [disabled]="page === totalPages">Next ›</button>
+  </div>
+
+  <!-- ══ EMPTY ══ -->
+  <ng-template #emptyState>
+    <div class="empty-state" *ngIf="!loading">
+      <div class="icon">📊</div>
+      <h3>No data found</h3>
+      <p>Select a date range and click Apply Filter</p>
+    </div>
+  </ng-template>
+
+</div>
