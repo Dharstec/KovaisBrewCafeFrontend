@@ -1,85 +1,118 @@
-<div class="stock-page">
+<div class="stk">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="title">
-      <h1>Stock Management</h1>
-      <p class="subtitle">Add / reduce daily stock</p>
+  <!-- ══ HEADER ══ -->
+  <div class="stk-header">
+    <div class="stk-header__left">
+      <h1 class="stk-header__title">Stock Management</h1>
+      <p class="stk-header__sub">Add / reduce daily stock</p>
     </div>
 
-    <div class="search-bar">
-      <input type="text" placeholder="Search product..." [(ngModel)]="searchTerm" />
+    <div class="search-wrap">
+      <svg class="search-wrap__icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-wrap__input"
+        type="text"
+        placeholder="Search product..."
+        [(ngModel)]="searchTerm" />
     </div>
   </div>
+
+  <!-- ══ FILTER BADGE ══ -->
   <div class="filter-badge" *ngIf="filterType">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
     Showing:
-    <strong>
-      {{ filterType === 'low' ? 'Low Stock' : 'Out of Stock' }}
-    </strong>
+    <strong>{{ filterType === 'low' ? 'Low Stock' : 'Out of Stock' }}</strong>
   </div>
 
-  <!-- STOCK TABLE -->
-  <div class="table-wrap">
+  <!-- ══ STOCK TABLE ══ -->
+  <div class="stk-card" *ngIf="filteredStocks.length; else empty">
     <table>
-
       <thead>
         <tr>
           <th>Product</th>
           <th>Unit</th>
-          <th>Current</th>
-          <th>Minimum</th>
-          <th>Change</th>
-          <th>Reason</th>
-          <th></th>
+          <th>Stock Status</th>
+          <th>Min</th>
+          <th>Update</th>
         </tr>
       </thead>
 
       <tbody>
         <tr *ngFor="let p of filteredStocks">
 
-          <td class="name">{{ p.name }}</td>
+          <!-- PRODUCT -->
+          <td class="td-product">{{ p.name }}</td>
 
-          <td>
+          <!-- UNIT -->
+          <td class="td-unit">
             {{ p.unit_label }}
-            <small>({{ p.unit_value }} {{ p.base_unit }})</small>
+            <small class="td-unit__sub">({{ p.unit_value }} {{ p.base_unit }})</small>
           </td>
 
+          <!-- STOCK STATUS -->
           <td>
-            <span class="qty" [class.low]="p.current_qty <= p.min_qty">
-              {{ p.current_qty }}
-            </span>
+            <div class="stock-status">
+              <span class="stk-badge"
+                [class.stk-badge--out]="p.current_qty <= 0"
+                [class.stk-badge--low]="p.current_qty > 0 && p.current_qty <= p.min_qty"
+                [class.stk-badge--ok]="p.current_qty > p.min_qty">
+                <span *ngIf="p.current_qty <= 0">Out of Stock</span>
+                <span *ngIf="p.current_qty > 0 && p.current_qty <= p.min_qty">Low Stock</span>
+                <span *ngIf="p.current_qty > p.min_qty">In Stock</span>
+              </span>
+              <span class="stk-qty">{{ p.current_qty }}</span>
+            </div>
           </td>
 
-          <td>{{ p.min_qty }}</td>
+          <!-- MIN -->
+          <td class="td-min">{{ p.min_qty }}</td>
 
+          <!-- UPDATE -->
           <td>
-            <input type="number" [(ngModel)]="p.change_qty" placeholder="+ / - qty" />
-          </td>
+            <div class="update-cell">
+              <input
+                class="update-cell__qty"
+                type="number"
+                [(ngModel)]="p.change_qty"
+                placeholder="qty" />
 
-<td>
-  <!-- ADMIN -->
-  <select *ngIf="isAdmin" [(ngModel)]="p.reason">
-    <option value="DAILY_REFILL">REFILL</option>
-    <option value="USAGE">USAGE</option>
-    <option value="WASTAGE">WASTAGE</option>
-    <option value="ADJUSTMENT">ADJUSTMENT</option>
-  </select>
+              <!-- ADMIN -->
+              <select class="update-cell__reason" *ngIf="isAdmin" [(ngModel)]="p.reason">
+                <option value="DAILY_REFILL">REFILL</option>
+                <option value="USAGE">USAGE</option>
+                <option value="WASTAGE">WASTAGE</option>
+                <option value="ADJUSTMENT">ADJUSTMENT</option>
+              </select>
 
-  <!-- NON ADMIN -->
-  <select *ngIf="!isAdmin" [(ngModel)]="p.reason">
-    <option value="DAILY_REFILL">REFILL</option>
-  </select>
-</td>
-          <td>
-            <button class="update" (click)="updateStock(p)">
-              Update
-            </button>
+              <!-- NON ADMIN -->
+              <select class="update-cell__reason" *ngIf="!isAdmin" [(ngModel)]="p.reason">
+                <option value="DAILY_REFILL">REFILL</option>
+              </select>
+
+              <button class="btn-update" (click)="updateStock(p)">Update</button>
+            </div>
           </td>
 
         </tr>
       </tbody>
-
     </table>
   </div>
+
+  <!-- ══ EMPTY STATE ══ -->
+  <ng-template #empty>
+    <div class="empty-state">
+      <div class="empty-state__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <h3 class="empty-state__title">No stock items found</h3>
+      <p class="empty-state__sub">Try adjusting your search or filter</p>
+    </div>
+  </ng-template>
 
 </div>

@@ -1,90 +1,108 @@
-<div class="completed-page">
+<div class="cmp">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <div class="title">
-      <h1>Completed Bills</h1>
-      <p class="subtitle" *ngIf="isAdmin">View bills by date range</p>
-      <p class="subtitle" *ngIf="!isAdmin">Today's completed bills</p>
+  <!-- ══ HEADER ══ -->
+  <div class="cmp-header">
+    <div class="cmp-header__left">
+      <h1 class="cmp-header__title">Completed Bills</h1>
+      <p class="cmp-header__sub" *ngIf="isAdmin">View bills by date range</p>
+      <p class="cmp-header__sub" *ngIf="!isAdmin">Today's completed bills</p>
     </div>
 
-    <div class="header-pills">
-      <div class="summary-pill cash" *ngIf="isAdmin">
-        <span class="pill-label">Cash</span>
-        <span class="pill-val">₹ {{ cashTotal | number:'1.2-2' }}</span>
+    <div class="cmp-header__pills" *ngIf="isAdmin">
+      <div class="sum-pill sum-pill--cash">
+        <span class="sum-pill__label">Cash</span>
+        <span class="sum-pill__val">&#8377; {{ cashTotal | number:'1.2-2' }}</span>
       </div>
-      <div class="summary-pill upi" *ngIf="isAdmin">
-        <span class="pill-label">UPI</span>
-        <span class="pill-val">₹ {{ upiTotal | number:'1.2-2' }}</span>
+      <div class="sum-pill sum-pill--upi">
+        <span class="sum-pill__label">UPI</span>
+        <span class="sum-pill__val">&#8377; {{ upiTotal | number:'1.2-2' }}</span>
       </div>
-      <div class="summary-pill total" *ngIf="isAdmin">
-        <span class="pill-label">Total</span>
-        <span class="pill-val">₹ {{ grandTotal | number:'1.2-2' }}</span>
+      <div class="sum-pill sum-pill--total">
+        <span class="sum-pill__label">Total</span>
+        <span class="sum-pill__val">&#8377; {{ grandTotal | number:'1.2-2' }}</span>
       </div>
     </div>
   </div>
 
-  <!-- DATE FILTER (ADMIN ONLY) -->
+  <!-- ══ DATE FILTER (ADMIN ONLY) ══ -->
   <div class="date-filter" *ngIf="isAdmin">
-    <div class="field">
-      <label>Start Date</label>
-      <input type="date" [(ngModel)]="startDate">
+    <div class="date-wrap">
+      <svg class="date-wrap__icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <div class="date-wrap__field">
+        <label class="date-wrap__label">Start Date</label>
+        <input class="date-wrap__input" type="date" [(ngModel)]="startDate" />
+      </div>
     </div>
 
-    <div class="field">
-      <label>End Date</label>
-      <input type="date" [(ngModel)]="endDate">
+    <div class="date-wrap">
+      <svg class="date-wrap__icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <div class="date-wrap__field">
+        <label class="date-wrap__label">End Date</label>
+        <input class="date-wrap__input" type="date" [(ngModel)]="endDate" />
+      </div>
     </div>
 
-    <button class="btn apply" (click)="applyDateFilter()">
-      Apply Filter
-    </button>
+    <button class="btn-apply" (click)="applyDateFilter()">Apply Filter</button>
   </div>
 
-  <!-- BILL LIST -->
+  <!-- ══ SECTION TITLE ══ -->
+  <div class="section-title">
+    <span class="section-title__bar"></span>
+    <span class="section-title__text">Bills</span>
+  </div>
+
+  <!-- ══ BILL GRID ══ -->
   <div class="bill-grid" *ngIf="bills.length; else empty">
 
     <div class="bill-card" *ngFor="let b of bills">
 
-      <!-- CARD HEADER -->
-      <div class="card-top">
-        <div>
-          <div class="bill-no">Bill #{{ b.id }}</div>
-          <div class="bill-date">
-            {{ b.created_at | date:'dd MMM yyyy, hh:mm a' }}
-          </div>
-          <div class="customer-name" *ngIf="b.customer_name">
-            👤 {{ b.customer_name }}
-          </div>
+      <!-- CARD TOP -->
+      <div class="bc-top">
+        <div class="bc-top__left">
+          <span class="bc-id">Bill #{{ b.id }}</span>
+          <span class="bc-date">{{ b.created_at | date:'dd MMM yyyy, hh:mm a' }}</span>
+          <span class="bc-customer" *ngIf="b.customer_name">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {{ b.customer_name }}
+          </span>
         </div>
 
-        <div class="amount-block">
-          <div class="bill-amount">₹ {{ b.grand_total | number:'1.2-2' }}</div>
-
+        <div class="bc-top__right">
+          <span class="bc-amount">&#8377; {{ b.grand_total | number:'1.2-2' }}</span>
           <span class="pay-badge"
-                [class.cash]="b.payment_mode === 'CASH'"
-                [class.upi]="b.payment_mode === 'UPI'">
+                [class.pay-badge--cash]="b.payment_mode === 'CASH'"
+                [class.pay-badge--upi]="b.payment_mode === 'UPI'">
             {{ b.payment_mode }}
           </span>
-
-          <div class="discount-note" *ngIf="b.discount_amount > 0">
-            🏷 -₹{{ b.discount_amount }} off
-          </div>
+          <span class="discount-note" *ngIf="b.discount_amount > 0">
+            &#127991; -&#8377;{{ b.discount_amount }} off
+          </span>
         </div>
       </div>
 
       <!-- ITEMS -->
-      <div class="items">
-        <div class="item" *ngFor="let i of b.items">
-          <span class="name">{{ i.name }} × {{ i.qty }}</span>
-          <span class="price">₹ {{ i.price * i.qty | number:'1.2-2' }}</span>
+      <div class="bc-items">
+        <div class="bc-item" *ngFor="let i of b.items">
+          <span class="bc-item__name">{{ i.name }} &times; {{ i.qty }}</span>
+          <span class="bc-item__price">&#8377; {{ i.price * i.qty | number:'1.2-2' }}</span>
         </div>
       </div>
 
-      <!-- PRINT BUTTON -->
-      <div class="card-footer">
+      <!-- FOOTER -->
+      <div class="bc-footer">
         <button class="btn-print" (click)="printBill(b)">
-          🖨 Print Receipt
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print Receipt
         </button>
       </div>
 
@@ -92,26 +110,35 @@
 
   </div>
 
-  <!-- PAGINATION -->
+  <!-- ══ PAGINATION ══ -->
   <div class="pagination" *ngIf="totalPages > 1">
-    <button (click)="prev()" [disabled]="page === 1">‹</button>
+    <button class="pagination__btn" (click)="prev()" [disabled]="page === 1">&#8249;</button>
 
     <button
+      class="pagination__btn"
       *ngFor="let p of pages"
       (click)="goTo(p)"
-      [class.active]="p === page">
+      [class.pagination__btn--active]="p === page">
       {{ p }}
     </button>
 
-    <button (click)="next()" [disabled]="page === totalPages">›</button>
+    <button class="pagination__btn" (click)="next()" [disabled]="page === totalPages">&#8250;</button>
   </div>
 
-  <!-- EMPTY -->
+  <!-- ══ EMPTY STATE ══ -->
   <ng-template #empty>
     <div class="empty-state">
-      <div class="icon">📄</div>
-      <h3>No bills found</h3>
-      <p>Try changing the date range</p>
+      <div class="empty-state__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <h3 class="empty-state__title">No bills found</h3>
+      <p class="empty-state__sub">Try changing the date range</p>
     </div>
   </ng-template>
 
@@ -122,7 +149,7 @@
      ════════════════════════════════════ -->
 <div class="print-receipt-wrap" id="printArea" *ngIf="printBillData">
   <div class="print-receipt">
-    <div class="shop-name">☕ Kovai's Brew Café</div>
+    <div class="shop-name">&#9749; Kovai's Brew Café</div>
     <div class="shop-sub">Bill Receipt</div>
     <div class="divider-dashed"></div>
 
@@ -143,7 +170,7 @@
         <tr *ngFor="let i of printBillData.items">
           <td>{{ i.name }}</td>
           <td>{{ i.qty }}</td>
-          <td class="right">₹{{ i.price * i.qty | number:'1.2-2' }}</td>
+          <td class="right">&#8377;{{ i.price * i.qty | number:'1.2-2' }}</td>
         </tr>
       </tbody>
     </table>
@@ -153,15 +180,15 @@
     <table>
       <tr *ngIf="printBillData.discount_amount > 0">
         <td>Discount</td>
-        <td class="right">-₹{{ printBillData.discount_amount | number:'1.2-2' }}</td>
+        <td class="right">-&#8377;{{ printBillData.discount_amount | number:'1.2-2' }}</td>
       </tr>
       <tr class="total-row">
         <td><strong>TOTAL</strong></td>
-        <td class="right"><strong>₹{{ printBillData.grand_total | number:'1.2-2' }}</strong></td>
+        <td class="right"><strong>&#8377;{{ printBillData.grand_total | number:'1.2-2' }}</strong></td>
       </tr>
     </table>
 
     <div class="divider-dashed"></div>
-    <div class="thank-you">Thank You! Visit Again 😊</div>
+    <div class="thank-you">Thank You! Visit Again &#128522;</div>
   </div>
 </div>

@@ -1,65 +1,97 @@
-<div class="advance-page">
+<div class="adv">
 
-  <div class="header">
-    <h2>Employee Advance</h2>
-    <p class="subtitle">Manage employee advance payments</p>
+  <!-- Header -->
+  <div class="adv-header">
+    <h1 class="adv-title">Employee Advance</h1>
+    <span class="adv-subtitle">Manage advance payments</span>
   </div>
 
-  <div class="content">
+  <!-- Body: Two-column layout -->
+  <div class="adv-body">
 
-    <!-- FORM -->
-    <div class="card form-card">
-      <h3>Add Advance</h3>
+    <!-- LEFT: Form Card -->
+    <div class="form-card">
+      <div class="card-title">New Advance Entry</div>
 
-      <div class="form-grid">
+      <!-- Employee -->
+      <div class="field">
+        <label class="field-label" for="adv-employee">Employee</label>
+        <select
+          id="adv-employee"
+          class="field-input"
+          [(ngModel)]="employee_id"
+          (change)="onEmployeeChange()"
+        >
+          <option value="">Select Employee</option>
+          <option *ngFor="let e of employees" [value]="e.id">
+            {{ e.name }}
+          </option>
+        </select>
+      </div>
 
-        <div class="field">
-          <label>Employee</label>
-          <select [(ngModel)]="employee_id" (change)="onEmployeeChange()">
-            <option value="">Select Employee</option>
-            <option *ngFor="let e of employees" [value]="e.id">
-              {{ e.name }}
-            </option>
-          </select>
-        </div>
+      <!-- Date -->
+      <div class="field">
+        <label class="field-label" for="adv-date">Date</label>
+        <input
+          id="adv-date"
+          type="date"
+          class="field-input"
+          [(ngModel)]="advance_date"
+        />
+      </div>
 
-        <div class="field">
-          <label>Date</label>
-          <input type="date" [(ngModel)]="advance_date" />
-        </div>
-
-        <div class="field">
-          <label>Amount</label>
+      <!-- Amount -->
+      <div class="field">
+        <label class="field-label" for="adv-amount">Amount</label>
+        <div class="input-prefix-wrap">
+          <span class="input-prefix">₹</span>
           <input
+            id="adv-amount"
             type="number"
             min="1"
-            placeholder="₹ 0.00"
+            placeholder="0.00"
+            class="field-input prefix-field"
             [(ngModel)]="amount"
           />
         </div>
-
-        <div class="field full">
-          <label>Note</label>
-          <input type="text" placeholder="Optional note" [(ngModel)]="note" />
-        </div>
-
       </div>
 
+      <!-- Note -->
+      <div class="field">
+        <label class="field-label" for="adv-note">Note</label>
+        <input
+          id="adv-note"
+          type="text"
+          placeholder="Optional note"
+          class="field-input"
+          [(ngModel)]="note"
+        />
+      </div>
+
+      <!-- Save Button -->
       <button
-        class="btn-primary"
+        class="save-btn"
+        type="button"
         [disabled]="!canSave()"
         (click)="save()"
       >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
         Save Advance
       </button>
     </div>
 
-    <!-- HISTORY -->
-    <div class="card history-card" *ngIf="history.length">
-      <h3>Advance History</h3>
+    <!-- RIGHT: History Card -->
+    <div class="history-card">
+      <div class="card-head">
+        <h3 class="card-head-title">Advance History</h3>
+        <span class="count-badge">{{ history?.length || 0 }}</span>
+      </div>
 
-      <div class="table-wrapper">
-        <table>
+      <!-- Table -->
+      <div class="table-wrap" *ngIf="history && history.length > 0; else noHistory">
+        <table class="hist-table">
           <thead>
             <tr>
               <th>Date</th>
@@ -68,18 +100,32 @@
               <th>Added By</th>
             </tr>
           </thead>
-
           <tbody>
             <tr *ngFor="let h of history">
-              <td>{{ h.advance_date | date:'dd-MM-yyyy' }}</td>
-              <td class="amount">₹ {{ h.amount }}</td>
-              <td>{{ h.note || '-' }}</td>
+              <td>{{ h.advance_date | date:'dd MMM yyyy' }}</td>
+              <td class="amount-cell">₹{{ h.amount | number:'1.0-2' }}</td>
+              <td>{{ h.note || '—' }}</td>
               <td>{{ h.created_by }}</td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      <!-- Empty History -->
+      <ng-template #noHistory>
+        <div class="history-empty">
+          <div class="empty-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <path d="M8 21h8m-4-4v4"></path>
+            </svg>
+          </div>
+          <p class="empty-title">No history yet</p>
+          <p class="empty-sub">Advance records will appear here once saved.</p>
+        </div>
+      </ng-template>
     </div>
 
   </div>
+
 </div>

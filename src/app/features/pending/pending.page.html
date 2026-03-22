@@ -1,72 +1,80 @@
-<div class="pending-page">
+<div class="pnd">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <div>
-      <h1>Pending Bills</h1>
-      <p class="sub">
-        Double-click a bill to continue billing
-      </p>
+  <!-- ══ HEADER ══ -->
+  <div class="pnd-header">
+    <div class="pnd-header__left">
+      <h1 class="pnd-header__title">Pending Bills</h1>
+      <p class="pnd-header__sub">Double-click any card to continue</p>
+    </div>
+    <div class="pnd-header__right">
+      <span class="pnd-badge">{{ bills.length }} pending</span>
     </div>
   </div>
 
-  <!-- LIST -->
+  <!-- ══ SECTION TITLE ══ -->
+  <div class="section-title">
+    <span class="section-title__bar"></span>
+    <span class="section-title__text">Active Bills</span>
+  </div>
+
+  <!-- ══ BILL GRID ══ -->
   <div class="bill-grid" *ngIf="bills.length; else empty">
 
-    <div class="bill-card" *ngFor="let b of bills" (dblclick)="edit(b)" tabindex="0">
+    <div
+      class="bill-card"
+      *ngFor="let b of bills"
+      (dblclick)="edit(b)"
+      tabindex="0">
 
-      <!-- TOP -->
-      <div class="card-top">
-        <div class="bill-info">
-          <div class="bill-id">Bill #{{ b.id }}</div>
-          <div class="bill-date">
-            {{ b.created_at | date:'dd MMM yyyy, hh:mm a' }}
-          </div>
-
+      <!-- TOP BAR -->
+      <div class="bc-top">
+        <div class="bc-top__left">
+          <span class="bc-id">Bill #{{ b.id }}</span>
+          <span class="bc-time">{{ b.created_at | date:'dd MMM, hh:mm a' }}</span>
         </div>
-
-        <div class="amount-block">
-          <div class="bill-amount">
-            ₹ {{ b.grand_total }}
-          </div>
-
-          <div class="customer-name" *ngIf="b.customer_name">
-            👤 {{ b.customer_name }}
-          </div>
-
+        <div class="bc-top__right">
+          <span class="bc-amount">&#8377;{{ b.grand_total }}</span>
         </div>
-
       </div>
 
-      <!-- ITEMS -->
-      <div class="items">
-        <div class="item" *ngFor="let i of b.items">
-          <span class="name">
-            {{ i.name }} × {{ i.qty }}
-          </span>
-          <span class="price">
-            ₹ {{ i.price * i.qty }}
-          </span>
+      <!-- CUSTOMER ROW -->
+      <div class="bc-customer" *ngIf="b.customer_name">
+        <svg class="bc-customer__icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span class="bc-customer__name">{{ b.customer_name }}</span>
+      </div>
+
+      <!-- ITEMS LIST -->
+      <div class="bc-items">
+        <div class="bc-item" *ngFor="let i of b.items">
+          <span class="bc-item__name">{{ i.name }} &times; {{ i.qty }}</span>
+          <span class="bc-item__price">&#8377;{{ i.price * i.qty }}</span>
         </div>
       </div>
 
       <!-- FOOTER -->
-      <div class="card-footer">
-        <span class="hint">
-          Double-click to open
-        </span>
+      <div class="bc-footer">
+        <span class="bc-footer__badge">{{ b.items.length }} item{{ b.items.length !== 1 ? 's' : '' }}</span>
+        <span class="bc-footer__hint">Double-click to open &rarr;</span>
       </div>
 
     </div>
 
   </div>
 
-  <!-- EMPTY -->
+  <!-- ══ EMPTY STATE ══ -->
   <ng-template #empty>
     <div class="empty-state">
-      <div class="icon">🧾</div>
-      <h3>No Pending Bills</h3>
-      <p>All bills are completed</p>
+      <div class="empty-state__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <h3 class="empty-state__title">No Pending Bills</h3>
+      <p class="empty-state__sub">All bills have been completed</p>
     </div>
   </ng-template>
 

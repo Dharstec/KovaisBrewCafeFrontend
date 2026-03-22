@@ -1,52 +1,100 @@
-<div class="spend-layout">
+<div class="spd">
 
   <!-- HEADER -->
-  <div class="page-head">
-    <div>
-      <h1>Kovai Brew Café</h1>
-      <p>Spend Management</p>
+  <div class="spd-header">
+    <div class="spd-title-block">
+      <h1>Daily Spend</h1>
+      <span class="spd-sub">Track and manage daily expenses</span>
     </div>
-
-    <div class="kpi-card" *ngIf="isAdmin">
-      <span>This Month Spend</span>
-      <h2>₹ {{ totalSpent }}</h2>
+    <div class="spd-header-right">
+      <div class="sum-pill" *ngIf="isAdmin">
+        <div class="sp-icon">🧾</div>
+        <div>
+          <div class="sp-label">This Month</div>
+          <div class="sp-val">₹{{ totalSpent | number:'1.0-2' }}</div>
+        </div>
+      </div>
+      <div class="sum-pill sum-pill--range" *ngIf="isAdmin">
+        <div class="sp-icon">📅</div>
+        <div>
+          <div class="sp-label">Selected Range</div>
+          <div class="sp-val">₹{{ rangeTotal | number:'1.0-2' }}</div>
+        </div>
+      </div>
+      <button class="btn-add-spend" (click)="openAdd()">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Add Spend
+      </button>
     </div>
   </div>
 
   <!-- ACTION BAR -->
-  <div class="action-bar">
-    <input class="search" placeholder="Search by reason / amount" [(ngModel)]="params.searchTerm" (input)="search()" />
+  <div class="spd-bar">
+    <!-- Date Range -->
+    <div class="date-filter-row">
+      <div class="date-wrap">
+        <svg class="date-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <div class="date-field">
+          <span class="date-label">From</span>
+          <input class="date-input" type="date" [(ngModel)]="startDate" [max]="maxDate" />
+        </div>
+      </div>
+      <span class="date-sep">–</span>
+      <div class="date-wrap">
+        <svg class="date-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <div class="date-field">
+          <span class="date-label">To</span>
+          <input class="date-input" type="date" [(ngModel)]="endDate" [max]="maxDate" />
+        </div>
+      </div>
+      <button class="btn-apply" (click)="applyFilter()">Apply</button>
+    </div>
 
-    <button class="btn-add" (click)="openAdd()">+ Add Spend</button>
+    <!-- Search -->
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input placeholder="Search by reason or amount..." [(ngModel)]="params.searchTerm" (input)="search()" />
+    </div>
   </div>
 
-  <!-- TABLE -->
-  <div class="card">
+  <!-- TABLE CARD -->
+  <div class="spd-card">
     <table>
       <thead>
         <tr>
-          <th class="center">Date</th>
-          <th class="center">Name</th>
-          <th class="center">Payment Type</th>
-          <th class="center">Amount</th>
-          <th class="center">Actions</th>
+          <th>Date</th>
+          <th>Reason</th>
+          <th>Payment</th>
+          <th class="right">Amount</th>
+          <th class="center" *ngIf="isAdmin">Actions</th>
         </tr>
       </thead>
-
       <tbody>
         <tr *ngFor="let s of spendList">
-          <td class="center">{{ s.spent_date }}</td>
-          <td class="center">{{ s.reason }}</td>
-          <td class="center">{{ s.payment_mode }}</td>
-          <td class="center">₹ {{ s.amount }}</td>
-          <td class="center">
-            <button class="btn-link" (click)="openEdit(s)">Edit</button>
-            <button class="btn-link danger" (click)="deleteSpend(s.id)">Delete</button>
+          <td class="td-date">{{ s.spent_date }}</td>
+          <td class="td-reason">{{ s.reason }}</td>
+          <td>
+            <span class="pay-badge" [class.cash]="s.payment_mode === 'CASH'" [class.upi]="s.payment_mode === 'UPI'">
+              {{ s.payment_mode }}
+            </span>
+          </td>
+          <td class="td-amount right">₹{{ s.amount | number:'1.0-2' }}</td>
+          <td class="center" *ngIf="isAdmin">
+            <div class="act-btns">
+              <button class="act-btn edit" (click)="openEdit(s)">
+                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="act-btn del" (click)="deleteSpend(s.id)">
+                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </button>
+            </div>
           </td>
         </tr>
-
         <tr *ngIf="spendList.length === 0">
-          <td colspan="4" class="empty">No records found</td>
+          <td colspan="5" class="td-empty">
+            <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 110 20A10 10 0 0112 2zm0 6v4l3 2"/></svg>
+            No records found
+          </td>
         </tr>
       </tbody>
     </table>
@@ -54,56 +102,96 @@
 
   <!-- PAGINATION -->
   <div class="pagination" *ngIf="totalCount > params.pageSize">
-    <button class="page-btn" [disabled]="params.page === 1" (click)="changePage(params.page - 1)">
-      < Prev </button>
-
-        <button class="page-btn" *ngFor="let p of totalPages" [class.active]="p === params.page"
-          (click)="changePage(p)">
-          {{ p }}
-        </button>
-
-        <button class="page-btn" [disabled]="params.page === totalPages.length" (click)="changePage(params.page + 1)">
-          Next >
-        </button>
-
-        <select class="page-size" [(ngModel)]="params.pageSize" (change)="search()">
-          <option [value]="5">5</option>
-          <option [value]="10">10</option>
-          <option [value]="20">20</option>
-        </select>
+    <button class="pg-btn" [disabled]="params.page === 1" (click)="changePage(params.page - 1)">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="pg-btn" *ngFor="let p of totalPages" [class.active]="p === params.page" (click)="changePage(p)">{{ p }}</button>
+    <button class="pg-btn" [disabled]="params.page === totalPages.length" (click)="changePage(params.page + 1)">
+      <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <select class="pg-size" [(ngModel)]="params.pageSize" (change)="search()">
+      <option [value]="5">5 / page</option>
+      <option [value]="10">10 / page</option>
+      <option [value]="20">20 / page</option>
+    </select>
   </div>
 
   <!-- OVERLAY -->
-  <div class="overlay" *ngIf="showForm" (click)="closeForm()"></div>
+  <div class="spd-overlay" *ngIf="showForm" (click)="closeForm()"></div>
 
   <!-- DRAWER -->
-  <div class="drawer" *ngIf="showForm">
-    <div class="drawer-header">
-      <h3>{{ isEdit ? 'Edit Spend' : 'Add Spend' }}</h3>
-      <button class="close-btn" (click)="closeForm()">✕</button>
+  <div class="spd-drawer" [class.open]="showForm">
+    <div class="drawer-head">
+      <div>
+        <div class="drawer-title">{{ isEdit ? 'Edit Spend' : 'Add Spend' }}</div>
+        <div class="drawer-sub">{{ isEdit ? 'Update expense record' : 'Record a new expense' }}</div>
+      </div>
+      <button class="drawer-close" (click)="closeForm()">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
 
     <div class="drawer-body">
+
       <div class="field">
-        <label>Name</label>
-        <input placeholder="Eg: Milk purchase" [(ngModel)]="form.reason" />
+        <label>Reason / Name</label>
+        <div class="reason-wrap">
+          <div class="reason-input-row">
+            <input
+              class="reason-input"
+              placeholder="Select from past or type new"
+              [(ngModel)]="reasonInput"
+              (input)="onReasonInput()"
+              (focus)="onReasonFocus()"
+              (blur)="onReasonBlur()"
+              autocomplete="off"
+            />
+            <button class="reason-caret" type="button" tabindex="-1"
+              (mousedown)="$event.preventDefault(); onReasonFocus()">
+              <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="reason-dropdown" *ngIf="showReasonDrop && filteredReasons.length">
+            <div class="reason-option" *ngFor="let r of filteredReasons" (mousedown)="selectReason(r)">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/></svg>
+              {{ r }}
+            </div>
+          </div>
+          <div class="reason-hint" *ngIf="reasonInput && !uniqueReasons.includes(reasonInput)">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            New: "{{ reasonInput }}" will be saved
+          </div>
+        </div>
       </div>
 
       <div class="field">
         <label>Amount</label>
-        <input type="number" placeholder="₹ Amount" [(ngModel)]="form.amount" />
+        <div class="amount-wrap">
+          <span class="currency-prefix">₹</span>
+          <input type="number" placeholder="0.00" [(ngModel)]="form.amount" />
+        </div>
       </div>
 
       <div class="field">
         <label>Date</label>
-        <input type="date" [(ngModel)]="form.date" [max]="maxDate" />
+        <div class="date-input-wrap">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <input type="date" [(ngModel)]="form.date" [max]="maxDate" />
+        </div>
       </div>
+
       <div class="field">
         <label>Payment Mode</label>
-        <select [(ngModel)]="form.payment_mode">
-          <option value="CASH">Cash</option>
-          <option value="UPI">UPI</option>
-        </select>
+        <div class="pay-toggle">
+          <button type="button" [class.active]="form.payment_mode === 'CASH'" (click)="form.payment_mode = 'CASH'">
+            <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M6 12h.01M18 12h.01"/></svg>
+            Cash
+          </button>
+          <button type="button" [class.active]="form.payment_mode === 'UPI'" (click)="form.payment_mode = 'UPI'">
+            <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+            UPI
+          </button>
+        </div>
       </div>
 
     </div>
@@ -111,10 +199,10 @@
     <div class="drawer-actions">
       <button class="btn-cancel" (click)="closeForm()">Cancel</button>
       <button class="btn-save" (click)="isEdit ? update() : save()">
+        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
         {{ isEdit ? 'Update Spend' : 'Save Spend' }}
       </button>
     </div>
   </div>
-
 
 </div>

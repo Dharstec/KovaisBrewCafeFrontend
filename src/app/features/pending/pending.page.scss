@@ -1,137 +1,307 @@
-.pending-page {
-  padding: 24px;
-  background: #f5f7fb;
+// ═══════════════════════════════════════════
+//  PENDING BILLS — Design Tokens
+// ═══════════════════════════════════════════
+$font:    'Inter', system-ui, sans-serif;
+$bg:      #f1f5f9;
+$surface: #ffffff;
+$border:  #e2e8f0;
+$text1:   #0f172a;
+$text2:   #475569;
+$text3:   #94a3b8;
+$accent:  #f97316;
+$green:   #16a34a;
+$red:     #ef4444;
+$purple:  #7c3aed;
+$radius:  14px;
+
+// ═══════════════════════════════════════════
+//  WRAPPER
+// ═══════════════════════════════════════════
+.pnd {
+  font-family: $font;
+  background: $bg;
+  padding: 24px 24px 60px;
   min-height: 100vh;
-  font-family: Inter, system-ui, sans-serif;
 }
 
-/* HEADER */
-.page-header {
-  margin-bottom: 20px;
+// ═══════════════════════════════════════════
+//  HEADER
+// ═══════════════════════════════════════════
+.pnd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 800;
+    color: $text1;
+    margin: 0;
+    letter-spacing: -0.4px;
+  }
+
+  &__sub {
+    font-size: 13px;
+    color: $text2;
+    margin: 0;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+  }
 }
 
-h1 {
-  font-size: 28px;
+.pnd-badge {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, $accent 0%, #ea580c 100%);
+  color: #fff;
+  font-size: 13px;
   font-weight: 700;
-  margin: 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
 }
 
-.sub {
-  margin-top: 4px;
-  font-size: 14px;
-  color: #6b7280;
+// ═══════════════════════════════════════════
+//  SECTION TITLE
+// ═══════════════════════════════════════════
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  &__bar {
+    display: block;
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, $accent 0%, #ea580c 100%);
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    font-size: 13px;
+    font-weight: 700;
+    color: $text2;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
 }
 
-/* GRID */
+// ═══════════════════════════════════════════
+//  BILL GRID
+// ═══════════════════════════════════════════
 .bill-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 18px;
+  gap: 14px;
 }
 
-/* CARD */
+// ═══════════════════════════════════════════
+//  BILL CARD
+// ═══════════════════════════════════════════
 .bill-card {
-  background: #fff;
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
   cursor: pointer;
-  transition: all .2s ease;
   outline: none;
+  overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(249, 115, 22, 0.10);
+    border-color: darken($border, 6%);
+  }
 }
 
-.bill-card:hover,
-.bill-card:focus {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 36px rgba(0,0,0,.12);
-}
-
-/* TOP */
-.card-top {
+// ── TOP BAR
+.bc-top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
+  padding: 14px 16px 10px;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+  }
 }
 
-.bill-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.bill-id {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.bill-date {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 2px;
-}
-
-.bill-amount {
-  font-size: 20px;
+.bc-id {
+  font-size: 13px;
   font-weight: 700;
-  color: #f59e0b;
+  color: $text3;
+  letter-spacing: 0.2px;
 }
 
-/* ITEMS */
-.items {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px dashed #e5e7eb;
+.bc-time {
+  font-size: 13px;
+  color: $text2;
 }
 
-.item {
+.bc-amount {
+  font-size: 22px;
+  font-weight: 800;
+  color: $text1;
+  letter-spacing: -0.5px;
+}
+
+// ── CUSTOMER ROW
+.bc-customer {
   display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  padding: 4px 0;
+  align-items: center;
+  gap: 5px;
+  padding: 0 16px 10px;
+
+  &__icon {
+    color: $text3;
+    flex-shrink: 0;
+  }
+
+  &__name {
+    font-size: 12px;
+    color: $text2;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
-.item .name {
-  color: #374151;
-}
-
-.item .price {
-  font-weight: 600;
-}
-
-/* FOOTER */
-.card-footer {
-  margin-top: 10px;
-  font-size: 12px;
-  color: #9ca3af;
-  text-align: right;
-}
-
-/* EMPTY */
-.empty-state {
-  margin-top: 80px;
-  text-align: center;
-  color: #9ca3af;
-}
-
-.empty-state .icon {
-  font-size: 40px;
-  margin-bottom: 10px;
-}
-
-.empty-state h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #374151;
-}
-
-.amount-block {
+// ── ITEMS
+.bc-items {
+  border-top: 1px solid $border;
+  padding: 10px 16px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  gap: 6px;
 }
 
-.customer-name {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 2px;
+.bc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__name {
+    font-size: 13px;
+    color: $text2;
+  }
+
+  &__price {
+    font-size: 13px;
+    font-weight: 600;
+    color: $text1;
+  }
 }
 
+// ── FOOTER
+.bc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #fafafa;
+  border-top: 1px solid $border;
+  border-radius: 0 0 $radius $radius;
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    background: $bg;
+    color: $text2;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid $border;
+  }
+
+  &__hint {
+    font-size: 11px;
+    color: $accent;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  EMPTY STATE
+// ═══════════════════════════════════════════
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 24px;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: $bg;
+    border-radius: 50%;
+    border: 1px solid $border;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text1;
+    margin: 0;
+  }
+
+  &__sub {
+    font-size: 13px;
+    color: $text3;
+    margin: 0;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RESPONSIVE
+// ═══════════════════════════════════════════
+@media (max-width: 640px) {
+  .pnd {
+    padding: 16px 16px 48px;
+  }
+
+  .pnd-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .bill-grid {
+    grid-template-columns: 1fr;
+  }
+}

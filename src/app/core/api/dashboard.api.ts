@@ -39,4 +39,18 @@ export class DashboardApi {
       `${environment.apiUrl}/dashboard/payment_breakdown`, { params }
     );
   }
+
+  getRangeSummary(start: string, end: string) {
+    return this.http.get<any>(
+      `${environment.apiUrl}/dashboard/range_summary`, { params: { start, end } }
+    );
+  }
+
+  getDailySpend(date?: string) {
+    const params: Record<string, string> = {};
+    if (date) params['date'] = date;
+    return this.http.get<{ total_spend: number; breakdown: any[]; records: any[] }>(
+      `${environment.apiUrl}/dashboard/daily_spend`, { params }
+    );
+  }
 }

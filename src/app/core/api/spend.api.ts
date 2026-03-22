@@ -16,7 +16,9 @@ export class  SpendService {
     page = 1,
     pageSize = 10,
     sortColumn = 'date',
-    sortOrder: 'ASC' | 'DESC' = 'DESC'
+    sortOrder: 'ASC' | 'DESC' = 'DESC',
+    startDate = '',
+    endDate = ''
   ) {
     return this.http.get<any>(this.API, {
       params: {
@@ -24,9 +26,18 @@ export class  SpendService {
         page,
         pageSize,
         sortColumn,
-        sortOrder
+        sortOrder,
+        ...(startDate ? { startDate } : {}),
+        ...(endDate   ? { endDate   } : {})
       }
     });
+  }
+
+  /* =============================
+     UNIQUE REASONS (for dropdown)
+     ============================= */
+  getUniqueReasons() {
+    return this.http.get<string[]>(`${this.API}/reasons`);
   }
 
   /* =============================

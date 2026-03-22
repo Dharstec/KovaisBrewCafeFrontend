@@ -1,125 +1,372 @@
-.attendance-page {
-  max-width: 900px;
-  margin: auto;
-  padding: 18px;
-  font-family: Inter, system-ui;
-  background: linear-gradient(180deg, #f8fafc, #eef2f7);
-  min-height: 100vh;
+// ─── Design Tokens ───────────────────────────────────────────────────────────
+$font:    'Inter', system-ui, sans-serif;
+$bg:      #f1f5f9;
+$surface: #ffffff;
+$border:  #e2e8f0;
+$text1:   #0f172a;
+$text2:   #475569;
+$text3:   #94a3b8;
+$accent:  #f97316;
+$radius:  14px;
+
+// ─── Page Wrapper ─────────────────────────────────────────────────────────────
+.att {
+  font-family: $font;
+  background:  $bg;
+  min-height:  100vh;
+  padding:     24px 24px 60px;
+  box-sizing:  border-box;
 }
 
-/* HEADER */
-.header {
-  display: flex;
+// ─── Header ──────────────────────────────────────────────────────────────────
+.att-header {
+  display:         flex;
   justify-content: space-between;
-  align-items: flex-end;
-  gap: 14px;
-  margin-bottom: 18px;
+  align-items:     flex-start;
+  gap:             16px;
+  margin-bottom:   28px;
 }
 
-.header h2 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-}
-
-.subtitle {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.date-picker {
-  display: flex;
+.att-header-left {
+  display:        flex;
   flex-direction: column;
-  gap: 4px;
+  gap:            4px;
 }
 
-.date-picker label {
-  font-size: 12px;
-  color: #6b7280;
+.att-title {
+  margin:      0;
+  font-size:   28px;
+  font-weight: 800;
+  color:       $text1;
+  line-height: 1.2;
 }
 
-.date-picker input {
-  height: 40px;
-  padding: 0 12px;
+.att-subtitle {
+  font-size: 13px;
+  color:     $text2;
+}
+
+.att-header-right {
+  flex-shrink: 0;
+}
+
+// Date Wrap (dashboard-style)
+.date-wrap {
+  display:       flex;
+  align-items:   center;
+  gap:           8px;
+  background:    $surface;
+  border:        1px solid $border;
   border-radius: 10px;
-  border: 1px solid #d1d5db;
+  padding:       0 12px;
+  height:        42px;
+  box-shadow:    0 1px 3px rgba(0, 0, 0, .06);
+  transition:    border-color .2s, box-shadow .2s;
+
+  &:focus-within {
+    border-color: $accent;
+    box-shadow:   0 0 0 3px rgba(249, 115, 22, .12);
+  }
 }
 
-/* TABLE */
-.table-wrapper {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 10px 28px rgba(0,0,0,.08);
-  overflow-x: auto;
+.date-icon {
+  color:       $text3;
+  flex-shrink: 0;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
+.date-input {
+  border:      none;
+  outline:     none;
+  background:  transparent;
+  font-family: $font;
+  font-size:   14px;
+  color:       $text1;
+  height:      100%;
+  cursor:      pointer;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
 }
 
-th, td {
-  padding: 12px 14px;
-  text-align: left;
-  font-size: 14px;
+// ─── Section Title ────────────────────────────────────────────────────────────
+.section-title {
+  display:        flex;
+  align-items:    center;
+  gap:            10px;
+  font-size:      11px;
+  font-weight:    700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color:          $text3;
+  margin-bottom:  14px;
+
+  &::before {
+    content:       '';
+    display:       block;
+    width:         3px;
+    height:        14px;
+    background:    $accent;
+    border-radius: 2px;
+    flex-shrink:   0;
+  }
 }
 
-th {
-  background: #f9fafb;
-  color: #6b7280;
-  font-weight: 700;
+// ─── Employee Grid ────────────────────────────────────────────────────────────
+.emp-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap:                   12px;
 }
 
-tr:not(:last-child) td {
-  border-bottom: 1px solid #e5e7eb;
+// ─── Employee Card ────────────────────────────────────────────────────────────
+.emp-card {
+  display:       flex;
+  align-items:   center;
+  gap:           14px;
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: $radius;
+  padding:       18px 20px;
+  box-shadow:    0 2px 8px rgba(0, 0, 0, .05);
+  transition:    box-shadow .2s, transform .2s;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+    transform:  translateY(-1px);
+  }
 }
 
-select {
-  height: 36px;
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+.emp-avatar {
+  width:           40px;
+  height:          40px;
+  border-radius:   50%;
+  background:      linear-gradient(135deg, $accent 0%, #fb923c 100%);
+  color:           #fff;
+  font-size:       16px;
+  font-weight:     700;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+  letter-spacing:  0;
+  user-select:     none;
+}
+
+// ─── Employee Info ────────────────────────────────────────────────────────────
+.emp-info {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+  flex:           1;
+  min-width:      0;
+}
+
+.emp-name {
+  font-size:     15px;
+  font-weight:   600;
+  color:         $text1;
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-role {
+  font-size: 11px;
+  color:     $text3;
+}
+
+// ─── Status Toggle ────────────────────────────────────────────────────────────
+.status-toggle {
+  display:     flex;
+  margin-left: auto;
+  flex-shrink: 0;
+  border:      1px solid $border;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
-  padding: 0 8px;
+  overflow:    hidden;
 }
 
-/* ACTIONS */
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 14px;
-}
-
-.actions button {
-  padding: 12px 20px;
-  border-radius: 12px;
-  border: none;
-  background: #2563eb;
-  color: #fff;
+.toggle-btn {
+  width:       42px;
+  height:      34px;
+  border:      none;
+  background:  $bg;
+  color:       $text3;
+  font-size:   12px;
   font-weight: 700;
-  cursor: pointer;
+  cursor:      pointer;
+  transition:  background .15s, color .15s;
+  font-family: $font;
+
+  &:first-child {
+    border-right: 1px solid $border;
+  }
+
+  &:hover {
+    background: #e2e8f0;
+    color:      $text2;
+  }
 }
 
-/* EMPTY */
-.empty {
-  text-align: center;
-  margin-top: 40px;
-  color: #9ca3af;
+.toggle-btn.active-p {
+  background: #16a34a;
+  color:      #fff;
 }
 
-/* MOBILE */
-@media (max-width: 640px) {
-  .attendance-page { padding: 16px; max-width: 100%; }
+.toggle-btn.active-a {
+  background: #ef4444;
+  color:      #fff;
+}
 
-  .header { flex-direction: column; align-items: stretch; }
+// ─── Read-only Status Badges ──────────────────────────────────────────────────
+.status-badge-wrap {
+  margin-left: auto;
+  flex-shrink: 0;
+}
 
-  .header h2 { font-size: 22px; }
+.badge-p,
+.badge-a {
+  display:       inline-block;
+  padding:       4px 12px;
+  border-radius: 999px;
+  font-size:     12px;
+  font-weight:   600;
+}
 
-  .date-picker input { width: 100%; }
+.badge-p {
+  background: #dcfce7;
+  color:      #16a34a;
+}
 
-  .actions { margin-top: 12px; }
-  .actions button { width: 100%; padding: 14px; font-size: 15px; }
+.badge-a {
+  background: #fee2e2;
+  color:      #ef4444;
+}
 
-  th { font-size: 12px; padding: 10px 10px; }
-  td { font-size: 13px; padding: 10px 10px; }
+// ─── Empty State ──────────────────────────────────────────────────────────────
+.empty-state {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  padding:         60px 20px;
+  text-align:      center;
+}
 
-  select { width: 100%; }
+.empty-icon-wrap {
+  width:           80px;
+  height:          80px;
+  background:      rgba(249, 115, 22, .08);
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  margin-bottom:   20px;
+  color:           $accent;
+}
+
+.empty-title {
+  margin:      0 0 6px;
+  font-size:   16px;
+  font-weight: 700;
+  color:       $text1;
+}
+
+.empty-sub {
+  margin:    0;
+  font-size: 13px;
+  color:     $text3;
+}
+
+// ─── Save Bar ────────────────────────────────────────────────────────────────
+.save-bar {
+  position:   fixed;
+  bottom:     0;
+  left:       0;
+  right:      0;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid $border;
+  z-index:    100;
+  padding:    12px 24px;
+}
+
+.save-bar-inner {
+  display:         flex;
+  justify-content: flex-end;
+  max-width:       1400px;
+  margin:          0 auto;
+}
+
+.save-btn {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             8px;
+  height:          44px;
+  padding:         0 24px;
+  border:          none;
+  border-radius:   10px;
+  background:      linear-gradient(135deg, $accent 0%, #fb923c 100%);
+  color:           #fff;
+  font-family:     $font;
+  font-size:       14px;
+  font-weight:     700;
+  cursor:          pointer;
+  box-shadow:      0 4px 14px rgba(249, 115, 22, .35);
+  transition:      transform .15s, box-shadow .15s, opacity .15s;
+
+  &:hover {
+    transform:  translateY(-1px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, .45);
+  }
+
+  &:active {
+    transform:  translateY(0);
+    box-shadow: 0 2px 8px rgba(249, 115, 22, .3);
+  }
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+@media (max-width: 600px) {
+  .att {
+    padding: 16px 16px 80px;
+  }
+
+  .att-header {
+    flex-direction: column;
+    align-items:    stretch;
+    gap:            12px;
+    margin-bottom:  20px;
+  }
+
+  .att-title {
+    font-size: 24px;
+  }
+
+  .date-wrap {
+    width: 100%;
+  }
+
+  .date-input {
+    flex: 1;
+    width: 100%;
+  }
+
+  .emp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .emp-card {
+    padding: 14px 16px;
+  }
+
+  .save-bar {
+    padding: 10px 16px;
+  }
+
+  .save-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

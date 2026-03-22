@@ -1,82 +1,112 @@
-<div class="coupon-page">
+<div class="cpn">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <div>
-      <h1>Coupons</h1>
-      <p class="sub">Create and manage discount coupons</p>
+  <!-- Header -->
+  <div class="cpn-header">
+    <div class="cpn-header-left">
+      <h1 class="cpn-title">Coupons</h1>
+      <span class="cpn-subtitle">Create and manage discount coupons</span>
     </div>
-
-    <button class="btn accent" (click)="openCreate()">
-      + Create Coupon
-    </button>
+    <div class="cpn-header-right">
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search coupons..."
+          [(ngModel)]="search"
+        />
+      </div>
+      <!-- Create Button -->
+      <button class="create-btn" type="button" (click)="openCreate()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Coupon
+      </button>
+    </div>
   </div>
 
-  <!-- SEARCH -->
-  <input
-    class="search"
-    placeholder="Search by coupon code..."
-    [(ngModel)]="search" />
+  <!-- Section Title -->
+  <div class="section-title">Active Coupons</div>
 
-  <!-- LIST -->
-  <div class="coupon-list">
+  <!-- Coupon List -->
+  <div class="cpn-list" *ngIf="filteredCoupons && filteredCoupons.length > 0; else emptyState">
+    <div class="cpn-card" *ngFor="let c of filteredCoupons">
 
-    <div class="coupon-row" *ngFor="let c of filteredCoupons">
+      <!-- Code (ticket style) -->
+      <div class="cc-code">{{ c.code }}</div>
 
-      <!-- LEFT -->
-      <div class="left">
-        <div class="code">{{ c.code }}</div>
-
-        <div class="meta">
-          <span *ngIf="c.min_bill_amount">
-            Min ₹{{ c.min_bill_amount }}
-          </span>
-
-          <span *ngIf="c.max_discount">
-            Max ₹{{ c.max_discount }}
-          </span>
-
-          <span *ngIf="c.valid_to">
+      <!-- Detail -->
+      <div class="cc-detail">
+        <div class="cc-discount">
+          {{ c.discount_type === 'PERCENT'
+            ? c.discount_value + '% OFF'
+            : '₹' + c.discount_value + ' OFF' }}
+        </div>
+        <div class="cc-meta-row">
+          <span class="cc-meta" *ngIf="c.min_bill_amount">Min ₹{{ c.min_bill_amount }}</span>
+          <span class="cc-meta" *ngIf="c.max_discount">Max ₹{{ c.max_discount }}</span>
+          <span class="cc-meta" *ngIf="c.valid_to">
             Valid till {{ c.valid_to | date:'dd MMM yyyy' }}
           </span>
         </div>
       </div>
 
-      <!-- CENTER -->
-      <div class="discount">
-        {{ c.discount_type === 'PERCENT'
-          ? c.discount_value + '% OFF'
-          : '₹ ' + c.discount_value + ' OFF' }}
-      </div>
-
-      <!-- STATUS -->
-      <div class="status">
-        <span
-          class="badge"
-          [class.active]="c.is_active"
-          [class.inactive]="!c.is_active">
+      <!-- Status Badge -->
+      <div class="cc-status">
+        <span class="status-badge" [class.status-active]="c.is_active" [class.status-inactive]="!c.is_active">
           {{ c.is_active ? 'Active' : 'Inactive' }}
         </span>
       </div>
 
-      <!-- ACTIONS -->
-      <div class="actions">
-        <button class="ghost" (click)="openEdit(c)">
+      <!-- Actions -->
+      <div class="cc-actions">
+        <button class="ghost-btn" type="button" (click)="openEdit(c)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
           Edit
         </button>
-        <button class="ghost danger" (click)="confirmDelete(c)">
+        <button class="ghost-btn ghost-btn--danger" type="button" (click)="confirmDelete(c)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+            <path d="M10 11v6m4-6v6"></path>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+          </svg>
           Delete
         </button>
       </div>
 
     </div>
-
   </div>
+
+  <!-- Empty State -->
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <div class="empty-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+          <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </svg>
+      </div>
+      <p class="empty-title">No coupons found</p>
+      <p class="empty-sub">Create your first coupon to get started.</p>
+    </div>
+  </ng-template>
 
 </div>
 
+<!-- Coupon Form Modal -->
 <app-coupon-form-modal
   *ngIf="showModal"
   [coupon]="selectedCoupon"
   (close)="closeModal()"
-  (saved)="reload()" />
+  (saved)="reload()"
+></app-coupon-form-modal>

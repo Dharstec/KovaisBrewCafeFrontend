@@ -1,104 +1,133 @@
-<div class="product-page">
+<div class="prd">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <div>
-      <h1>Products</h1>
-      <p>Manage café menu & inventory</p>
+  <!-- ══ HEADER ══ -->
+  <div class="prd-header">
+    <div class="prd-header__left">
+      <h1 class="prd-header__title">Products</h1>
+      <p class="prd-header__sub">Manage café menu &amp; inventory</p>
     </div>
-    <button class="btn-primary" (click)="open()">+ Add Product</button>
+    <button class="btn-add" (click)="open()">+ Add Product</button>
   </div>
 
-  <!-- FILTER BAR -->
-  <div class="filter-bar">
-    <input type="text" placeholder="Search products" [(ngModel)]="search" (ngModelChange)="onSearchChange()" />
+  <!-- ══ FILTER BAR ══ -->
+  <div class="prd-filter">
+    <div class="search-wrap">
+      <svg class="search-wrap__icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input
+        class="search-wrap__input"
+        type="text"
+        placeholder="Search products..."
+        [(ngModel)]="search"
+        (ngModelChange)="onSearchChange()" />
+    </div>
 
-    <select [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+    <select class="filter-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
       <option value="">All Categories</option>
-      <option *ngFor="let c of categories" [value]="c.id">
-        {{ c.name }}
-      </option>
+      <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
     </select>
   </div>
 
-  <!-- PRODUCT GRID -->
-  <div class="product-grid">
-    <div class="product-card" *ngFor="let p of products">
+  <!-- ══ SECTION TITLE ══ -->
+  <div class="section-title">
+    <span class="section-title__bar"></span>
+    <span class="section-title__text">Menu Items</span>
+  </div>
 
-      <div class="product-image">
-        <img [src]="p.image_url" />
+  <!-- ══ PRODUCT GRID ══ -->
+  <div class="prd-grid">
+    <div class="prd-card" *ngFor="let p of products">
+
+      <!-- IMAGE -->
+      <div class="pc-img">
+        <img *ngIf="p.image_url" [src]="p.image_url" [alt]="p.name" />
+        <span *ngIf="!p.image_url" class="pc-img__placeholder">&#127861;</span>
       </div>
 
-      <div class="product-body">
-        <div class="product-title">{{ p.name }}</div>
+      <!-- BODY -->
+      <div class="pc-body">
+        <div class="pc-name">{{ p.name }}</div>
+        <div class="pc-meta">{{ p.category_name }} &bull; {{ p.unit_label || p.base_unit }}</div>
 
-        <div class="product-price" *ngIf="p.is_sellable && !p.is_manual_price">
-          ₹ {{ p.price }}
+        <div class="pc-price" *ngIf="p.is_sellable && !p.is_manual_price">
+          &#8377; {{ p.price }}
         </div>
 
-        <div class="product-meta">
-          {{ p.category_name }} • {{ p.unit_label || p.base_unit }}
+        <div class="pc-tags">
+          <span class="pc-tag pc-tag--sell" *ngIf="p.is_sellable">Sell</span>
+          <span class="pc-tag pc-tag--stock" *ngIf="p.track_stock">Stock</span>
+          <span class="pc-tag pc-tag--low" *ngIf="p.track_stock && p.current_qty <= p.min_qty">Low</span>
         </div>
 
-        <div class="tags">
-          <span class="tag sell" *ngIf="p.is_sellable">Sell</span>
-          <span class="tag stock" *ngIf="p.track_stock">Stock</span>
-        </div>
-
-        <div class="stock-info" *ngIf="p.track_stock">
-          <span>Stock: <b>{{ p.current_qty }}</b></span>
-          <span class="low" *ngIf="p.current_qty <= p.min_qty">
-            Low Stock
-          </span>
+        <div class="pc-stock" *ngIf="p.track_stock">
+          Stock: <strong>{{ p.current_qty }}</strong>
         </div>
       </div>
 
-      <div class="card-actions">
-        <button class="btn-outline" (click)="edit(p)">Edit</button>
-        <button class="btn-danger" (click)="remove(p.id)">Delete</button>
+      <!-- ACTIONS -->
+      <div class="pc-actions">
+        <button class="btn-edit" (click)="edit(p)">Edit</button>
+        <button class="btn-delete" (click)="remove(p.id)">Delete</button>
       </div>
 
     </div>
   </div>
 
-  <!-- MODAL -->
-  <div class="modal-backdrop" *ngIf="show">
-    <div class="modal">
+  <!-- ══ PAGINATION ══ -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="pagination__btn" (click)="changePage(page - 1)" [disabled]="page === 1">&#8249;</button>
 
-      <div class="modal-header">
-        <h3>{{ form.id ? 'Edit Product' : 'Add Product' }}</h3>
-        <button class="close-btn" (click)="close()">✕</button>
+    <button
+      class="pagination__btn"
+      *ngFor="let p of pages"
+      (click)="changePage(p)"
+      [class.pagination__btn--active]="p === page">
+      {{ p }}
+    </button>
+
+    <button class="pagination__btn" (click)="changePage(page + 1)" [disabled]="page === totalPages">&#8250;</button>
+  </div>
+
+  <!-- ══ MODAL ══ -->
+  <div class="modal-overlay" *ngIf="show" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <!-- MODAL HEADER -->
+      <div class="modal__header">
+        <h3 class="modal__title">{{ form.id ? 'Edit Product' : 'Add Product' }}</h3>
+        <button class="modal__close" (click)="close()">&#10005;</button>
       </div>
 
-      <div class="modal-body">
+      <!-- MODAL BODY -->
+      <div class="modal__body">
 
         <div class="form-group">
-          <label>Product Name</label>
-          <input type="text" [(ngModel)]="form.name" />
+          <label class="form-label">Product Name</label>
+          <input class="form-input" type="text" [(ngModel)]="form.name" placeholder="e.g. Cappuccino" />
         </div>
 
         <div class="form-group">
-          <label>Category</label>
-          <select [(ngModel)]="form.category_id">
-            <option value="">Select</option>
-            <option *ngFor="let c of categories" [value]="c.id">
-              {{ c.name }}
-            </option>
+          <label class="form-label">Category</label>
+          <select class="form-input" [(ngModel)]="form.category_id">
+            <option value="">Select category</option>
+            <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
           </select>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Sellable</label>
-            <select [(ngModel)]="form.is_sellable" (change)="onBehaviourChange()">
+            <label class="form-label">Sellable</label>
+            <select class="form-input" [(ngModel)]="form.is_sellable" (change)="onBehaviourChange()">
               <option [ngValue]="true">Yes</option>
               <option [ngValue]="false">No</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label>Track Stock</label>
-            <select [(ngModel)]="form.track_stock" (change)="onBehaviourChange()">
+            <label class="form-label">Track Stock</label>
+            <select class="form-input" [(ngModel)]="form.track_stock" (change)="onBehaviourChange()">
               <option [ngValue]="true">Yes</option>
               <option [ngValue]="false">No</option>
             </select>
@@ -107,25 +136,27 @@
 
         <div class="form-row" *ngIf="form.is_sellable">
           <div class="form-group">
-            <label>Manual Price</label>
-            <select [(ngModel)]="form.is_manual_price">
+            <label class="form-label">Manual Price</label>
+            <select class="form-input" [(ngModel)]="form.is_manual_price">
               <option [ngValue]="false">No</option>
               <option [ngValue]="true">Yes</option>
             </select>
           </div>
 
           <div class="form-group" *ngIf="!form.is_manual_price">
-            <label>Price</label>
-            <input type="number" [(ngModel)]="form.price" />
+            <label class="form-label">Price (&#8377;)</label>
+            <input class="form-input" type="number" [(ngModel)]="form.price" placeholder="0.00" />
           </div>
         </div>
 
         <!-- STOCK SETTINGS -->
-        <div *ngIf="form.track_stock" class="stock-box">
+        <div class="stock-box" *ngIf="form.track_stock">
+          <div class="stock-box__title">Stock Settings</div>
+
           <div class="form-row">
             <div class="form-group">
-              <label>Base Unit</label>
-              <select [(ngModel)]="form.base_unit" (change)="onBaseUnitChange()">
+              <label class="form-label">Base Unit</label>
+              <select class="form-input" [(ngModel)]="form.base_unit" (change)="onBaseUnitChange()">
                 <option value="pcs">Pcs</option>
                 <option value="ml">ML</option>
                 <option value="gram">Gram</option>
@@ -133,8 +164,8 @@
             </div>
 
             <div class="form-group">
-              <label>Display Unit</label>
-              <select [(ngModel)]="form.unit_label">
+              <label class="form-label">Display Unit</label>
+              <select class="form-input" [(ngModel)]="form.unit_label">
                 <option value="piece">Piece</option>
                 <option value="litre">Litre</option>
                 <option value="kg">Kg</option>
@@ -144,94 +175,72 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label>Opening Stock</label>
-              <input type="number" [(ngModel)]="form.current_qty" />
+              <label class="form-label">Opening Stock</label>
+              <input class="form-input" type="number" [(ngModel)]="form.current_qty" placeholder="0" />
             </div>
 
             <div class="form-group">
-              <label>Min Stock</label>
-              <input type="number" [(ngModel)]="form.min_qty" />
+              <label class="form-label">Min Stock</label>
+              <input class="form-input" type="number" [(ngModel)]="form.min_qty" placeholder="0" />
             </div>
           </div>
+
           <div class="form-row">
             <div class="form-group">
-              <label>Unit value</label>
-              <input type="number" [(ngModel)]="form.unit_value" />
+              <label class="form-label">Unit Value</label>
+              <input class="form-input" type="number" [(ngModel)]="form.unit_value" placeholder="1" />
             </div>
           </div>
         </div>
 
         <!-- RECIPE / INGREDIENTS -->
         <div class="recipe-box" *ngIf="form.id && form.is_sellable">
-
-          <div class="recipe-header">
+          <div class="recipe-box__header">
             <div>
-              <h4>Ingredients / Recipe</h4>
-              <p>Raw materials used per sale</p>
+              <h4 class="recipe-box__title">Ingredients / Recipe</h4>
+              <p class="recipe-box__sub">Raw materials used per sale</p>
             </div>
             <span class="recipe-badge">Stock Based</span>
           </div>
 
           <div class="recipe-table">
-            <div class="recipe-row header">
+            <div class="recipe-row recipe-row--header">
               <span>Raw Item</span>
               <span>Usage Qty</span>
               <span></span>
             </div>
 
             <div class="recipe-row" *ngFor="let r of recipeItems; let i = index">
-
-              <select [(ngModel)]="r.raw_product_id">
+              <select class="form-input" [(ngModel)]="r.raw_product_id">
                 <option value="">Select stock item</option>
                 <option *ngFor="let s of stockProducts" [value]="s.id">
                   {{ s.name }} ({{ s.base_unit }})
                 </option>
               </select>
 
-              <input type="number" step="0.1" min="0.1" [(ngModel)]="r.used_qty" />
+              <input class="form-input" type="number" step="0.1" min="0.1" [(ngModel)]="r.used_qty" />
 
-              <button class="icon-btn danger" (click)="removeRecipe(i)">
-                ✕
-              </button>
+              <button class="btn-recipe-remove" (click)="removeRecipe(i)">&#10005;</button>
             </div>
           </div>
 
-          <button class="btn-outline add-btn" (click)="addRecipe()">
-            + Add Ingredient
-          </button>
+          <button class="btn-add-ingredient" (click)="addRecipe()">+ Add Ingredient</button>
         </div>
 
         <div class="form-group">
-          <label>Image URL</label>
-          <input type="text" [(ngModel)]="form.image_url" />
+          <label class="form-label">Image URL</label>
+          <input class="form-input" type="text" [(ngModel)]="form.image_url" placeholder="https://..." />
         </div>
 
       </div>
 
-      <div class="modal-footer">
-        <button class="btn-outline" (click)="close()">Cancel</button>
-        <button class="btn-primary" (click)="save()">Save</button>
+      <!-- MODAL FOOTER -->
+      <div class="modal__footer">
+        <button class="btn-cancel" (click)="close()">Cancel</button>
+        <button class="btn-save" (click)="save()">Save Product</button>
       </div>
 
     </div>
   </div>
-
-  <!-- PAGINATION -->
-  <div class="pagination" *ngIf="totalPages > 1">
-
-    <button (click)="changePage(page - 1)" [disabled]="page === 1">
-
-    </button>
-
-    <button *ngFor="let p of pages" (click)="changePage(p)" [class.active]="p === page">
-      {{ p }}
-    </button>
-
-    <button (click)="changePage(page + 1)" [disabled]="page === totalPages">
-      >
-    </button>
-
-  </div>
-
 
 </div>

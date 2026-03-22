@@ -1,147 +1,352 @@
-.advance-page {
-  max-width: 1100px;
-  margin: auto;
-  padding: 20px;
-  font-family: Inter, system-ui;
-  background: #f8fafc;
-  min-height: 100vh;
+// ─── Design Tokens ───────────────────────────────────────────────────────────
+$font:    'Inter', system-ui, sans-serif;
+$bg:      #f1f5f9;
+$surface: #ffffff;
+$border:  #e2e8f0;
+$text1:   #0f172a;
+$text2:   #475569;
+$text3:   #94a3b8;
+$accent:  #f97316;
+$radius:  14px;
+
+// ─── Page Wrapper ─────────────────────────────────────────────────────────────
+.adv {
+  font-family: $font;
+  background:  $bg;
+  min-height:  100vh;
+  padding:     24px 24px 60px;
+  box-sizing:  border-box;
 }
 
-/* HEADER */
-.header {
-  margin-bottom: 18px;
-}
-
-.header h2 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-}
-
-.subtitle {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-/* LAYOUT */
-.content {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 20px;
-}
-
-/* CARD */
-.card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: 0 10px 28px rgba(0,0,0,.08);
-}
-
-/* FORM */
-.form-card h3,
-.history-card h3 {
-  margin: 0 0 14px;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.field {
-  display: flex;
+// ─── Header ──────────────────────────────────────────────────────────────────
+.adv-header {
+  display:        flex;
   flex-direction: column;
+  gap:            4px;
+  margin-bottom:  28px;
 }
 
-.field.full {
-  grid-column: span 2;
-}
-
-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #6b7280;
-  margin-bottom: 4px;
-}
-
-input,
-select {
-  height: 42px;
-  padding: 0 12px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-}
-
-.btn-primary {
-  margin-top: 18px;
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
-  background: #2563eb;
-  color: #fff;
+.adv-title {
+  margin:      0;
+  font-size:   28px;
   font-weight: 800;
-  cursor: pointer;
+  color:       $text1;
+  line-height: 1.2;
 }
 
-/* TABLE */
-.table-wrapper {
+.adv-subtitle {
+  font-size: 13px;
+  color:     $text2;
+}
+
+// ─── Body Layout ─────────────────────────────────────────────────────────────
+.adv-body {
+  display:               grid;
+  grid-template-columns: 400px 1fr;
+  gap:                   20px;
+  align-items:           start;
+}
+
+// ─── Shared Card Styles ───────────────────────────────────────────────────────
+.form-card,
+.history-card {
+  background:  $surface;
+  border:      1px solid $border;
+  border-radius: $radius;
+  box-shadow:  0 2px 12px rgba(0, 0, 0, .06);
+}
+
+// ─── Card Title (Section-title style) ────────────────────────────────────────
+.card-title {
+  display:        flex;
+  align-items:    center;
+  gap:            10px;
+  font-size:      11px;
+  font-weight:    700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color:          $text3;
+  margin-bottom:  20px;
+
+  &::before {
+    content:       '';
+    display:       block;
+    width:         3px;
+    height:        14px;
+    background:    $accent;
+    border-radius: 2px;
+    flex-shrink:   0;
+  }
+}
+
+// ─── Form Card ────────────────────────────────────────────────────────────────
+.form-card {
+  padding: 24px;
+}
+
+// ─── Fields ──────────────────────────────────────────────────────────────────
+.field {
+  display:        flex;
+  flex-direction: column;
+  margin-bottom:  16px;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.field-label {
+  font-size:      12px;
+  font-weight:    700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color:          $text3;
+  margin-bottom:  6px;
+}
+
+.field-input {
+  height:        44px;
+  padding:       0 12px;
+  border:        1px solid $border;
+  border-radius: 10px;
+  font-family:   $font;
+  font-size:     14px;
+  color:         $text1;
+  background:    $surface;
+  outline:       none;
+  transition:    border-color .2s, box-shadow .2s;
+  box-sizing:    border-box;
+  width:         100%;
+
+  &::placeholder {
+    color: $text3;
+  }
+
+  &:focus {
+    border-color: $accent;
+    box-shadow:   0 0 0 3px rgba(249, 115, 22, .12);
+  }
+
+  &:disabled {
+    background: $bg;
+    color:      $text3;
+    cursor:     not-allowed;
+  }
+}
+
+select.field-input {
+  cursor:              pointer;
+  -webkit-appearance:  none;
+  appearance:          none;
+  background-image:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:   no-repeat;
+  background-position: right 12px center;
+  padding-right:       36px;
+}
+
+// ─── Amount Prefix Wrapper ────────────────────────────────────────────────────
+.input-prefix-wrap {
+  position: relative;
+  display:  flex;
+  width:    100%;
+}
+
+.input-prefix {
+  position:        absolute;
+  left:            12px;
+  top:             50%;
+  transform:       translateY(-50%);
+  font-size:       14px;
+  font-weight:     600;
+  color:           $text2;
+  pointer-events:  none;
+  z-index:         1;
+}
+
+.prefix-field {
+  padding-left: 28px;
+}
+
+// ─── Save Button ──────────────────────────────────────────────────────────────
+.save-btn {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             8px;
+  width:           100%;
+  height:          46px;
+  margin-top:      20px;
+  border:          none;
+  border-radius:   10px;
+  background:      linear-gradient(135deg, $accent 0%, #fb923c 100%);
+  color:           #fff;
+  font-family:     $font;
+  font-size:       14px;
+  font-weight:     700;
+  cursor:          pointer;
+  box-shadow:      0 4px 14px rgba(249, 115, 22, .35);
+  transition:      transform .15s, box-shadow .15s, opacity .15s;
+
+  &:hover:not(:disabled) {
+    transform:  translateY(-1px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, .45);
+  }
+
+  &:active:not(:disabled) {
+    transform:  translateY(0);
+    box-shadow: 0 2px 8px rgba(249, 115, 22, .3);
+  }
+
+  &:disabled {
+    opacity: .5;
+    cursor:  not-allowed;
+  }
+}
+
+// ─── History Card ─────────────────────────────────────────────────────────────
+.history-card {
+  overflow: hidden;
+}
+
+.card-head {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         16px 20px;
+  border-bottom:   1px solid $border;
+}
+
+.card-head-title {
+  margin:      0;
+  font-size:   15px;
+  font-weight: 700;
+  color:       $text1;
+}
+
+.count-badge {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  min-width:       24px;
+  height:          24px;
+  padding:         0 8px;
+  background:      rgba(249, 115, 22, .1);
+  color:           $accent;
+  border-radius:   999px;
+  font-size:       12px;
+  font-weight:     700;
+}
+
+// ─── History Table ────────────────────────────────────────────────────────────
+.table-wrap {
   overflow-x: auto;
 }
 
-table {
-  width: 100%;
+.hist-table {
+  width:           100%;
   border-collapse: collapse;
+
+  thead {
+    background: #f8fafc;
+
+    th {
+      padding:        10px 16px;
+      font-size:      11px;
+      font-weight:    700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color:          $text3;
+      text-align:     left;
+      white-space:    nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      transition: background .15s;
+
+      &:hover {
+        background: #fafafa;
+      }
+
+      &:not(:last-child) td {
+        border-bottom: 1px solid $border;
+      }
+    }
+
+    td {
+      padding:   12px 16px;
+      font-size: 14px;
+      color:     $text2;
+    }
+  }
 }
 
-th,
-td {
-  padding: 12px;
-  font-size: 14px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-th {
-  background: #f9fafb;
-  color: #6b7280;
+.amount-cell {
   font-weight: 700;
+  color:       #16a34a;
 }
 
-.amount {
+// ─── History Empty State ──────────────────────────────────────────────────────
+.history-empty {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  padding:         48px 20px;
+  text-align:      center;
+}
+
+.empty-icon-wrap {
+  width:           64px;
+  height:          64px;
+  background:      rgba(249, 115, 22, .08);
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  margin-bottom:   16px;
+  color:           $accent;
+}
+
+.empty-title {
+  margin:      0 0 4px;
+  font-size:   15px;
   font-weight: 700;
-  color: #2563eb;
+  color:       $text1;
 }
 
-/* 📱 TABLET */
+.empty-sub {
+  margin:    0;
+  font-size: 13px;
+  color:     $text3;
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
 @media (max-width: 900px) {
-  .content {
+  .adv-body {
     grid-template-columns: 1fr;
   }
 }
 
-/* 📱 MOBILE */
-@media (max-width: 520px) {
-
-  .form-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 600px) {
+  .adv {
+    padding: 16px 16px 60px;
   }
 
-  .field.full {
-    grid-column: span 1;
+  .adv-title {
+    font-size: 24px;
   }
 
-  .header h2 {
-    font-size: 22px;
+  .form-card {
+    padding: 18px 16px;
   }
 
-  th,
-  td {
-    font-size: 13px;
-    padding: 10px;
+  .hist-table {
+    thead th,
+    tbody td {
+      font-size: 13px;
+      padding:   10px 12px;
+    }
   }
 }
