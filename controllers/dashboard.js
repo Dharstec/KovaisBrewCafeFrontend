@@ -154,6 +154,131 @@ exports.getItemSalesChart = async (req, res) => {
 };
 
 /* ─────────────────────────────────────────
+   GET /dashboard/daily_spend?date=YYYY-MM-DD
+   Total daily spend + breakdown by reason
+   ───────────────────────────────────────── */
+exports.getDailySpend = async (req, res) => {
+  try {
+    const date = resolveDate(req);
+    const dateExpr = date ? `$1::date` : `CURRENT_DATE`;
+    const params   = date ? [date] : [];
+
+    const total = await DB.PostgresAny(`
+      SELECT COALESCE(SUM(amount), 0) AS total_spend
+      FROM spent
+      WHERE date::date = ${dateExpr}
+    `, params);
+
+    const breakdown = await DB.PostgresAny(`
+      SELECT
+        reason,
+        COALESCE(SUM(amount), 0) AS total,
+        COUNT(*)::INT             AS count
+      FROM spent
+      WHERE date::date = ${dateExpr}
+      GROUP BY reason
+      ORDER BY total DESC
+    `, params);
+
+    const records = await DB.PostgresAny(`
+      SELECT id, reason, amount, TO_CHAR(created_at, 'HH12:MI AM') AS time
+      FROM spent
+      WHERE date::date = ${dateExpr}
+      ORDER BY created_at DESC
+    `, params);
+
+    res.json({
+      total_spend: Number(total[0].total_spend),
+      breakdown,
+      records
+    });
+  } catch (err) {
+    console.error('Daily spend failed:', err);
+    res.status(500).json({ message: 'Daily spend failed' });
+  }
+};
+
+/* ─────────────────────────────────────────
+   GET /dashboard/range_summary?start=YYYY-MM-DD&end=YYYY-MM-DD
+   Sales + Expenses totals + daily breakdown for a date range
+   ───────────────────────────────────────── */
+exports.getRangeSummary = async (req, res) => {
+  try {
+    const s = req.query.start;
+    const e = req.query.end;
+    const dateRx = /^\d{4}-\d{2}-\d{2}$/;
+    const start = (s && dateRx.test(s)) ? s : new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().slice(0, 10);
+    const end   = (e && dateRx.test(e)) ? e : new Date().toISOString().slice(0, 10);
+
+    const sales = await DB.PostgresAny(`
+      SELECT
+        COALESCE(SUM(grand_total), 0)  AS total_sales,
+        COUNT(*)::INT                  AS total_bills,
+        COALESCE(SUM(grand_total) FILTER (WHERE payment_mode = 'CASH'), 0) AS cash_total,
+        COALESCE(SUM(grand_total) FILTER (WHERE payment_mode = 'UPI'),  0) AS upi_total
+      FROM bills
+      WHERE status = 'COMPLETED'
+        AND DATE(created_at) BETWEEN $1::date AND $2::date
+    `, [start, end]);
+
+    const spend = await DB.PostgresAny(`
+      SELECT COALESCE(SUM(amount), 0) AS total_spend
+      FROM spent
+      WHERE date::date BETWEEN $1::date AND $2::date
+    `, [start, end]);
+
+    const dailySales = await DB.PostgresAny(`
+      SELECT
+        DATE(created_at)               AS day,
+        COALESCE(SUM(grand_total), 0)  AS sales,
+        COUNT(*)::INT                  AS bills
+      FROM bills
+      WHERE status = 'COMPLETED'
+        AND DATE(created_at) BETWEEN $1::date AND $2::date
+      GROUP BY DATE(created_at)
+      ORDER BY day
+    `, [start, end]);
+
+    const dailySpend = await DB.PostgresAny(`
+      SELECT
+        date::date                    AS day,
+        COALESCE(SUM(amount), 0)      AS spend
+      FROM spent
+      WHERE date::date BETWEEN $1::date AND $2::date
+      GROUP BY date::date
+      ORDER BY day
+    `, [start, end]);
+
+    const spendBreakdown = await DB.PostgresAny(`
+      SELECT
+        reason,
+        COALESCE(SUM(amount), 0) AS total,
+        COUNT(*)::INT             AS count
+      FROM spent
+      WHERE date::date BETWEEN $1::date AND $2::date
+      GROUP BY reason
+      ORDER BY total DESC
+    `, [start, end]);
+
+    res.json({
+      start, end,
+      total_sales:  Number(sales[0].total_sales),
+      total_bills:  Number(sales[0].total_bills),
+      cash_total:   Number(sales[0].cash_total),
+      upi_total:    Number(sales[0].upi_total),
+      total_spend:  Number(spend[0].total_spend),
+      net_profit:   Number(sales[0].total_sales) - Number(spend[0].total_spend),
+      daily_sales:  dailySales,
+      daily_spend:  dailySpend,
+      spend_breakdown: spendBreakdown
+    });
+  } catch (err) {
+    console.error('Range summary failed:', err);
+    res.status(500).json({ message: 'Range summary failed' });
+  }
+};
+
+/* ─────────────────────────────────────────
    GET /dashboard/payment_breakdown?date=YYYY-MM-DD
    Cash vs UPI counts & amounts
    ───────────────────────────────────────── */
