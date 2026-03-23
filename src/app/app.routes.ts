@@ -94,6 +94,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/reports/reports.page')
         .then(m => m.ReportsPage)
+  },
+
+  /* 📲 WHATSAPP SETUP — Admin only */
+  {
+    path: 'whatsapp-setup',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/whatsapp/whatsapp-setup.page')
+        .then(m => m.WhatsappSetupPage)
   }
 
 ];

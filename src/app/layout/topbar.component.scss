@@ -677,7 +677,7 @@ $border: rgba(255,255,255,.06);
   overflow: hidden;
   transition: max-height .25s ease;
 
-  &.open { max-height: 220px; }
+  &.open { max-height: 320px; }
 
   a {
     padding-left: 44px !important;
@@ -689,10 +689,11 @@ $border: rgba(255,255,255,.06);
    RESPONSIVE
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 960px) {
-  .nav-desktop { display: none; }
-  .menu-btn    { display: flex; align-items: center; justify-content: center; }
-  .nav-mobile  { display: flex; }
-  .nav-overlay { display: block; }
+  .nav-desktop      { display: none; }
+  .hr-dropdown-wrap { display: none; } /* hidden on mobile — HR links are in the drawer */
+  .menu-btn         { display: flex; align-items: center; justify-content: center; }
+  .nav-mobile       { display: flex; }
+  .nav-overlay      { display: block; }
   .user-info, .profile-chevron { display: none; }
 }
 

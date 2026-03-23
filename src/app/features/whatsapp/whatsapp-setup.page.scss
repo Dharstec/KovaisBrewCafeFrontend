@@ -1,0 +1,391 @@
+$bg:      #0f172a;
+$surface: #1e293b;
+$surface2:#263347;
+$accent:  #25d366;  // WhatsApp green
+$orange:  #f97316;
+$text:    #f1f5f9;
+$muted:   #94a3b8;
+$border:  rgba(255,255,255,.07);
+
+.wa-page {
+  min-height: 100vh;
+  background: $bg;
+  padding: 32px 24px;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: $text;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.wa-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+
+  .wa-icon {
+    width: 52px;
+    height: 52px;
+    background: rgba(37,211,102,.15);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg {
+      width: 28px;
+      height: 28px;
+      fill: $accent;
+    }
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  p {
+    font-size: 14px;
+    color: $muted;
+    margin: 0;
+  }
+
+  strong { color: $text; }
+}
+
+.wa-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(148,163,184,.1);
+  border: 1px solid rgba(148,163,184,.2);
+  color: $muted;
+  margin-left: auto;
+  white-space: nowrap;
+
+  &.ready {
+    background: rgba(37,211,102,.12);
+    border-color: rgba(37,211,102,.3);
+    color: $accent;
+  }
+
+  &.pending {
+    background: rgba(251,191,36,.1);
+    border-color: rgba(251,191,36,.3);
+    color: #fbbf24;
+  }
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+
+  .ready & { animation: pulse-green 2s infinite; }
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .4; }
+}
+
+/* ── Cards ── */
+.wa-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+
+  &.center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: $muted;
+    font-size: 14px;
+    padding: 40px;
+  }
+}
+
+.card-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: $muted;
+  margin-bottom: 14px;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.card-hint {
+  font-size: 12px;
+  color: $muted;
+  margin: 10px 0 0;
+  line-height: 1.5;
+
+  code {
+    background: rgba(255,255,255,.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+  }
+}
+
+/* ── QR Card ── */
+.wa-qr-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.qr-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 24px;
+
+  svg {
+    width: 22px;
+    height: 22px;
+    stroke: $accent;
+    fill: none;
+    stroke-width: 2;
+  }
+}
+
+.qr-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 28px;
+  text-align: left;
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: $muted;
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(37,211,102,.15);
+  color: $accent;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qr-box {
+  display: inline-block;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  img {
+    width: 220px;
+    height: 220px;
+    display: block;
+  }
+}
+
+.qr-placeholder {
+  width: 220px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #666;
+  font-size: 13px;
+}
+
+.qr-note {
+  font-size: 12px;
+  color: $muted;
+  margin: 0;
+}
+
+.init-error {
+  background: rgba(239,68,68,.1);
+  border: 1px solid rgba(239,68,68,.25);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 0 auto 20px;
+  max-width: 400px;
+  text-align: center;
+
+  .err-icon  { font-size: 28px; margin-bottom: 8px; }
+  .err-title { font-size: 15px; font-weight: 700; color: #f87171; margin-bottom: 6px; }
+  .err-msg   { font-size: 12px; color: #fca5a5; font-family: monospace; margin-bottom: 10px; word-break: break-all; }
+  .err-hint  { font-size: 12px; color: $muted; }
+}
+
+/* ── Group select ── */
+.group-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: $surface2;
+  color: $text;
+  font-size: 14px;
+  font-family: inherit;
+  appearance: none;
+  cursor: pointer;
+
+  &:focus { outline: none; border-color: $accent; }
+}
+
+/* ── Preview ── */
+.preview-box {
+  background: $surface2;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 16px;
+  overflow-x: auto;
+
+  pre {
+    margin: 0;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 13px;
+    color: $text;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+}
+
+/* ── Send card ── */
+.send-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.send-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.send-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.send-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text;
+}
+
+.send-sub {
+  font-size: 13px;
+  color: $muted;
+  margin-top: 2px;
+}
+
+.send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: $accent;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.send-success {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: $accent;
+}
+
+.send-error {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f87171;
+}
+
+/* ── Spinner ── */
+.spinner,
+.btn-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.wa-setup { }
+
+@media (max-width: 600px) {
+  .wa-page { padding: 20px 16px; }
+  .wa-header { gap: 12px; }
+  .qr-box img { width: 180px; height: 180px; }
+}
