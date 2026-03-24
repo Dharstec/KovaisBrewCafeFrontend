@@ -1,0 +1,289 @@
+$primary: #6366f1;
+$success: #10b981;
+$danger:  #ef4444;
+$txt:     #111827;
+$txt2:    #6b7280;
+$txt3:    #9ca3af;
+$border:  #e5e7eb;
+$bg:      #f9fafb;
+$r:       12px;
+$r2:      8px;
+
+.ep {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: $bg;
+  @media (max-width: 640px) { padding: 16px; }
+}
+
+// ── Header ────────────────────────────────────
+.page-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.hdr-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border-radius: $r;
+  display: flex; align-items: center; justify-content: center;
+  svg { width: 22px; height: 22px; color: white; }
+}
+
+h1 { font-size: 22px; font-weight: 700; color: $txt; margin: 0; }
+p  { font-size: 13px; color: $txt2; margin: 2px 0 0; }
+
+// ── Buttons ───────────────────────────────────
+.btn-primary {
+  display: flex; align-items: center; gap: 6px;
+  background: $primary; color: white;
+  border: none; border-radius: $r2;
+  padding: 9px 18px; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .15s;
+  svg { width: 16px; height: 16px; }
+  &:hover { background: #4f46e5; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.btn-ghost {
+  background: white; color: $txt2;
+  border: 1px solid $border; border-radius: $r2;
+  padding: 9px 18px; font-size: 14px; font-weight: 500;
+  cursor: pointer;
+  &:hover { background: $bg; }
+}
+
+.icon-btn {
+  background: none; border: none; cursor: pointer;
+  color: $txt2; padding: 4px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  svg { width: 18px; height: 18px; }
+  &:hover { background: $bg; color: $danger; }
+}
+
+// ── Form Panel ────────────────────────────────
+.form-panel {
+  background: white;
+  border: 1px solid $border;
+  border-radius: $r;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.fp-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  h3 { font-size: 16px; font-weight: 700; color: $txt; margin: 0; }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.fg { display: flex; flex-direction: column; gap: 5px; }
+
+label {
+  font-size: 12px;
+  font-weight: 600;
+  color: $txt2;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.req { color: $danger; }
+
+.fi {
+  padding: 9px 12px;
+  border: 1px solid $border;
+  border-radius: $r2;
+  font-size: 14px;
+  color: $txt;
+  background: white;
+  outline: none;
+  transition: border-color .15s;
+  &:focus { border-color: $primary; }
+}
+
+.check-fg { justify-content: flex-end; }
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: $txt;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: $primary; }
+}
+
+.fp-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+// ── States ────────────────────────────────────
+.center-state, .empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 12px;
+  padding: 60px 20px; color: $txt2; text-align: center;
+  svg { width: 48px; height: 48px; color: $txt3; }
+  h3 { font-size: 18px; font-weight: 700; color: $txt; margin: 0; }
+  p  { font-size: 14px; color: $txt2; margin: 0; }
+}
+
+.spin {
+  width: 32px; height: 32px;
+  border: 3px solid $border;
+  border-top-color: $primary;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+.spin-sm {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Employee Cards Grid ───────────────────────
+.emp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.emp-card {
+  background: white;
+  border: 1px solid $border;
+  border-radius: $r;
+  padding: 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  transition: box-shadow .2s;
+
+  &:hover { box-shadow: 0 4px 14px rgba(0,0,0,.1); }
+  &.inactive { opacity: .65; }
+}
+
+.ec-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ec-avatar {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; color: white;
+  flex-shrink: 0;
+}
+
+.ec-info { flex: 1; min-width: 0; }
+
+.ec-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: $txt;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ec-joined {
+  font-size: 11px;
+  color: $txt3;
+  margin-top: 2px;
+}
+
+.ec-status {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  &.active   { background: #d1fae5; color: #065f46; }
+  &.inactive { background: #fee2e2; color: #991b1b; }
+}
+
+.ec-salary {
+  background: $bg;
+  border-radius: $r2;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ec-sal-amt {
+  font-size: 22px;
+  font-weight: 800;
+  color: $primary;
+}
+
+.ec-sal-type {
+  font-size: 12px;
+  color: $txt2;
+}
+
+.ec-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit, .btn-delete {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 8px 12px;
+  border-radius: $r2;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid;
+  transition: background .15s;
+  svg { width: 14px; height: 14px; }
+}
+
+.btn-edit {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  &:hover { background: #dbeafe; }
+}
+
+.btn-delete {
+  background: #fff1f2;
+  color: $danger;
+  border-color: #fecdd3;
+  &:hover { background: #fee2e2; }
+}

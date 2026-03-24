@@ -1,0 +1,119 @@
+<div class="ep">
+
+  <!-- Header -->
+  <div class="page-hdr">
+    <div class="hdr-left">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Employees</h1>
+        <p>{{ employees.length }} staff members</p>
+      </div>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Add Employee
+    </button>
+  </div>
+
+  <!-- Form Panel -->
+  <div class="form-panel" *ngIf="showForm">
+    <div class="fp-hdr">
+      <h3>{{ editingId ? 'Edit Employee' : 'Add New Employee' }}</h3>
+      <button class="icon-btn" (click)="cancel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="form-grid">
+      <div class="fg">
+        <label>Full Name <span class="req">*</span></label>
+        <input class="fi" type="text" [(ngModel)]="form.name" placeholder="e.g. Tamil Selvam"/>
+      </div>
+      <div class="fg">
+        <label>Join Date <span class="req">*</span></label>
+        <input class="fi" type="date" [(ngModel)]="form.join_date"/>
+      </div>
+      <div class="fg">
+        <label>Salary Type <span class="req">*</span></label>
+        <select class="fi" [(ngModel)]="form.salary_type">
+          <option value="MONTHLY">Monthly</option>
+          <option value="WEEKLY">Weekly</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Salary Amount (₹) <span class="req">*</span></label>
+        <input class="fi" type="number" [(ngModel)]="form.salary_amount" placeholder="e.g. 18000" min="0"/>
+      </div>
+      <div class="fg check-fg" *ngIf="editingId">
+        <label class="check-label">
+          <input type="checkbox" [(ngModel)]="form.is_active"/>
+          <span>Active Employee</span>
+        </label>
+      </div>
+    </div>
+    <div class="fp-actions">
+      <button class="btn-ghost" (click)="cancel()">Cancel</button>
+      <button class="btn-primary" (click)="save()"
+        [disabled]="saving || !form.name || !form.join_date || !form.salary_amount">
+        <span *ngIf="!saving">{{ editingId ? 'Save Changes' : 'Add Employee' }}</span>
+        <span *ngIf="saving" class="spin-sm"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="center-state" *ngIf="loading">
+    <div class="spin"></div><p>Loading...</p>
+  </div>
+
+  <!-- Empty -->
+  <div class="empty-state" *ngIf="!loading && employees.length === 0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    </svg>
+    <h3>No employees yet</h3>
+    <p>Add your first staff member to get started.</p>
+    <button class="btn-primary" (click)="openCreate()">Add Employee</button>
+  </div>
+
+  <!-- Employee Cards -->
+  <div class="emp-grid" *ngIf="!loading && employees.length > 0">
+    <div class="emp-card" *ngFor="let emp of employees" [class.inactive]="!emp.is_active">
+      <div class="ec-top">
+        <div class="ec-avatar">{{ emp.name.charAt(0).toUpperCase() }}</div>
+        <div class="ec-info">
+          <div class="ec-name">{{ emp.name }}</div>
+          <div class="ec-joined">Joined {{ fmtDate(emp.join_date) }}</div>
+        </div>
+        <div class="ec-status" [class.active]="emp.is_active" [class.inactive]="!emp.is_active">
+          {{ emp.is_active ? 'Active' : 'Inactive' }}
+        </div>
+      </div>
+      <div class="ec-salary">
+        <div class="ec-sal-amt">{{ fmt(emp.salary_amount) }}</div>
+        <div class="ec-sal-type">{{ emp.salary_type === 'MONTHLY' ? 'per month' : 'per week' }}</div>
+      </div>
+      <div class="ec-actions">
+        <button class="btn-edit" (click)="openEdit(emp)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Edit
+        </button>
+        <button class="btn-delete" (click)="delete(emp)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
+          </svg>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

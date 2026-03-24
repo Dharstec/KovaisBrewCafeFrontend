@@ -103,6 +103,24 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/whatsapp/whatsapp-setup.page')
         .then(m => m.WhatsappSetupPage)
+  },
+
+  /* 👥 EMPLOYEES — Admin only */
+  {
+    path: 'employees',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/employees/employees.page')
+        .then(m => m.EmployeesPage)
+  },
+
+  /* 🎯 BUSINESS TARGETS — Admin only */
+  {
+    path: 'targets',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/targets/targets.page')
+        .then(m => m.TargetsPage)
   }
 
 ];

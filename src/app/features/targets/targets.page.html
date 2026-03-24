@@ -1,0 +1,604 @@
+<!-- ═══════════════════════════════════════════════
+     BUSINESS TARGETS — Expense Budget Tracker
+════════════════════════════════════════════════ -->
+
+<!-- ══ LIST VIEW ══════════════════════════════════ -->
+<div class="tp" *ngIf="view === 'list'">
+
+  <div class="page-hdr">
+    <div class="page-hdr-left">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Business Targets</h1>
+        <p>Set monthly expense budgets &amp; track your sales achievement</p>
+      </div>
+    </div>
+    <button class="btn-primary" (click)="showCreateForm = !showCreateForm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      New Target
+    </button>
+  </div>
+
+  <!-- Create Panel -->
+  <div class="create-panel" *ngIf="showCreateForm">
+    <div class="cp-hdr">
+      <h3>Create New Target Period</h3>
+      <button class="icon-btn" (click)="showCreateForm = false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="form-row">
+      <div class="fg">
+        <label>Period Name</label>
+        <input class="fi" type="text" [(ngModel)]="createForm.name" placeholder="e.g. March 7 – April 7"/>
+      </div>
+      <div class="fg">
+        <label>Start Date</label>
+        <input class="fi" type="date" [(ngModel)]="createForm.start_date"/>
+      </div>
+      <div class="fg">
+        <label>End Date</label>
+        <input class="fi" type="date" [(ngModel)]="createForm.end_date"/>
+      </div>
+      <div class="fg">
+        <label>Sales Target (₹) <span class="lbl-hint">— how much you want to earn</span></label>
+        <input class="fi" type="number" [(ngModel)]="createForm.sales_target" placeholder="e.g. 80000" min="0"/>
+      </div>
+    </div>
+    <p class="cp-hint">After creating, add your expense budgets (Deepika, Tamil, Rent, EB, etc.) one by one.</p>
+    <div class="cp-actions">
+      <button class="btn-ghost" (click)="showCreateForm = false">Cancel</button>
+      <button class="btn-primary" (click)="createTarget()" [disabled]="creating || !createForm.start_date || !createForm.end_date">
+        <span *ngIf="!creating">Create</span>
+        <span *ngIf="creating" class="spin-sm"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="center-state" *ngIf="loading">
+    <div class="spin"></div><p>Loading...</p>
+  </div>
+
+  <!-- Empty -->
+  <div class="empty-state" *ngIf="!loading && targets.length === 0">
+    <div class="empty-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+      </svg>
+    </div>
+    <h3>No targets yet</h3>
+    <p>Create your first target period to track expense budgets and sales.</p>
+    <button class="btn-primary" (click)="showCreateForm = true">Create Target</button>
+  </div>
+
+  <!-- Cards -->
+  <div class="card-grid" *ngIf="!loading && targets.length > 0">
+    <div class="tcard" *ngFor="let t of targets" (click)="openDetail(t)">
+      <div class="tcard-hdr">
+        <div class="tcard-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
+          </svg>
+        </div>
+        <h3>{{ t.name }}</h3>
+        <button class="icon-btn danger" (click)="deleteTarget(t.id, $event)" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="tcard-dates">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+        {{ fmtDate(t.start_date) }} &rarr; {{ fmtDate(t.end_date) }}
+      </div>
+      <div class="tcard-stats">
+        <div class="tstat">
+          <span class="tstat-lbl">Total Budget</span>
+          <span class="tstat-val">{{ fmt(+t.total_budget) }}</span>
+        </div>
+        <div class="tstat">
+          <span class="tstat-lbl">Expense Items</span>
+          <span class="tstat-val badge">{{ t.item_count }}</span>
+        </div>
+      </div>
+      <div class="tcard-footer">
+        View Details
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /list -->
+
+
+<!-- ══ DETAIL VIEW ════════════════════════════════ -->
+<div class="tp" *ngIf="view === 'detail'">
+
+  <!-- Header -->
+  <div class="detail-hdr">
+    <button class="btn-back" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back
+    </button>
+    <div class="detail-title-blk">
+      <h1>{{ selected?.name }}</h1>
+      <span class="date-range">{{ fmtDate(selected?.start_date) }} → {{ fmtDate(selected?.end_date) }}
+        <span class="day-badge" *ngIf="achievement">{{ achievement.total_days }} days</span>
+      </span>
+    </div>
+    <button class="btn-outline" (click)="editMode = !editMode" *ngIf="!editMode">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+      Edit
+    </button>
+  </div>
+
+  <!-- Edit Panel -->
+  <div class="edit-panel" *ngIf="editMode">
+    <div class="form-row">
+      <div class="fg full">
+        <label>Period Name</label>
+        <input class="fi" type="text" [(ngModel)]="editForm.name"/>
+      </div>
+      <div class="fg">
+        <label>Start Date</label>
+        <input class="fi" type="date" [(ngModel)]="editForm.start_date"/>
+      </div>
+      <div class="fg">
+        <label>End Date</label>
+        <input class="fi" type="date" [(ngModel)]="editForm.end_date"/>
+      </div>
+      <div class="fg">
+        <label>Sales Target (₹)</label>
+        <input class="fi" type="number" [(ngModel)]="editForm.sales_target" min="0"/>
+      </div>
+    </div>
+    <div class="cp-actions">
+      <button class="btn-ghost" (click)="editMode = false">Cancel</button>
+      <button class="btn-primary" (click)="saveEdit()">Save</button>
+    </div>
+  </div>
+
+  <!-- ── Two Column Layout ── -->
+  <div class="detail-grid">
+
+    <!-- LEFT: Expense Budget Setup -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-icon expense-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+        </div>
+        <div>
+          <h2>Expense Budget</h2>
+          <span class="panel-sub" *ngIf="totalBudget > 0">Total: <strong>{{ fmt(totalBudget) }}</strong></span>
+        </div>
+      </div>
+
+      <!-- Items List -->
+      <div class="expense-list" *ngIf="selected?.items?.length > 0">
+        <div class="expense-row" *ngFor="let item of selected.items; let i = index">
+          <span class="e-num">{{ i + 1 }}</span>
+          <span class="e-name">{{ item.item_name }}</span>
+          <span class="e-amt">{{ fmt(+item.target_amount) }}</span>
+          <button class="icon-btn danger sm" (click)="removeItem(item.id)" title="Remove">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="expense-total-row">
+          <span>Total Budget</span>
+          <span class="e-total">{{ fmt(totalBudget) }}</span>
+        </div>
+      </div>
+
+      <div class="list-empty" *ngIf="!selected?.items?.length">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+        <p>No expense items yet.<br>Add your monthly expenses below.</p>
+      </div>
+
+      <!-- Add Item Form -->
+      <div class="add-form">
+        <div class="add-form-title">Add Expense Item</div>
+        <div class="add-inputs">
+          <input
+            class="fi"
+            type="text"
+            [(ngModel)]="newItem.item_name"
+            placeholder="Name (e.g. Deepika, Tamil, Rent, EB)"
+            (keyup.enter)="addItem()"
+          />
+          <input
+            class="fi amt-fi"
+            type="number"
+            [(ngModel)]="newItem.target_amount"
+            placeholder="Amount (₹)"
+            min="0"
+            (keyup.enter)="addItem()"
+          />
+          <button
+            class="btn-add"
+            (click)="addItem()"
+            [disabled]="addingItem || !newItem.item_name || !newItem.target_amount"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" *ngIf="!addingItem"><path d="M12 5v14M5 12h14"/></svg>
+            <span class="spin-sm" *ngIf="addingItem"></span>
+            Add
+          </button>
+        </div>
+      </div>
+    </div><!-- /left panel -->
+
+    <!-- RIGHT: Achievement Dashboard -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <div class="panel-icon achieve-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div>
+          <h2>Achievement</h2>
+          <span class="panel-sub" *ngIf="achievement">
+            {{ achievement.days_elapsed }} of {{ achievement.total_days }} days elapsed
+          </span>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="center-state" *ngIf="loadingAchieve">
+        <div class="spin"></div><p>Calculating...</p>
+      </div>
+
+      <ng-container *ngIf="!loadingAchieve && achievement">
+
+        <!-- ══════════════════════════════════════════
+             BIG SUMMARY — The Clear View
+        ══════════════════════════════════════════ -->
+        <div class="big-summary">
+
+          <!-- Row 1: 3 main numbers -->
+          <div class="bs-row">
+            <div class="bs-cell target-cell">
+              <div class="bs-lbl">Sales Target</div>
+              <div class="bs-val">{{ fmt(achievement.sales_target) }}</div>
+              <div class="bs-sub">goal for this period</div>
+            </div>
+            <div class="bs-cell sales-cell">
+              <div class="bs-lbl">Sales Achieved</div>
+              <div class="bs-val">{{ fmt(achievement.actual_sales) }}</div>
+              <div class="bs-sub">{{ achievement.total_bills }} bills · {{ achievement.days_elapsed }} days</div>
+            </div>
+            <div class="bs-cell expense-cell">
+              <div class="bs-lbl">Total Expenses</div>
+              <div class="bs-val">{{ fmt(achievement.total_expenses) }}</div>
+              <div class="bs-sub">spent + advances</div>
+            </div>
+          </div>
+
+          <!-- Row 2: In Hand highlight -->
+          <div class="in-hand-row" [class.positive]="achievement.in_hand >= 0" [class.negative]="achievement.in_hand < 0">
+            <div class="ih-left">
+              <div class="ih-label">In Hand (Net)</div>
+              <div class="ih-formula">{{ fmt(achievement.actual_sales) }} sales − {{ fmt(achievement.total_expenses) }} expenses</div>
+            </div>
+            <div class="ih-value">{{ fmt(achievement.in_hand) }}</div>
+          </div>
+
+          <!-- Row 3: Sales target progress bar -->
+          <div class="target-progress" *ngIf="achievement.sales_target > 0">
+            <div class="tp-labels">
+              <span>Sales Progress</span>
+              <span class="tp-pct">{{ salesPct() }}% of target</span>
+            </div>
+            <div class="tp-track">
+              <div class="tp-fill"
+                [style.width.%]="salesPct()"
+                [style.background]="salesPct() >= 100 ? '#10b981' : salesPct() >= 70 ? '#f59e0b' : '#6366f1'">
+              </div>
+            </div>
+            <div class="tp-sub">
+              <span>{{ fmt(achievement.actual_sales) }} earned</span>
+              <span class="tp-need" *ngIf="achievement.remaining_sales > 0">Need {{ fmt(achievement.remaining_sales) }} more</span>
+              <span class="tp-done" *ngIf="achievement.remaining_sales <= 0">Target reached!</span>
+            </div>
+          </div>
+
+          <!-- Row 4: Budget coverage pace — always shown -->
+          <div class="budget-pace-box">
+            <div class="bp-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+              </svg>
+              To pay all salaries, rent &amp; EB by month end
+            </div>
+            <div class="bp-grid">
+              <div class="bp-cell">
+                <div class="bp-lbl">In Hand Now</div>
+                <div class="bp-val blue">{{ fmt(achievement.in_hand) }}</div>
+              </div>
+              <div class="bp-cell">
+                <div class="bp-lbl">Still Need to Pay</div>
+                <div class="bp-val orange">{{ fmt(achievement.budget_remaining) }}</div>
+              </div>
+              <div class="bp-cell">
+                <div class="bp-lbl">Days Left</div>
+                <div class="bp-val">{{ achievement.days_left }}</div>
+              </div>
+            </div>
+            <div class="bp-pace-row">
+              <div class="bp-pace-item">
+                <div class="bp-pace-lbl">You're earning avg</div>
+                <div class="bp-pace-val">{{ fmt(achievement.avg_daily_sales) }}/day</div>
+              </div>
+              <div class="bp-pace-arrow">→</div>
+              <div class="bp-pace-item">
+                <div class="bp-pace-lbl">Need to earn</div>
+                <div class="bp-pace-val needed" [class.on-track]="onTrack" [class.behind]="!onTrack">
+                  {{ achievement.budget_daily_needed > 0 ? fmt(achievement.budget_daily_needed) + '/day' : 'Budget covered!' }}
+                </div>
+              </div>
+              <div class="bp-status" [class.on-track]="onTrack" [class.behind]="!onTrack">
+                {{ onTrack ? 'On Track' : 'Behind' }}
+              </div>
+            </div>
+            <div class="bp-note" *ngIf="achievement.budget_daily_needed > 0">
+              Need {{ fmt(achievement.net_still_needed) }} more over {{ achievement.days_left }} days
+              (includes est. daily expenses)
+            </div>
+          </div>
+
+        </div><!-- /big-summary -->
+
+        <!-- ── Payment Split ── -->
+        <div class="payment-split">
+          <div class="ps-item cash">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/>
+            </svg>
+            <div>
+              <div class="ps-lbl">Cash</div>
+              <div class="ps-val">{{ fmt(achievement.cash_sales) }}</div>
+            </div>
+          </div>
+          <div class="ps-divider"></div>
+          <div class="ps-item upi">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <div>
+              <div class="ps-lbl">UPI</div>
+              <div class="ps-val">{{ fmt(achievement.upi_sales) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Expense Budget Tracking ── -->
+        <div class="section-divider"><span>Expense Budget Tracking</span></div>
+
+        <!-- Budget overview: spent + advance breakdown -->
+        <div class="budget-overview">
+          <div class="bo-row">
+            <span class="bo-label">Daily Expenses</span>
+            <span class="bo-val">{{ fmt(achievement.spent_expenses) }}</span>
+          </div>
+          <div class="bo-row" *ngIf="achievement.employee_advance_total > 0">
+            <span class="bo-label">Employee Advances</span>
+            <span class="bo-val advance-val">{{ fmt(achievement.employee_advance_total) }}</span>
+          </div>
+          <div class="bo-divider"></div>
+          <div class="bo-row total-row">
+            <span class="bo-label">Total Expenses</span>
+            <span class="bo-val">{{ fmt(achievement.total_expenses) }} <span class="bo-of">of {{ fmt(achievement.total_budget) }} budget</span></span>
+          </div>
+          <div class="prog-track">
+            <div class="prog-fill"
+              [style.width.%]="pct(achievement.total_expenses, achievement.total_budget)"
+              [style.background]="barColor(achievement.total_expenses, achievement.total_budget)">
+            </div>
+          </div>
+          <div class="bo-sub">
+            <span>{{ pct(achievement.total_expenses, achievement.total_budget) }}% of budget used</span>
+            <span class="bo-left" [class.over]="achievement.total_expenses > achievement.total_budget">
+              {{ achievement.total_expenses > achievement.total_budget
+                ? 'Over by ' + fmt(achievement.total_expenses - achievement.total_budget)
+                : fmt(achievement.total_budget - achievement.total_expenses) + ' remaining' }}
+            </span>
+          </div>
+        </div>
+
+
+        <!-- Per-item expense cards -->
+        <div class="item-cards" *ngIf="selected?.items?.length > 0">
+          <div class="item-card" *ngFor="let item of selected.items">
+
+            <!-- Row 1: name + action buttons -->
+            <div class="ic-top">
+              <span class="ic-name">{{ item.item_name }}</span>
+              <div class="ic-btns">
+                <button class="btn-pay" (click)="openPay(item)" title="Record daily expense">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                    <path d="M2 10h20"/>
+                  </svg>
+                  Pay
+                </button>
+                <button class="btn-advance" (click)="openAdvance(item)" title="Give employee advance">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                  Advance
+                </button>
+              </div>
+            </div>
+
+            <!-- Row 2: progress bar -->
+            <div class="ic-bar-track">
+              <div class="ic-bar-fill"
+                [style.width.%]="pct(itemActual(item.id), +item.target_amount)"
+                [style.background]="barColor(itemActual(item.id), +item.target_amount)">
+              </div>
+            </div>
+
+            <!-- Row 3: paid / budget / % -->
+            <div class="ic-amounts">
+              <div class="ic-paid">
+                <span class="ic-lbl">Paid</span>
+                <span class="ic-paid-val">{{ fmt(itemActual(item.id)) }}</span>
+              </div>
+              <div class="ic-budget">
+                <span class="ic-lbl">Budget</span>
+                <span class="ic-budget-val">{{ fmt(+item.target_amount) }}</span>
+              </div>
+              <div class="ic-remaining">
+                <span class="ic-lbl">Remaining</span>
+                <span class="ic-rem-val" [class.over-budget]="itemActual(item.id) > +item.target_amount">
+                  {{ itemActual(item.id) > +item.target_amount ? '–' + fmt(itemActual(item.id) - +item.target_amount) : fmt(itemRemaining(item.id, +item.target_amount)) }}
+                </span>
+              </div>
+              <div class="ic-daily" *ngIf="achievement.days_left > 0 && itemRemaining(item.id, +item.target_amount) > 0">
+                <span class="ic-lbl">Per Day Left</span>
+                <span class="ic-daily-val">{{ fmt(dailyRemaining(item.id, +item.target_amount)) }}/day</span>
+              </div>
+            </div>
+
+            <!-- Advance history for this item -->
+            <ng-container *ngIf="itemAdvances(item.item_name).length > 0">
+              <div class="ic-adv-toggle" (click)="toggleAdvances(item.id)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                </svg>
+                Advances paid: {{ fmt(itemAdvanceTotal(item.item_name)) }}
+                <span class="ic-adv-count">{{ itemAdvances(item.item_name).length }}</span>
+                <svg class="ic-adv-arrow" [class.open]="showAdvances[item.id]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+              <div class="ic-adv-list" *ngIf="showAdvances[item.id]">
+                <div class="ic-adv-row" *ngFor="let a of itemAdvances(item.item_name)">
+                  <span class="ic-adv-name">{{ a.employee_name }}</span>
+                  <span class="ic-adv-date">{{ fmtDate(a.advance_date) }}</span>
+                  <span class="ic-adv-amt">{{ fmt(a.amount) }}</span>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Inline Pay Form -->
+            <ng-container *ngIf="payForm && payForm.itemId === item.id">
+              <div class="pay-form">
+                <div class="pay-form-title">Record Payment — {{ item.item_name }}</div>
+                <div class="pay-inputs">
+                  <div class="fg">
+                    <label>Amount (₹)</label>
+                    <input class="fi" type="number" [(ngModel)]="$any(payForm).amount" placeholder="Enter amount" min="0" (keyup.enter)="submitPay()"/>
+                  </div>
+                  <div class="fg">
+                    <label>Date</label>
+                    <input class="fi" type="date" [(ngModel)]="$any(payForm).date"/>
+                  </div>
+                  <div class="fg">
+                    <label>Mode</label>
+                    <select class="fi" [(ngModel)]="$any(payForm).payment_mode">
+                      <option value="CASH">Cash</option>
+                      <option value="UPI">UPI</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="pay-actions">
+                  <button class="btn-ghost sm" (click)="closePay()">Cancel</button>
+                  <button class="btn-pay-submit" (click)="submitPay()" [disabled]="paying || !$any(payForm).amount">
+                    <span *ngIf="!paying">Record Payment</span>
+                    <span *ngIf="paying" class="spin-sm"></span>
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Inline Advance Form -->
+            <ng-container *ngIf="advForm && advForm.itemId === item.id">
+              <div class="adv-form">
+                <div class="adv-form-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  </svg>
+                  Employee Advance — {{ item.item_name }}
+                </div>
+                <div class="pay-inputs">
+                  <div class="fg">
+                    <label>Employee</label>
+                    <select class="fi" [(ngModel)]="$any(advForm).employee_id">
+                      <option [ngValue]="null">— Select employee —</option>
+                      <option *ngFor="let e of activeEmployees" [ngValue]="e.id">{{ e.name }}</option>
+                    </select>
+                  </div>
+                  <div class="fg">
+                    <label>Amount (₹)</label>
+                    <input class="fi" type="number" [(ngModel)]="$any(advForm).amount" placeholder="Enter amount" min="0" (keyup.enter)="submitAdvance()"/>
+                  </div>
+                  <div class="fg">
+                    <label>Date</label>
+                    <input class="fi" type="date" [(ngModel)]="$any(advForm).date"/>
+                  </div>
+                  <div class="fg">
+                    <label>Note (optional)</label>
+                    <input class="fi" type="text" [(ngModel)]="$any(advForm).note" placeholder="e.g. March advance"/>
+                  </div>
+                </div>
+                <div class="pay-actions">
+                  <button class="btn-ghost sm" (click)="closeAdvance()">Cancel</button>
+                  <button class="btn-adv-submit" (click)="submitAdvance()" [disabled]="addingAdvance || !$any(advForm).amount || !$any(advForm).employee_id">
+                    <span *ngIf="!addingAdvance">Give Advance</span>
+                    <span *ngIf="addingAdvance" class="spin-sm"></span>
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+
+          </div>
+        </div>
+
+        <div class="no-items-hint" *ngIf="!selected?.items?.length">
+          <p>Add expense items on the left to see budget tracking here.</p>
+        </div>
+
+        <!-- ── P&L Summary ── -->
+        <div class="section-divider"><span>Profit &amp; Loss</span></div>
+        <div class="pnl-table">
+          <div class="pnl-row">
+            <span>Total Sales (Actual)</span>
+            <span class="pnl-val green-text">{{ fmt(achievement.actual_sales) }}</span>
+          </div>
+          <div class="pnl-row">
+            <span>Total Expenses (Actual)</span>
+            <span class="pnl-val red-text">{{ fmt(achievement.total_expenses) }}</span>
+          </div>
+          <div class="pnl-row">
+            <span>Avg Daily Expense</span>
+            <span class="pnl-val">{{ fmt(achievement.avg_daily_expense) }}/day</span>
+          </div>
+          <div class="pnl-row net">
+            <span>Net Profit</span>
+            <span class="pnl-val" [class.green-text]="achievement.net_profit >= 0" [class.red-text]="achievement.net_profit < 0">
+              {{ fmt(achievement.net_profit) }}
+            </span>
+          </div>
+        </div>
+
+      </ng-container><!-- /achievement -->
+
+    </div><!-- /right panel -->
+
+  </div><!-- /detail-grid -->
+</div><!-- /detail view -->
