@@ -281,9 +281,9 @@
               <div class="bs-sub">{{ achievement.total_bills }} bills · {{ achievement.days_elapsed }} days</div>
             </div>
             <div class="bs-cell expense-cell">
-              <div class="bs-lbl">Total Expenses</div>
-              <div class="bs-val">{{ fmt(achievement.total_expenses) }}</div>
-              <div class="bs-sub">spent + advances</div>
+              <div class="bs-lbl">Daily Expenses</div>
+              <div class="bs-val">{{ fmt(achievement.spent_expenses) }}</div>
+              <div class="bs-sub">operational costs</div>
             </div>
           </div>
 
@@ -387,34 +387,30 @@
         <!-- ── Expense Budget Tracking ── -->
         <div class="section-divider"><span>Expense Budget Tracking</span></div>
 
-        <!-- Budget overview: spent + advance breakdown -->
+        <!-- Budget overview: only Pay + Advance toward budget items -->
         <div class="budget-overview">
-          <div class="bo-row">
-            <span class="bo-label">Daily Expenses</span>
-            <span class="bo-val">{{ fmt(achievement.spent_expenses) }}</span>
+          <div class="bo-row total-row">
+            <span class="bo-label">Budget Allocated</span>
+            <span class="bo-val">{{ fmt(achievement.total_budget) }}</span>
           </div>
-          <div class="bo-row" *ngIf="achievement.employee_advance_total > 0">
-            <span class="bo-label">Employee Advances</span>
-            <span class="bo-val advance-val">{{ fmt(achievement.employee_advance_total) }}</span>
+          <div class="bo-row">
+            <span class="bo-label">Paid (Pay + Advances)</span>
+            <span class="bo-val advance-val">{{ fmt(achievement.total_item_paid) }}</span>
           </div>
           <div class="bo-divider"></div>
-          <div class="bo-row total-row">
-            <span class="bo-label">Total Expenses</span>
-            <span class="bo-val">{{ fmt(achievement.total_expenses) }} <span class="bo-of">of {{ fmt(achievement.total_budget) }} budget</span></span>
+          <div class="bo-row">
+            <span class="bo-label">Budget Remaining</span>
+            <span class="bo-val">{{ fmt(achievement.budget_remaining) }}</span>
           </div>
           <div class="prog-track">
             <div class="prog-fill"
-              [style.width.%]="pct(achievement.total_expenses, achievement.total_budget)"
-              [style.background]="barColor(achievement.total_expenses, achievement.total_budget)">
+              [style.width.%]="pct(achievement.total_item_paid, achievement.total_budget)"
+              [style.background]="barColor(achievement.total_item_paid, achievement.total_budget)">
             </div>
           </div>
           <div class="bo-sub">
-            <span>{{ pct(achievement.total_expenses, achievement.total_budget) }}% of budget used</span>
-            <span class="bo-left" [class.over]="achievement.total_expenses > achievement.total_budget">
-              {{ achievement.total_expenses > achievement.total_budget
-                ? 'Over by ' + fmt(achievement.total_expenses - achievement.total_budget)
-                : fmt(achievement.total_budget - achievement.total_expenses) + ' remaining' }}
-            </span>
+            <span>{{ pct(achievement.total_item_paid, achievement.total_budget) }}% of budget paid</span>
+            <span class="bo-left">{{ fmt(achievement.budget_remaining) }} still to pay</span>
           </div>
         </div>
 
