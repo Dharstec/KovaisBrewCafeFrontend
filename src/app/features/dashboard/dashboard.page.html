@@ -116,9 +116,17 @@
         <div class="chart-card-head">
           <div>
             <h3>Items Sold</h3>
-            <p>Top 15 products by units · {{ displayDate }}</p>
+            <p>Top 15 products by units · {{ itemRangeLabel }}</p>
           </div>
           <div class="chart-badge">Horizontal Bar</div>
+        </div>
+        <div class="item-range-row">
+          <label>From</label>
+          <input type="date" [(ngModel)]="itemStart" [max]="itemEnd || todayStr" />
+          <label>To</label>
+          <input type="date" [(ngModel)]="itemEnd"   [min]="itemStart" [max]="todayStr" />
+          <button class="item-range-btn" (click)="applyItemRange()">Apply</button>
+          <button class="item-range-reset" (click)="itemStart=todayStr; itemEnd=todayStr; applyItemRange()">Today</button>
         </div>
         <div class="chart-area h380" *ngIf="hasItemData; else noItem">
           <canvas baseChart [data]="itemChartData" [options]="itemChartOptions" chartType="bar"></canvas>

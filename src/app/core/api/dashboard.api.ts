@@ -24,9 +24,10 @@ export class DashboardApi {
     );
   }
 
-  getItemSalesChart(date?: string) {
+  getItemSalesChart(date?: string, startDate?: string, endDate?: string) {
     const params: Record<string, string> = {};
-    if (date) params['date'] = date;
+    if (startDate && endDate) { params['startDate'] = startDate; params['endDate'] = endDate; }
+    else if (date) params['date'] = date;
     return this.http.get<any[]>(
       `${environment.apiUrl}/dashboard/sales_chart`, { params }
     );

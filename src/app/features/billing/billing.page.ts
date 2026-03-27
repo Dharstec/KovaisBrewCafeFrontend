@@ -7,6 +7,7 @@ import { BillingStore }      from '../../core/state/billing.store';
 import { ProductApi }        from '../../core/api/product.api';
 import { BillApi }           from '../../core/api/bill.api';
 import { OfflineQueueService } from '../../core/services/offline-queue.service';
+import { PrinterService }    from '../../core/services/printer.service';
 
 @Component({
   standalone: true,
@@ -22,6 +23,7 @@ export class BillingPage implements OnInit, OnDestroy {
   productApi   = inject(ProductApi);
   billApi      = inject(BillApi);
   offlineQueue = inject(OfflineQueueService);
+  printer      = inject(PrinterService);
   LOW_STOCK_DEFAULT = 5;
 
   /* ── catalogue ── */
@@ -277,6 +279,7 @@ export class BillingPage implements OnInit, OnDestroy {
       await this.offlineQueue.add(offlineBill);
       this.syncPending++;
       this.showSuccess('Bill queued — will complete when connected');
+      this.printReceipt(0, items, offlineBill.grand_total, offlineBill.payment_mode, offlineBill.customer_name);
       this.clearBill();
       return;
     }
@@ -294,7 +297,11 @@ export class BillingPage implements OnInit, OnDestroy {
           grand_total:   this.finalTotal,
           payment_mode:  this.paymentMethod
         }).subscribe({
-          next:  () => { this.isCompleting = false; this.clearBill(); },
+          next:  () => {
+            this.isCompleting = false;
+            this.printReceipt(billId, items, this.finalTotal, this.paymentMethod, this.customerName);
+            this.clearBill();
+          },
           error: () => { this.isCompleting = false; this.showError('Failed to complete bill'); }
         });
       },
@@ -358,6 +365,28 @@ export class BillingPage implements OnInit, OnDestroy {
     if (this.syncPending === 0) {
       this.showSuccess('All offline bills synced!');
     }
+  }
+
+  /* ════════════════════════════════
+     PRINT
+  ════════════════════════════════ */
+  printReceipt(
+    billId      : number,
+    items       : { name: string; price: number; qty: number }[],
+    grandTotal  : number,
+    paymentMode : string,
+    customerName: string
+  ) {
+    if (!this.printer.isAndroid()) return;  // only works on Android with RawBT
+    this.printer.printViaRawBT({
+      billId,
+      customerName,
+      paymentMode,
+      items,
+      subtotal    : this.subtotal,
+      discount    : this.couponDiscount,
+      grandTotal
+    });
   }
 
   /* ════════════════════════════════

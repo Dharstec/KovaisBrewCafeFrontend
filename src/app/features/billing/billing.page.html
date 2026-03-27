@@ -271,6 +271,15 @@
         <span *ngIf="isCompleting">Completing…</span>
       </button>
 
+      <!-- Test Print button — remove after confirming printer works -->
+      <button
+        class="action-btn"
+        *ngIf="printer.isAndroid()"
+        style="background:#607d8b"
+        (click)="printer.testPrint()">
+        🖨️ Test Print
+      </button>
+
     </div>
 
     <!-- Bill ID indicator -->

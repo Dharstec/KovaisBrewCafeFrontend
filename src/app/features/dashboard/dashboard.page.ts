@@ -46,6 +46,14 @@ export class DashboardPage implements OnInit {
   loadingSummary = false;
   loadingCharts  = false;
 
+  /* ── Items Sold date range ── */
+  itemStart = new Date().toISOString().split('T')[0];
+  itemEnd   = new Date().toISOString().split('T')[0];
+  get itemRangeLabel() {
+    if (this.itemStart === this.itemEnd) return this.itemStart === this.todayStr ? 'Today' : this.itemStart;
+    return `${this.itemStart} → ${this.itemEnd}`;
+  }
+
   totalSpend    = 0;
   spendBreakdown: any[] = [];
   spendRecords:   any[] = [];
@@ -242,6 +250,14 @@ export class DashboardPage implements OnInit {
   goToday()      { this.selectedDate = this.todayStr; this.isToday = true; this.loadAll(); }
   refresh()      { this.loadAll(); }
 
+  applyItemRange() {
+    if (!this.itemStart || !this.itemEnd) return;
+    this.api.getItemSalesChart(undefined, this.itemStart, this.itemEnd).subscribe({
+      next:  res => this.buildItemChart(res),
+      error: ()  => {}
+    });
+  }
+
   loadAll() {
     const d = this.selectedDate || undefined;
     this.loadSummary(d);
@@ -265,7 +281,7 @@ export class DashboardPage implements OnInit {
       error: ()  => {}
     });
 
-    this.api.getItemSalesChart(date).subscribe({
+    this.api.getItemSalesChart(date, this.itemStart, this.itemEnd).subscribe({
       next:  res => this.buildItemChart(res),
       error: ()  => {}
     });
