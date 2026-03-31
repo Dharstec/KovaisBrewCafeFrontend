@@ -72,15 +72,10 @@ export class ProductsPage implements OnInit {
       image_url: '',
       is_sellable: true,
       is_manual_price: false,
-      track_stock: false,
-      base_unit: 'pcs',
-      unit_label: 'piece',
-      unit_value: 1,
-      current_qty: 0,
-      min_qty: 0,
       is_active: true
     };
     this.recipeItems = [];
+    this.loadStockProducts();
     this.show = true;
   }
 
@@ -91,35 +86,27 @@ export class ProductsPage implements OnInit {
   edit(p: any) {
     this.loadStockProducts();
 
-    // 🔥 normalize booleans
-    const isSellable = p.is_sellable === true || p.is_sellable === 'true';
-    const trackStock = p.track_stock === true || p.track_stock === 'true';
-
     this.form = {
       ...p,
-      is_sellable: isSellable,
-      track_stock: trackStock
+      is_sellable: p.is_sellable === true || p.is_sellable === 'true'
     };
 
     this.recipeItems = [];
-    // 🔥 ONLY load recipe for sell items without stock
-    if (isSellable) {
-
-      this.productApi.getRecipeByProduct(p.id)
-        .subscribe((res: any) => {
-
-          // 🔥 handle both response types safely
-          const items = Array.isArray(res) ? res : res?.data;
-
-          this.recipeItems = items || [];
-        });
+    if (this.form.is_sellable) {
+      this.productApi.getRecipeByProduct(p.id).subscribe((res: any) => {
+        const items = Array.isArray(res) ? res : res?.data;
+        this.recipeItems = (items || []).map((r: any) => ({
+          stock_item_id: r.stock_item_id,
+          used_qty: r.used_qty
+        }));
+      });
     }
 
     this.show = true;
   }
 
   addRecipe() {
-    this.recipeItems.push({ raw_product_id: '', used_qty: 1 });
+    this.recipeItems.push({ stock_item_id: '', used_qty: 1 });
   }
 
   removeRecipe(i: number) {
@@ -134,10 +121,11 @@ export class ProductsPage implements OnInit {
       : this.productApi.productCreate(payload);
 
     req.subscribe((res: any) => {
+      const productId = this.form.id || res?.product?.id || res?.id;
 
-      if (this.form.id && this.form.is_sellable) {
+      if (productId && this.form.is_sellable) {
         this.productApi.saveRecipe({
-          sale_product_id: this.form.id,
+          sale_product_id: productId,
           items: this.recipeItems
         }).subscribe(() => {
           this.close();
@@ -147,7 +135,6 @@ export class ProductsPage implements OnInit {
         this.close();
         this.loadProducts();
       }
-
     });
   }
 
@@ -173,25 +160,4 @@ changePage(p: number) {
 }
 
 
-  onBehaviourChange() {
-    if (!this.form.track_stock) {
-      this.form.current_qty = 0;
-      this.form.min_qty = 0;
-    }
-  }
-
-  onBaseUnitChange() {
-    if (this.form.base_unit === 'pcs') {
-      this.form.unit_label = 'piece';
-      this.form.unit_value = 1;
-    }
-    if (this.form.base_unit === 'ml') {
-      this.form.unit_label = 'litre';
-      this.form.unit_value = 1000;
-    }
-    if (this.form.base_unit === 'gram') {
-      this.form.unit_label = 'kg';
-      this.form.unit_value = 1000;
-    }
-  }
 }
