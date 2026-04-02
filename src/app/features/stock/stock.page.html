@@ -1,172 +1,149 @@
 <div class="stk">
 
-  <!-- ══════════════════════════════════════
-       HEADER
-       ══════════════════════════════════════ -->
+  <!-- ══ HEADER ══════════════════════════════════════════ -->
   <div class="stk-header">
-    <div class="stk-header__left">
-      <h1 class="stk-header__title">Stock Management</h1>
-      <p class="stk-header__sub">Manage raw materials, purchases &amp; expiry</p>
+    <div>
+      <h1 class="stk-header__title">Stock</h1>
+      <p class="stk-header__sub">Raw materials, purchases &amp; expiry</p>
     </div>
-
     <div class="search-wrap" *ngIf="activeTab === 'stock'">
-      <svg class="search-wrap__icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15"
-        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input class="search-wrap__input" type="text"
-        placeholder="Search item..." [(ngModel)]="searchTerm" />
+      <input type="text" placeholder="Search…" [(ngModel)]="searchTerm" />
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       TABS
-       ══════════════════════════════════════ -->
+  <!-- ══ TABS ════════════════════════════════════════════ -->
   <div class="tabs">
-    <button class="tab" [class.tab--active]="activeTab==='stock'"
-      (click)="setTab('stock')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+
+    <button class="tab" [class.tab--active]="activeTab==='stock'" (click)="setTab('stock')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       Stock
     </button>
-    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='add'"
-      (click)="setTab('add')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/>
+
+    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='add'" (click)="setTab('add')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
         <line x1="8" y1="12" x2="16" y2="12"/>
       </svg>
       Add Stock
     </button>
-    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='entries'"
-      (click)="setTab('entries')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+
+    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='purchases'" (click)="setTab('purchases')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
       </svg>
       Purchases
     </button>
-    <button class="tab" [class.tab--active]="activeTab==='expiring'"
-      (click)="setTab('expiring')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+
+    <button class="tab" [class.tab--active]="activeTab==='expiry'" (click)="setTab('expiry')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
         <line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
       Expiry
     </button>
-    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='logs'"
-      (click)="setTab('logs')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+
+    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='logs'" (click)="setTab('logs')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3v5h5"/>
+        <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
       </svg>
       Logs
     </button>
-    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='items'"
-      (click)="setTab('items')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+
+    <button *ngIf="isAdmin" class="tab" [class.tab--active]="activeTab==='items'" (click)="setTab('items')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/>
+        <line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
       </svg>
       Items
     </button>
+
   </div>
 
-  <!-- ══════════════════════════════════════
+  <!-- ══════════════════════════════════════════════════════
        TAB 1 — STOCK LIST
-       ══════════════════════════════════════ -->
-  <div *ngIf="activeTab === 'stock'">
+       ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'stock'">
 
     <div class="filter-badge" *ngIf="filterType">
       Showing: <strong>{{ filterType === 'low' ? 'Low Stock' : 'Out of Stock' }}</strong>
     </div>
 
-    <div class="loading-row" *ngIf="loading">Loading...</div>
+    <div class="loading-row" *ngIf="stockLoading">Loading…</div>
 
-    <div class="card" *ngIf="!loading && filteredStocks.length">
+    <div class="card" *ngIf="!stockLoading && filteredStocks.length">
       <table>
         <thead>
           <tr>
             <th>Item</th>
             <th>Category</th>
-            <th>Unit</th>
-            <th>Status</th>
+            <th>Stock</th>
             <th>Nearest Expiry</th>
-            <th>Min</th>
-            <th *ngIf="isAdmin">Update</th>
-            <th *ngIf="!isAdmin">Refill</th>
+            <th>Min Qty</th>
+            <th>Update Qty</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let p of filteredStocks">
+          <tr *ngFor="let s of filteredStocks">
 
-            <!-- ITEM -->
-            <td class="td-name">{{ p.name }}</td>
+            <td class="td-name">{{ s.name }}</td>
 
-            <!-- CATEGORY -->
-            <td class="td-cat">{{ p.category_name || '—' }}</td>
+            <td class="td-cat">{{ s.category_name || '—' }}</td>
 
-            <!-- UNIT -->
-            <td class="td-unit">
-              {{ p.unit_label }}
-              <small>({{ p.unit_value }} {{ p.base_unit }})</small>
-            </td>
-
-            <!-- STATUS + QTY -->
+            <!-- STOCK QTY + STATUS -->
             <td>
-              <div class="stock-status">
+              <div class="qty-cell">
                 <span class="stk-badge"
-                  [class.stk-badge--out]="p.current_qty <= 0"
-                  [class.stk-badge--low]="p.current_qty > 0 && p.is_low_stock"
-                  [class.stk-badge--ok]="!p.is_low_stock && p.current_qty > 0">
-                  <span *ngIf="p.current_qty <= 0">Out</span>
-                  <span *ngIf="p.current_qty > 0 && p.is_low_stock">Low</span>
-                  <span *ngIf="!p.is_low_stock && p.current_qty > 0">OK</span>
+                  [class.stk-badge--out]="s.current_qty <= 0"
+                  [class.stk-badge--low]="s.current_qty > 0 && s.is_low_stock"
+                  [class.stk-badge--ok]="!s.is_low_stock && s.current_qty > 0">
+                  {{ s.current_qty <= 0 ? 'Out' : s.is_low_stock ? 'Low' : 'OK' }}
                 </span>
-                <span class="stk-qty">{{ p.current_qty }}</span>
+                <span class="qty-val">{{ s.current_qty }} <small>{{ s.base_unit }}</small></span>
               </div>
             </td>
 
             <!-- NEAREST EXPIRY -->
             <td>
-              <div class="exp-cell" *ngIf="p.nearest_expiry">
-                <span class="exp-badge" [ngClass]="expiryBadgeClass(p)">
-                  {{ formatDate(p.nearest_expiry) }}
-                </span>
-                <span class="exp-count" *ngIf="p.expiring_count > 0">
-                  {{ p.expiring_count }} batch{{ p.expiring_count > 1 ? 'es' : '' }}
-                </span>
-              </div>
-              <span class="td-none" *ngIf="!p.nearest_expiry">—</span>
+              <span *ngIf="s.nearest_expiry" class="exp-badge" [ngClass]="expiryClass(s)">
+                {{ fmtDate(s.nearest_expiry) }}
+                <small *ngIf="s.expiring_count > 0">({{ s.expiring_count }} batch)</small>
+              </span>
+              <span *ngIf="!s.nearest_expiry" class="td-none">—</span>
             </td>
 
-            <!-- MIN QTY -->
-            <td class="td-min">{{ p.min_qty }}</td>
+            <!-- MIN -->
+            <td class="td-min">{{ s.min_qty }} <small>{{ s.base_unit }}</small></td>
 
-            <!-- UPDATE CELL -->
+            <!-- UPDATE -->
             <td>
               <div class="update-cell">
-                <input class="update-cell__qty" type="number"
-                  [(ngModel)]="p.change_qty" placeholder="qty" />
+                <input class="update-cell__qty" type="number" min="0.001" step="0.001"
+                  [(ngModel)]="s._qty" placeholder="qty" />
 
-                <select class="update-cell__reason" *ngIf="isAdmin" [(ngModel)]="p.reason">
-                  <option value="DAILY_REFILL">REFILL</option>
-                  <option value="WASTAGE">WASTAGE</option>
-                  <option value="ADJUSTMENT">ADJUST</option>
+                <select class="update-cell__reason" [(ngModel)]="s._reason">
+                  <option value="DAILY_REFILL">Refill</option>
+                  <option *ngIf="isAdmin" value="WASTAGE">Wastage</option>
+                  <option *ngIf="isAdmin" value="ADJUSTMENT">Adjust</option>
                 </select>
 
-                <select class="update-cell__reason" *ngIf="!isAdmin" [(ngModel)]="p.reason">
-                  <option value="DAILY_REFILL">REFILL</option>
-                </select>
-
-                <button class="btn-update" (click)="updateStock(p)">Update</button>
+                <button class="btn-update" (click)="updateStock(s)">Update</button>
               </div>
             </td>
 
@@ -175,154 +152,111 @@
       </table>
     </div>
 
-    <div class="empty-state" *ngIf="!loading && !filteredStocks.length">
+    <div class="empty-state" *ngIf="!stockLoading && !filteredStocks.length">
       <p>No stock items found</p>
     </div>
 
-  </div>
+  </ng-container>
 
-  <!-- ══════════════════════════════════════
-       TAB 2 — ADD STOCK
-       ══════════════════════════════════════ -->
-  <div *ngIf="activeTab === 'add'" class="add-wrap">
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 2 — ADD STOCK (admin)
+       ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'add'">
 
     <div class="form-card">
       <h2 class="form-card__title">Add Stock Purchase</h2>
-      <p class="form-card__sub">
-        Same item bought in multiple batches with different expiry dates?
-        Use <strong>Add Another Batch</strong> below.
-      </p>
+      <p class="form-card__sub">Record a new purchase and update stock quantity.</p>
 
-      <!-- ── SHARED FIELDS ── -->
       <div class="field-row">
 
         <div class="field">
           <label>Stock Item <span class="req">*</span></label>
-          <select [(ngModel)]="form.stock_item_id">
-            <option [value]="null">Select item...</option>
-            <option *ngFor="let d of dropdown" [value]="d.id">
-              {{ d.name }} ({{ d.unit_label }}) — {{ d.current_qty }} in stock
+          <select [(ngModel)]="addForm.stock_item_id">
+            <option [ngValue]="null">Select item…</option>
+            <option *ngFor="let d of dropdown" [ngValue]="d.id">
+              {{ d.name }} ({{ d.unit_label }}) — {{ d.current_qty }} {{ d.base_unit }} in stock
             </option>
           </select>
         </div>
 
-        <div class="field">
+        <div class="field field--sm">
+          <label>Qty
+            <span *ngIf="selectedDropdownItem">({{ selectedDropdownItem.unit_label }})</span>
+            <span class="req">*</span>
+          </label>
+          <input type="number" min="0.001" step="0.001" [(ngModel)]="addForm.qty" placeholder="0" />
+        </div>
+
+        <div class="field field--sm">
+          <label>Price / unit (₹) <span class="req">*</span></label>
+          <input type="number" min="0" step="0.01" [(ngModel)]="addForm.purchase_price" placeholder="0.00" />
+        </div>
+
+        <div class="field field--sm">
+          <label>Expiry Date</label>
+          <input type="date" [(ngModel)]="addForm.expiry_date" />
+        </div>
+
+        <div class="field field--sm">
           <label>Purchase Date</label>
-          <input type="date" [(ngModel)]="form.purchase_date" />
+          <input type="date" [(ngModel)]="addForm.purchase_date" />
         </div>
 
         <div class="field">
           <label>Supplier</label>
-          <input type="text" [(ngModel)]="form.supplier" placeholder="Vendor name (optional)" />
+          <input type="text" [(ngModel)]="addForm.supplier" placeholder="Vendor name (optional)" />
+        </div>
+
+        <div class="field field--sm">
+          <label>Batch No.</label>
+          <input type="text" [(ngModel)]="addForm.batch_no" placeholder="optional" />
+        </div>
+
+        <div class="field">
+          <label>Notes</label>
+          <input type="text" [(ngModel)]="addForm.notes" placeholder="optional" />
         </div>
 
       </div>
 
-      <!-- ── BATCH ROWS ── -->
-      <div class="batches-section">
-
-        <div class="batches-header">
-          <span class="batches-header__label">
-            Batches
-            <span class="batches-header__unit" *ngIf="selectedItem">
-              — unit: {{ selectedItem.unit_label }}
-            </span>
-          </span>
-          <span class="batches-header__hint">
-            Add one row per different expiry date
-          </span>
-        </div>
-
-        <div class="batch-row" *ngFor="let b of batches; let i = index">
-
-          <div class="batch-row__num">{{ i + 1 }}</div>
-
-          <div class="field field--sm">
-            <label>Qty ({{ selectedItem?.unit_label || 'unit' }}) <span class="req">*</span></label>
-            <input type="number" [(ngModel)]="b.qty"
-              placeholder="0" min="0.001" step="0.001" />
-          </div>
-
-          <div class="field field--sm">
-            <label>Price / {{ selectedItem?.unit_label || 'unit' }} (₹) <span class="req">*</span></label>
-            <input type="number" [(ngModel)]="b.purchase_price"
-              placeholder="0.00" min="0" step="0.01" />
-          </div>
-
-          <div class="field field--sm">
-            <label>Expiry Date</label>
-            <input type="date" [(ngModel)]="b.expiry_date" />
-          </div>
-
-          <div class="field field--sm">
-            <label>Batch No.</label>
-            <input type="text" [(ngModel)]="b.batch_no" placeholder="optional" />
-          </div>
-
-          <div class="field field--sm">
-            <label>Notes</label>
-            <input type="text" [(ngModel)]="b.notes" placeholder="optional" />
-          </div>
-
-          <button class="btn-remove-batch" (click)="removeBatchRow(i)"
-            *ngIf="batches.length > 1" title="Remove batch">
-            &#x2715;
-          </button>
-
-        </div>
-
-        <button class="btn-add-batch" (click)="addBatchRow()">
-          + Add Another Batch
-        </button>
-
-      </div>
-
-      <!-- ── TOTAL SUMMARY ── -->
-      <div class="total-bar" *ngIf="selectedItem && totalQty > 0">
-        Total:
-        <strong>{{ totalQty }} {{ selectedItem.unit_label }}</strong>
-        across
-        <strong>{{ batches.length }}</strong> batch{{ batches.length > 1 ? 'es' : '' }}
-      </div>
-
-      <!-- ── ERROR ── -->
       <div class="form-error" *ngIf="addError">{{ addError }}</div>
 
-      <!-- ── ACTIONS ── -->
       <div class="form-actions">
-        <button class="btn-reset" (click)="resetForm()">Reset</button>
-        <button class="btn-submit" (click)="submitAdd()" [disabled]="addLoading">
-          {{ addLoading ? 'Saving...' : 'Save Stock' }}
+        <button class="btn-reset" (click)="resetAddForm()">Reset</button>
+        <button class="btn-submit" [disabled]="addLoading" (click)="submitAdd()">
+          {{ addLoading ? 'Saving…' : 'Save Purchase' }}
         </button>
       </div>
 
     </div>
-  </div>
 
-  <!-- ══════════════════════════════════════
-       TAB 3 — PURCHASE HISTORY
-       ══════════════════════════════════════ -->
-  <div *ngIf="activeTab === 'entries'">
+  </ng-container>
 
-    <!-- FILTER ROW -->
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 3 — PURCHASES (admin)
+       ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'purchases'">
+
     <div class="filter-row">
-      <label>Filter by item</label>
-      <select [(ngModel)]="entryFilterItemId" (ngModelChange)="onEntryFilterChange()">
+      <label>Item</label>
+      <select [(ngModel)]="purchaseFilterId" (ngModelChange)="onPurchaseFilterChange()">
         <option [ngValue]="null">All items</option>
         <option *ngFor="let d of dropdown" [ngValue]="d.id">{{ d.name }}</option>
       </select>
-      <span class="pg-info" *ngIf="entryTotal">{{ entryTotal }} entries</span>
+      <span class="pg-info" *ngIf="purchaseTotal">{{ purchaseTotal }} entries</span>
     </div>
 
-    <div class="card" *ngIf="entries.length">
+    <div class="card" *ngIf="purchases.length">
       <table>
         <thead>
           <tr>
             <th>#</th>
             <th>Item</th>
-            <th>Qty</th>
+            <th>Purchased Qty</th>
             <th>Remaining</th>
-            <th>Price / Unit</th>
+            <th>Price/unit</th>
             <th>Purchase Date</th>
             <th>Expiry Date</th>
             <th>Status</th>
@@ -332,54 +266,43 @@
           </tr>
         </thead>
         <tbody>
-          <ng-container *ngFor="let e of entries">
+          <ng-container *ngFor="let e of purchases">
 
             <!-- READ ROW -->
-            <tr *ngIf="editingEntryId !== e.id">
+            <tr *ngIf="editingPurchaseId !== e.id">
               <td class="td-id">{{ e.id }}</td>
               <td class="td-name">{{ e.item_name }}</td>
               <td class="td-qty">{{ e.qty }} {{ e.unit }}</td>
               <td class="td-qty">{{ e.remaining_qty }} {{ e.base_unit }}</td>
               <td class="td-price">₹{{ e.purchase_price }}</td>
-              <td class="td-date">{{ formatDate(e.purchase_date) }}</td>
-              <td class="td-date">{{ formatDate(e.expiry_date) }}</td>
+              <td class="td-date">{{ fmtDate(e.purchase_date) }}</td>
+              <td class="td-date">{{ fmtDate(e.expiry_date) }}</td>
               <td>
-                <span class="es-badge" [ngClass]="entryStatusClass(e.expiry_status)">
-                  {{ entryStatusLabel(e.expiry_status) }}
+                <span class="es-badge" [ngClass]="expiryStatusClass(e.expiry_status)">
+                  {{ expiryStatusLabel(e.expiry_status) }}
                 </span>
               </td>
               <td class="td-sup">{{ e.supplier || '—' }}</td>
               <td class="td-batch">{{ e.batch_no || '—' }}</td>
-              <td>
-                <button class="btn-edit" (click)="startEntryEdit(e)">Edit</button>
-              </td>
+              <td><button class="btn-edit" (click)="startEditPurchase(e)">Edit</button></td>
             </tr>
 
             <!-- EDIT ROW -->
-            <tr *ngIf="editingEntryId === e.id" class="row--editing">
+            <tr *ngIf="editingPurchaseId === e.id" class="row--editing">
               <td class="td-id">{{ e.id }}</td>
               <td class="td-name">{{ e.item_name }}</td>
               <td class="td-qty">{{ e.qty }} {{ e.unit }}</td>
               <td class="td-qty">{{ e.remaining_qty }} {{ e.base_unit }}</td>
               <td class="td-price">₹{{ e.purchase_price }}</td>
-              <td class="td-date">{{ formatDate(e.purchase_date) }}</td>
-              <td>
-                <input class="edit-input" type="date"
-                  [(ngModel)]="entryEditForm.expiry_date" />
-              </td>
+              <td class="td-date">{{ fmtDate(e.purchase_date) }}</td>
+              <td><input class="edit-input" type="date" [(ngModel)]="purchaseEditForm.expiry_date" /></td>
               <td>—</td>
-              <td>
-                <input class="edit-input" type="text"
-                  [(ngModel)]="entryEditForm.supplier" placeholder="supplier" />
-              </td>
-              <td>
-                <input class="edit-input" type="text"
-                  [(ngModel)]="entryEditForm.batch_no" placeholder="batch no" />
-              </td>
+              <td><input class="edit-input" type="text" [(ngModel)]="purchaseEditForm.supplier" placeholder="supplier" /></td>
+              <td><input class="edit-input" type="text" [(ngModel)]="purchaseEditForm.batch_no" placeholder="batch no" /></td>
               <td>
                 <div class="edit-actions">
-                  <button class="btn-save"   (click)="saveEntry(e)">Save</button>
-                  <button class="btn-cancel" (click)="cancelEntryEdit()">Cancel</button>
+                  <button class="btn-save"   (click)="savePurchase(e)">Save</button>
+                  <button class="btn-cancel" (click)="cancelEditPurchase()">Cancel</button>
                 </div>
               </td>
             </tr>
@@ -388,37 +311,37 @@
         </tbody>
       </table>
 
-      <!-- PAGINATION -->
-      <div class="pagination" *ngIf="entryTotalPages > 1">
-        <button class="pg-btn" *ngFor="let pg of pages(entryTotalPages)"
-          [class.pg-btn--active]="pg === entryPage"
-          (click)="loadEntries(pg)">{{ pg }}</button>
-        <span class="pg-info">{{ entryTotal }} total</span>
+      <div class="pagination" *ngIf="purchaseTotalPages > 1">
+        <button class="pg-btn" *ngFor="let pg of pageRange(purchaseTotalPages)"
+          [class.pg-btn--active]="pg === purchasePage"
+          (click)="loadPurchases(pg)">{{ pg }}</button>
+        <span class="pg-info">{{ purchaseTotal }} total</span>
       </div>
     </div>
 
-    <div class="empty-state" *ngIf="!entries.length">
+    <div class="empty-state" *ngIf="!purchases.length">
       <p>No purchase entries found</p>
     </div>
 
-  </div>
+  </ng-container>
 
-  <!-- ══════════════════════════════════════
-       TAB 4 — EXPIRY ALERTS
-       ══════════════════════════════════════ -->
-  <div *ngIf="activeTab === 'expiring'">
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 4 — EXPIRY
+       ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'expiry'">
 
     <div class="filter-row">
-      <label>Show items expiring within</label>
-      <select [(ngModel)]="expiryDays" (ngModelChange)="loadExpiring()">
-        <option [value]="3">3 days</option>
-        <option [value]="7">7 days</option>
-        <option [value]="14">14 days</option>
-        <option [value]="30">30 days</option>
+      <label>Show expiring within</label>
+      <select [(ngModel)]="expiryDays" (ngModelChange)="loadExpiry()">
+        <option [ngValue]="3">3 days</option>
+        <option [ngValue]="7">7 days</option>
+        <option [ngValue]="14">14 days</option>
+        <option [ngValue]="30">30 days</option>
       </select>
     </div>
 
-    <div class="card" *ngIf="expiringList.length">
+    <div class="card" *ngIf="expiryList.length">
       <table>
         <thead>
           <tr>
@@ -433,11 +356,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let e of expiringList">
+          <tr *ngFor="let e of expiryList">
             <td class="td-name">{{ e.item_name }}</td>
             <td class="td-qty">{{ e.qty }} {{ e.unit }}</td>
             <td class="td-qty">{{ e.remaining_qty }} {{ e.base_unit }}</td>
-            <td class="td-date">{{ formatDate(e.expiry_date) }}</td>
+            <td class="td-date">{{ fmtDate(e.expiry_date) }}</td>
             <td>
               <span class="days-left"
                 [class.days-left--red]="e.days_to_expiry < 0"
@@ -448,11 +371,10 @@
             </td>
             <td>
               <span class="ea-badge"
-                [class.ea-badge--expired]="e.status === 'EXPIRED'"
-                [class.ea-badge--today]="e.status === 'EXPIRING_TODAY'"
-                [class.ea-badge--soon]="e.status === 'EXPIRING_SOON'">
-                {{ e.status === 'EXPIRED' ? 'Expired' :
-                   e.status === 'EXPIRING_TODAY' ? 'Very soon' : 'Expiring' }}
+                [class.ea-badge--expired]="e.status==='EXPIRED'"
+                [class.ea-badge--today]="e.status==='EXPIRING_TODAY'"
+                [class.ea-badge--soon]="e.status==='EXPIRING_SOON'">
+                {{ e.status==='EXPIRED' ? 'Expired' : e.status==='EXPIRING_TODAY' ? 'Very soon' : 'Expiring' }}
               </span>
             </td>
             <td class="td-sup">{{ e.supplier || '—' }}</td>
@@ -462,27 +384,28 @@
       </table>
     </div>
 
-    <div class="empty-state" *ngIf="!expiringList.length">
+    <div class="empty-state" *ngIf="!expiryList.length">
       <p>No items expiring within {{ expiryDays }} days</p>
     </div>
 
-  </div>
+  </ng-container>
 
-  <!-- ══════════════════════════════════════
-       TAB 5 — STOCK LOGS
-       ══════════════════════════════════════ -->
-  <div *ngIf="activeTab === 'logs'">
+
+  <!-- ══════════════════════════════════════════════════════
+       TAB 5 — LOGS (admin)
+       ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'logs'">
 
     <div class="filter-row">
-      <label>Filter by action</label>
+      <label>Action</label>
       <select [(ngModel)]="logAction" (ngModelChange)="loadLogs()">
-        <option value="">All actions</option>
-        <option value="STOCK_IN">STOCK_IN</option>
-        <option value="USAGE">USAGE</option>
-        <option value="WASTAGE">WASTAGE</option>
-        <option value="ADJUSTMENT">ADJUSTMENT</option>
-        <option value="DAILY_REFILL">DAILY_REFILL</option>
-        <option value="RETURN">RETURN</option>
+        <option value="">All</option>
+        <option value="STOCK_IN">Stock In</option>
+        <option value="DAILY_REFILL">Daily Refill</option>
+        <option value="USAGE">Usage (billing)</option>
+        <option value="WASTAGE">Wastage</option>
+        <option value="ADJUSTMENT">Adjustment</option>
+        <option value="RETURN">Return</option>
       </select>
     </div>
 
@@ -500,14 +423,10 @@
         </thead>
         <tbody>
           <tr *ngFor="let l of logs">
-            <td class="td-date">
-              {{ l.created_at | date: 'dd MMM yyyy, HH:mm' }}
-            </td>
+            <td class="td-date">{{ l.created_at | date:'dd MMM yyyy, HH:mm' }}</td>
             <td class="td-name">{{ l.item_name }}</td>
             <td>
-              <span class="la-badge" [ngClass]="logActionClass(l.action)">
-                {{ l.action }}
-              </span>
+              <span class="la-badge" [ngClass]="logActionClass(l.action)">{{ l.action }}</span>
             </td>
             <td>
               <span class="log-qty"
@@ -527,41 +446,41 @@
       <p>No logs found</p>
     </div>
 
-  </div>
+  </ng-container>
 
-  <!-- ══════════════════════════════════════
-       TAB 6 — ITEMS MANAGEMENT (Admin)
-       ══════════════════════════════════════ -->
-  <div *ngIf="activeTab === 'items'">
 
-    <!-- TOOLBAR -->
+  <!-- ══════════════════════════════════════════════════════
+       TAB 6 — ITEMS (admin)
+       ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="activeTab === 'items'">
+
     <div class="items-toolbar">
-      <button class="btn-add-item" (click)="showAddForm = !showAddForm">
-        {{ showAddForm ? '✕ Cancel' : '+ New Item' }}
+      <button class="btn-add-item" (click)="showNewItemForm = !showNewItemForm">
+        {{ showNewItemForm ? '✕ Cancel' : '+ New Item' }}
       </button>
     </div>
 
-    <!-- ADD NEW ITEM FORM -->
-    <div class="form-card add-item-card" *ngIf="showAddForm">
-      <h2 class="form-card__title">Add New Stock Item</h2>
+    <!-- NEW ITEM FORM -->
+    <div class="form-card" *ngIf="showNewItemForm" style="margin-bottom:20px;max-width:900px">
+      <h2 class="form-card__title">New Stock Item</h2>
       <div class="field-row">
 
         <div class="field">
           <label>Name <span class="req">*</span></label>
-          <input type="text" [(ngModel)]="addItemForm.name" placeholder="e.g. Sugar" />
+          <input type="text" [(ngModel)]="newItemForm.name" placeholder="e.g. Sugar" />
         </div>
 
         <div class="field">
           <label>Category</label>
-          <select [(ngModel)]="addItemForm.category_id">
-            <option [value]="null">None</option>
-            <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+          <select [(ngModel)]="newItemForm.category_id">
+            <option [ngValue]="null">None</option>
+            <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
           </select>
         </div>
 
         <div class="field field--sm">
           <label>Base Unit <span class="req">*</span></label>
-          <select [(ngModel)]="addItemForm.base_unit">
+          <select [(ngModel)]="newItemForm.base_unit">
             <option value="gm">gm</option>
             <option value="ml">ml</option>
             <option value="pcs">pcs</option>
@@ -570,31 +489,32 @@
 
         <div class="field field--sm">
           <label>Purchase Unit <span class="req">*</span></label>
-          <input type="text" [(ngModel)]="addItemForm.unit_label" placeholder="e.g. kg" />
+          <input type="text" [(ngModel)]="newItemForm.unit_label" placeholder="e.g. kg" />
         </div>
 
         <div class="field field--sm">
-          <label>Unit Value <span class="req">*</span></label>
-          <input type="number" [(ngModel)]="addItemForm.unit_value" placeholder="e.g. 1000" min="1" />
+          <label>Unit Value <span class="req">*</span>
+            <small style="color:#94a3b8;font-weight:400"> (base units per purchase unit)</small>
+          </label>
+          <input type="number" [(ngModel)]="newItemForm.unit_value" placeholder="e.g. 1000" min="1" />
         </div>
 
         <div class="field field--sm">
-          <label>Min Qty</label>
-          <input type="number" [(ngModel)]="addItemForm.min_qty" placeholder="0" min="0" />
+          <label>Min Qty ({{ newItemForm.base_unit }})</label>
+          <input type="number" [(ngModel)]="newItemForm.min_qty" placeholder="0" min="0" />
         </div>
 
       </div>
-      <div class="form-error" *ngIf="addItemError">{{ addItemError }}</div>
+      <div class="form-error" *ngIf="newItemError">{{ newItemError }}</div>
       <div class="form-actions">
-        <button class="btn-reset" (click)="showAddForm = false">Cancel</button>
-        <button class="btn-submit" (click)="submitAddItem()" [disabled]="addItemLoading">
-          {{ addItemLoading ? 'Saving...' : 'Create Item' }}
+        <button class="btn-reset" (click)="showNewItemForm = false">Cancel</button>
+        <button class="btn-submit" [disabled]="newItemLoading" (click)="submitNewItem()">
+          {{ newItemLoading ? 'Saving…' : 'Create Item' }}
         </button>
       </div>
     </div>
 
-    <!-- ITEMS TABLE -->
-    <div class="loading-row" *ngIf="itemsLoading">Loading...</div>
+    <div class="loading-row" *ngIf="itemsLoading">Loading…</div>
 
     <div class="card" *ngIf="!itemsLoading && items.length">
       <table>
@@ -605,7 +525,7 @@
             <th>Unit</th>
             <th>Min Qty</th>
             <th>Current Stock</th>
-            <th>Status</th>
+            <th>Active</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -613,20 +533,20 @@
           <ng-container *ngFor="let item of items">
 
             <!-- READ ROW -->
-            <tr *ngIf="editingId !== item.id" [class.row--inactive]="!item.is_active">
+            <tr *ngIf="editingItemId !== item.id" [class.row--inactive]="!item.is_active">
               <td class="td-name">{{ item.name }}</td>
               <td class="td-cat">{{ item.category_name || '—' }}</td>
               <td class="td-unit">
                 {{ item.unit_label }}
                 <small>({{ item.unit_value }} {{ item.base_unit }})</small>
               </td>
-              <td class="td-min">{{ item.min_qty }}</td>
+              <td class="td-min">{{ item.min_qty }} {{ item.base_unit }}</td>
               <td>
                 <span class="stk-badge"
                   [class.stk-badge--out]="item.current_qty <= 0"
                   [class.stk-badge--low]="item.current_qty > 0 && item.is_low_stock"
                   [class.stk-badge--ok]="!item.is_low_stock && item.current_qty > 0">
-                  {{ item.current_qty }}
+                  {{ item.current_qty }} {{ item.base_unit }}
                 </span>
               </td>
               <td>
@@ -638,35 +558,27 @@
                 </button>
               </td>
               <td>
-                <button class="btn-edit" (click)="startEdit(item)">Edit</button>
+                <button class="btn-edit" (click)="startEditItem(item)">Edit</button>
               </td>
             </tr>
 
             <!-- EDIT ROW -->
-            <tr *ngIf="editingId === item.id" class="row--editing">
+            <tr *ngIf="editingItemId === item.id" class="row--editing">
+              <td><input class="edit-input" type="text" [(ngModel)]="itemEditForm.name" /></td>
               <td>
-                <input class="edit-input" type="text" [(ngModel)]="editForm.name" />
-              </td>
-              <td>
-                <select class="edit-select" [(ngModel)]="editForm.category_id">
-                  <option [value]="null">None</option>
-                  <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+                <select class="edit-select" [(ngModel)]="itemEditForm.category_id">
+                  <option [ngValue]="null">None</option>
+                  <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
                 </select>
               </td>
-              <td class="td-unit">
-                {{ item.unit_label }}
-                <small>({{ item.unit_value }} {{ item.base_unit }})</small>
-              </td>
-              <td>
-                <input class="edit-input edit-input--sm" type="number"
-                  [(ngModel)]="editForm.min_qty" min="0" />
-              </td>
-              <td>{{ item.current_qty }}</td>
+              <td class="td-unit">{{ item.unit_label }}<small>({{ item.unit_value }} {{ item.base_unit }})</small></td>
+              <td><input class="edit-input edit-input--sm" type="number" [(ngModel)]="itemEditForm.min_qty" min="0" /></td>
+              <td>{{ item.current_qty }} {{ item.base_unit }}</td>
               <td>—</td>
               <td>
                 <div class="edit-actions">
                   <button class="btn-save"   (click)="saveItem(item)">Save</button>
-                  <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+                  <button class="btn-cancel" (click)="cancelEditItem()">Cancel</button>
                 </div>
               </td>
             </tr>
@@ -680,6 +592,6 @@
       <p>No stock items found</p>
     </div>
 
-  </div>
+  </ng-container>
 
 </div>

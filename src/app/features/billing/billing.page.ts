@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { BillingStore }      from '../../core/state/billing.store';
 import { ProductApi }        from '../../core/api/product.api';
 import { BillApi }           from '../../core/api/bill.api';
+import { StockApi }          from '../../core/api/stock.api';
 import { OfflineQueueService } from '../../core/services/offline-queue.service';
 import { PrinterService }    from '../../core/services/printer.service';
 
@@ -22,6 +23,7 @@ export class BillingPage implements OnInit, OnDestroy {
   store        = inject(BillingStore);
   productApi   = inject(ProductApi);
   billApi      = inject(BillApi);
+  stockApi     = inject(StockApi);
   offlineQueue = inject(OfflineQueueService);
   printer      = inject(PrinterService);
   LOW_STOCK_DEFAULT = 5;
@@ -51,6 +53,11 @@ export class BillingPage implements OnInit, OnDestroy {
   showCart         = false;
   syncPending      = 0;   // count of queued offline bills
 
+  /* ── quick refill ── */
+  refillItem    : any    = null;
+  refillQty     : number | null = null;
+  refillLoading           = false;
+
   /* ── listeners ── */
   private onlineHandler  = async () => { this.isOnlineStatus = true;  await this.syncOfflineQueue(); };
   private offlineHandler = ()       => { this.isOnlineStatus = false; this.showError('You are offline'); };
@@ -66,6 +73,9 @@ export class BillingPage implements OnInit, OnDestroy {
     const t = this.subtotal - this.couponDiscount;
     return t > 0 ? t : 0;
   }
+
+  get lowStockCount()  { return this.products.filter(p => this.isLowStock(p)).length; }
+  get outStockCount()  { return this.products.filter(p => this.isOutOfStock(p)).length; }
 
   /* ════════════════════════════════
      LIFECYCLE
@@ -404,12 +414,39 @@ export class BillingPage implements OnInit, OnDestroy {
   }
 
   getIntQty(qty: any): number { return Math.floor(Number(qty || 0)); }
-  isOutOfStock(p: any) { return p.track_stock && this.getIntQty(p.current_qty) === 0; }
+  isOutOfStock(p: any) { return p.stock_item_id != null && this.getIntQty(p.stock_qty) === 0; }
   isLowStock(p: any) {
-    if (!p.track_stock) return false;
-    const qty = this.getIntQty(p.current_qty);
-    const min = p.min_qty > 0 ? this.getIntQty(p.min_qty) : this.LOW_STOCK_DEFAULT;
+    if (p.stock_item_id == null) return false;
+    const qty = this.getIntQty(p.stock_qty);
+    const min = Number(p.stock_min_qty) > 0 ? this.getIntQty(p.stock_min_qty) : this.LOW_STOCK_DEFAULT;
     return qty > 0 && qty <= min;
+  }
+
+  openRefill(p: any, e: Event) {
+    e.stopPropagation();
+    this.refillItem = p;
+    this.refillQty  = null;
+  }
+
+  closeRefill() { this.refillItem = null; this.refillQty = null; }
+
+  submitRefill() {
+    const qty = parseFloat(String(this.refillQty));
+    if (!qty || qty <= 0) return;
+    this.refillLoading = true;
+    this.stockApi.adjust({ product_id: this.refillItem.stock_item_id, change_qty: qty, reason: 'DAILY_REFILL' })
+      .subscribe({
+        next: (res: any) => {
+          this.refillItem.stock_qty = parseFloat(res.current_qty);
+          this.refillLoading = false;
+          this.showSuccess(`Refilled! New stock: ${res.current_qty}`);
+          this.closeRefill();
+        },
+        error: err => {
+          this.refillLoading = false;
+          this.showError(err.error?.message || 'Refill failed');
+        }
+      });
   }
 
   trackByProductId(_: number, item: any) { return item.productId; }

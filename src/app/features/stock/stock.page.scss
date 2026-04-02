@@ -182,7 +182,21 @@ td {
 .td-qty    { font-weight: 600; }
 .td-none   { color: $text3; }
 
-// ── STOCK STATUS
+// ── STOCK QTY CELL
+.qty-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: $text1;
+  small { font-size: 11px; font-weight: 400; color: $text3; margin-left: 2px; }
+}
+
+// ── STOCK STATUS (kept for compatibility)
 .stock-status { display: flex; align-items: center; gap: 8px; }
 
 .stk-badge {

@@ -1,0 +1,21 @@
+<div class="pwa-banner" *ngIf="pwa.showBanner">
+
+  <div class="pwa-banner__left">
+    <img class="pwa-banner__icon" src="assets/icons/manifest-icon-192.maskable.png" alt="Kovais Brew" />
+    <div class="pwa-banner__text">
+      <span class="pwa-banner__title">Install Kovais Brew</span>
+      <span class="pwa-banner__sub" *ngIf="pwa.canInstall()">Add to your home screen for faster access</span>
+      <span class="pwa-banner__sub" *ngIf="pwa.isIos() && !pwa.canInstall()">
+        Tap <strong>Share</strong> → <strong>Add to Home Screen</strong>
+      </span>
+    </div>
+  </div>
+
+  <div class="pwa-banner__actions">
+    <button class="pwa-banner__install" *ngIf="pwa.canInstall()" (click)="pwa.triggerInstall()">
+      Install
+    </button>
+    <button class="pwa-banner__dismiss" (click)="pwa.dismiss()" title="Dismiss">✕</button>
+  </div>
+
+</div>

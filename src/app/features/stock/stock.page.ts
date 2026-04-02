@@ -4,9 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthApi } from '../../core/api/auth.api';
 import { StockApi } from '../../core/api/stock.api';
-import { StockItem, StockEntry, StockLog, BatchEntry } from '../../core/models/stock.model';
 
-type Tab = 'stock' | 'add' | 'entries' | 'expiring' | 'logs' | 'items';
+type Tab = 'stock' | 'add' | 'purchases' | 'expiry' | 'logs' | 'items';
 
 @Component({
   standalone: true,
@@ -20,55 +19,63 @@ export class StockPage implements OnInit {
   private auth     = inject(AuthApi);
   private stockApi = inject(StockApi);
 
-  isAdmin    = false;
+  isAdmin   = false;
   activeTab: Tab = 'stock';
-  loading    = false;
 
-  /* ── STOCK LIST ─────────────────────────── */
-  stocks: StockItem[] = [];
-  searchTerm  = '';
+  /* ─── TAB: STOCK LIST ──────────────────────────────────── */
+  stocks: any[]   = [];
+  stockLoading    = false;
+  searchTerm      = '';
   filterType: 'low' | 'out' | null = null;
 
-  /* ── ADD STOCK FORM ─────────────────────── */
-  dropdown: any[]  = [];
-  form = {
+  /* ─── TAB: ADD STOCK (admin) ────────────────────────────── */
+  dropdown: any[] = [];
+  addForm = {
     stock_item_id: null as number | null,
-    purchase_date: new Date().toISOString().split('T')[0],
-    supplier: ''
+    purchase_date: today(),
+    supplier: '',
+    qty:            null as number | null,
+    purchase_price: null as number | null,
+    expiry_date: '',
+    batch_no: '',
+    notes: ''
   };
-  batches: BatchEntry[] = [this.newBatch()];
   addLoading = false;
   addError   = '';
 
-  /* ── PURCHASE HISTORY ───────────────────── */
-  entries: StockEntry[]  = [];
-  entryPage       = 1;
-  entryTotal      = 0;
-  entryTotalPages = 0;
-  entryFilterItemId: number | null = null;
-  editingEntryId: number | null = null;
-  entryEditForm = { expiry_date: '', batch_no: '', supplier: '', notes: '' };
+  /* ─── TAB: PURCHASES (admin) ────────────────────────────── */
+  purchases: any[]   = [];
+  purchasePage       = 1;
+  purchaseTotal      = 0;
+  purchaseTotalPages = 0;
+  purchaseFilterId: number | null = null;
+  editingPurchaseId: number | null = null;
+  purchaseEditForm = { expiry_date: '', supplier: '', batch_no: '', notes: '' };
 
-  /* ── EXPIRY ALERTS ──────────────────────── */
-  expiringList: any[] = [];
+  /* ─── TAB: EXPIRY ────────────────────────────────────────── */
+  expiryList: any[] = [];
   expiryDays = 7;
 
-  /* ── STOCK LOGS ─────────────────────────── */
-  logs: StockLog[] = [];
-  logAction = '';
+  /* ─── TAB: LOGS (admin) ──────────────────────────────────── */
+  logs: any[]  = [];
+  logAction    = '';
 
-  /* ── ITEMS MANAGEMENT ───────────────────── */
-  items: any[] = [];
+  /* ─── TAB: ITEMS (admin) ─────────────────────────────────── */
+  items: any[]    = [];
   categories: any[] = [];
-  itemsLoading  = false;
-  editingId: number | null = null;
-  editForm = { name: '', category_id: null as number | null, min_qty: 0 };
-  showAddForm   = false;
-  addItemForm   = { name: '', category_id: null as number | null, base_unit: 'gm', unit_label: 'kg', unit_value: 1000, min_qty: 0 };
-  addItemError  = '';
-  addItemLoading = false;
+  itemsLoading    = false;
+  showNewItemForm = false;
+  newItemForm = {
+    name: '', category_id: null as number | null,
+    base_unit: 'gm', unit_label: 'kg', unit_value: 1000, min_qty: 0
+  };
+  newItemError   = '';
+  newItemLoading = false;
+  editingItemId: number | null = null;
+  itemEditForm = { name: '', category_id: null as number | null, min_qty: 0 };
 
-  /* ════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════ */
+
   ngOnInit() {
     this.isAdmin = this.auth.isAdmin();
     this.route.queryParams.subscribe(p => {
@@ -77,138 +84,114 @@ export class StockPage implements OnInit {
     });
   }
 
-  /* ── TAB SWITCH ─────────────────────────── */
   setTab(tab: Tab) {
-    const adminOnly: Tab[] = ['add', 'entries', 'logs', 'items'];
-    if (adminOnly.includes(tab) && !this.isAdmin) return;
+    const adminTabs: Tab[] = ['add', 'purchases', 'logs', 'items'];
+    if (adminTabs.includes(tab) && !this.isAdmin) return;
     this.activeTab = tab;
-    if (tab === 'stock'    && !this.stocks.length)   this.loadStock();
-    if (tab === 'add'      && !this.dropdown.length) this.loadDropdown();
-    if (tab === 'entries') { this.loadDropdown(); this.loadEntries(1); }
-    if (tab === 'expiring')                          this.loadExpiring();
-    if (tab === 'logs')                              this.loadLogs();
-    if (tab === 'items')  { this.loadItems(); this.loadCategories(); }
+    if (tab === 'stock'     && !this.stocks.length)   this.loadStock();
+    if (tab === 'add'       && !this.dropdown.length) this.loadDropdown();
+    if (tab === 'purchases') { this.loadDropdown(); this.loadPurchases(1); }
+    if (tab === 'expiry')                             this.loadExpiry();
+    if (tab === 'logs')                               this.loadLogs();
+    if (tab === 'items')    { this.loadItems(); this.loadCategories(); }
   }
 
-  /* ════════════════════════════════════════
+  /* ══════════════════════════════════════════════════════════
      STOCK LIST
-     ════════════════════════════════════════ */
+     ══════════════════════════════════════════════════════════ */
   loadStock() {
-    this.loading = true;
+    this.stockLoading = true;
     this.stockApi.getStock().subscribe({
-      next: res => {
-        this.stocks  = res.map(p => ({ ...p, change_qty: null, reason: 'DAILY_REFILL' }));
-        this.loading = false;
+      next: rows => {
+        this.stocks      = rows.map(r => ({ ...r, _qty: null, _reason: 'DAILY_REFILL' }));
+        this.stockLoading = false;
       },
-      error: () => { this.loading = false; }
+      error: () => { this.stockLoading = false; }
     });
   }
 
   get filteredStocks() {
     let list = this.stocks;
-    if (this.filterType === 'low') list = list.filter(p => p.is_low_stock && p.current_qty > 0);
-    if (this.filterType === 'out') list = list.filter(p => p.current_qty <= 0);
-    if (this.searchTerm)
-      list = list.filter(p => p.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
+    if (this.filterType === 'low') list = list.filter(s => s.is_low_stock && s.current_qty > 0);
+    if (this.filterType === 'out') list = list.filter(s => s.current_qty <= 0);
+    if (this.searchTerm.trim())
+      list = list.filter(s => s.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
     return list;
   }
 
-  updateStock(p: StockItem) {
-    if (!p.change_qty) { alert('Enter quantity'); return; }
-    if (!this.isAdmin && p.reason !== 'DAILY_REFILL') {
-      alert('You are not authorized to perform this action'); return;
-    }
-    let qty = Number(p.change_qty);
-    if (p.reason === 'DAILY_REFILL') qty =  Math.abs(qty);
-    if (p.reason === 'WASTAGE')      qty = -Math.abs(qty);
-    const newQty = p.current_qty + qty;
-    if (newQty < 0) { alert('Stock cannot go below zero'); return; }
-    if (!confirm(`${p.reason} — ${p.name}\nFrom ${p.current_qty} → ${newQty}`)) return;
+  updateStock(s: any) {
+    const qty = parseFloat(s._qty);
+    if (!s._qty || isNaN(qty) || qty <= 0) { alert('Enter a valid quantity greater than 0'); return; }
 
-    this.stockApi.adjust({ product_id: p.id, change_qty: qty, reason: p.reason! }).subscribe({
-      next: () => { p.current_qty = newQty; p.change_qty = null; },
+    const reason: string = s._reason || 'DAILY_REFILL';
+    if (!this.isAdmin && reason !== 'DAILY_REFILL') {
+      alert('Not authorised'); return;
+    }
+
+    /* REFILL = add, WASTAGE = subtract, ADJUSTMENT = can be + or - */
+    let change = qty;
+    if (reason === 'WASTAGE') change = -qty;
+
+    const currentQty = parseFloat(s.current_qty);
+    const newQty     = parseFloat((currentQty + change).toFixed(3));
+    if (newQty < 0) { alert('Stock cannot go below zero'); return; }
+
+    if (!confirm(`${reason} — ${s.name}\n${currentQty} → ${newQty} ${s.base_unit}`)) return;
+
+    this.stockApi.adjust({ product_id: s.id, change_qty: change, reason }).subscribe({
+      next: () => { s.current_qty = newQty; s._qty = null; },
       error: err => alert(err.error?.message || 'Update failed')
     });
   }
 
-  expiryBadgeClass(item: StockItem) {
-    if (!item.nearest_expiry) return '';
-    const days = Math.floor(
-      (new Date(item.nearest_expiry).getTime() - Date.now()) / 86400000
-    );
-    if (days < 0)  return 'exp--expired';
-    if (days <= 3) return 'exp--today';
-    if (days <= 7) return 'exp--soon';
+  expiryClass(s: any) {
+    if (!s.nearest_expiry) return '';
+    const days = Math.floor((new Date(s.nearest_expiry).getTime() - Date.now()) / 86400000);
+    if (days < 0)   return 'exp--expired';
+    if (days <= 3)  return 'exp--today';
+    if (days <= 7)  return 'exp--soon';
     return 'exp--ok';
   }
 
-  formatDate(d: string | null) {
-    if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-  }
-
-  /* ════════════════════════════════════════
-     ADD STOCK — MULTI-BATCH FORM
-     ════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════
+     ADD STOCK
+     ══════════════════════════════════════════════════════════ */
   loadDropdown() {
-    this.stockApi.getDropdown().subscribe(res => this.dropdown = res);
+    if (this.dropdown.length) return;
+    this.stockApi.getDropdown().subscribe({ next: rows => this.dropdown = rows });
   }
 
-  newBatch(): BatchEntry {
-    return { qty: null, purchase_price: null, expiry_date: '', batch_no: '', notes: '' };
-  }
-
-  addBatchRow() {
-    this.batches.push(this.newBatch());
-  }
-
-  removeBatchRow(i: number) {
-    if (this.batches.length > 1) this.batches.splice(i, 1);
-  }
-
-  get totalQty() {
-    return this.batches.reduce((s, b) => s + (Number(b.qty) || 0), 0);
-  }
-
-  get selectedItem() {
-    return this.dropdown.find(d => d.id === Number(this.form.stock_item_id));
+  get selectedDropdownItem() {
+    return this.dropdown.find(d => d.id === Number(this.addForm.stock_item_id));
   }
 
   submitAdd() {
-    if (!this.form.stock_item_id) { this.addError = 'Select a stock item'; return; }
-    if (this.batches.some(b => !b.qty || b.purchase_price == null)) {
-      this.addError = 'Every batch must have qty and price'; return;
-    }
+    if (!this.addForm.stock_item_id)    { this.addError = 'Select a stock item'; return; }
+    if (!this.addForm.qty || this.addForm.qty <= 0)
+                                         { this.addError = 'Enter quantity'; return; }
+    if (this.addForm.purchase_price == null || this.addForm.purchase_price < 0)
+                                         { this.addError = 'Enter purchase price'; return; }
+
     this.addError   = '';
     this.addLoading = true;
 
-    const entries = this.batches.map(b => ({
-      qty:            Number(b.qty),
-      purchase_price: Number(b.purchase_price),
-      expiry_date:    b.expiry_date || undefined,
-      batch_no:       b.batch_no   || undefined,
-      notes:          b.notes      || undefined
-    }));
-
-    const payload = {
-      stock_item_id: this.form.stock_item_id,
-      purchase_date: this.form.purchase_date,
-      supplier:      this.form.supplier || undefined,
-      entries
+    const payload: any = {
+      stock_item_id:  this.addForm.stock_item_id,
+      purchase_date:  this.addForm.purchase_date || today(),
+      supplier:       this.addForm.supplier      || undefined,
+      qty:            Number(this.addForm.qty),
+      purchase_price: Number(this.addForm.purchase_price),
+      expiry_date:    this.addForm.expiry_date   || undefined,
+      batch_no:       this.addForm.batch_no      || undefined,
+      notes:          this.addForm.notes         || undefined
     };
 
-    // single batch → /stock/add  |  multiple batches → /stock/add-bulk
-    const api$ = entries.length === 1
-      ? this.stockApi.addEntry({ ...payload, ...entries[0] })
-      : this.stockApi.addBulk(payload);
-
-    api$.subscribe({
+    this.stockApi.addEntry(payload).subscribe({
       next: (res: any) => {
         this.addLoading = false;
-        const qty = res.total_base_qty ?? res.base_qty;
-        alert(`Stock added!\n${res.item} — ${qty} ${res.base_unit}\nNew total: ${res.new_total}`);
-        this.resetForm();
-        this.stocks = [];       // force reload when switching back
+        alert(`Added!\n${res.item}  +${res.qty_added}\nNew total: ${res.new_total} ${res.base_unit}`);
+        this.resetAddForm();
+        this.stocks = [];           // force reload on next visit
         this.setTab('stock');
       },
       error: err => {
@@ -218,127 +201,103 @@ export class StockPage implements OnInit {
     });
   }
 
-  resetForm() {
-    this.form    = { stock_item_id: null, purchase_date: new Date().toISOString().split('T')[0], supplier: '' };
-    this.batches = [this.newBatch()];
+  resetAddForm() {
+    this.addForm = {
+      stock_item_id: null, purchase_date: today(), supplier: '',
+      qty: null, purchase_price: null, expiry_date: '', batch_no: '', notes: ''
+    };
     this.addError = '';
   }
 
-  /* ════════════════════════════════════════
-     PURCHASE HISTORY
-     ════════════════════════════════════════ */
-  loadEntries(page = 1) {
-    this.entryPage = page;
+  /* ══════════════════════════════════════════════════════════
+     PURCHASES
+     ══════════════════════════════════════════════════════════ */
+  loadPurchases(page = 1) {
+    this.purchasePage = page;
     this.stockApi.getEntries({
       page,
       limit: 20,
-      stock_item_id: this.entryFilterItemId ?? undefined
+      stock_item_id: this.purchaseFilterId ?? undefined
     }).subscribe({
       next: res => {
-        this.entries         = res.data;
-        this.entryTotal      = res.total;
-        this.entryTotalPages = res.totalPages;
+        this.purchases          = res.data;
+        this.purchaseTotal      = res.total;
+        this.purchaseTotalPages = res.totalPages;
       }
     });
   }
 
-  onEntryFilterChange() {
-    this.editingEntryId = null;
-    this.loadEntries(1);
+  onPurchaseFilterChange() {
+    this.editingPurchaseId = null;
+    this.loadPurchases(1);
   }
 
-  startEntryEdit(e: any) {
-    this.editingEntryId = e.id;
-    this.entryEditForm  = {
-      expiry_date: e.expiry_date ? e.expiry_date.split('T')[0] : '',
-      batch_no:    e.batch_no   || '',
+  startEditPurchase(e: any) {
+    this.editingPurchaseId = e.id;
+    this.purchaseEditForm  = {
+      expiry_date: e.expiry_date ? e.expiry_date.substring(0, 10) : '',
       supplier:    e.supplier   || '',
+      batch_no:    e.batch_no   || '',
       notes:       e.notes      || ''
     };
   }
 
-  cancelEntryEdit() { this.editingEntryId = null; }
+  cancelEditPurchase() { this.editingPurchaseId = null; }
 
-  saveEntry(e: any) {
-    this.stockApi.updateEntry(e.id, this.entryEditForm).subscribe({
+  savePurchase(e: any) {
+    this.stockApi.updateEntry(e.id, this.purchaseEditForm).subscribe({
       next: res => {
         e.expiry_date   = res.entry.expiry_date;
-        e.batch_no      = res.entry.batch_no;
         e.supplier      = res.entry.supplier;
+        e.batch_no      = res.entry.batch_no;
         e.notes         = res.entry.notes;
         e.expiry_status = res.entry.expiry_status;
-        this.editingEntryId = null;
-        // refresh stock list so nearest_expiry badge updates there too
-        this.stocks = [];
+        this.editingPurchaseId = null;
+        this.stocks = [];           // force stock tab to reload expiry badges
       },
-      error: err => alert(err.error?.message || 'Update failed')
+      error: err => alert(err.error?.message || 'Save failed')
     });
   }
 
-  entryStatusClass(status: string) {
-    const map: Record<string, string> = {
-      EXPIRED:        'es--expired',
-      EXPIRING_TODAY: 'es--today',
-      EXPIRING_SOON:  'es--soon',
-      OK:             'es--ok',
-      NO_EXPIRY:      'es--none'
-    };
-    return map[status] || '';
+  expiryStatusClass(status: string) {
+    return ({ EXPIRED:'es--expired', EXPIRING_TODAY:'es--today',
+              EXPIRING_SOON:'es--soon', OK:'es--ok', NO_EXPIRY:'es--none' } as any)[status] || '';
   }
 
-  entryStatusLabel(status: string) {
-    const map: Record<string, string> = {
-      EXPIRED:        'Expired',
-      EXPIRING_TODAY: 'Expiring today',
-      EXPIRING_SOON:  'Expiring soon',
-      OK:             'Good',
-      NO_EXPIRY:      'No expiry'
-    };
-    return map[status] || status;
+  expiryStatusLabel(status: string) {
+    return ({ EXPIRED:'Expired', EXPIRING_TODAY:'Expiring today',
+              EXPIRING_SOON:'Expiring soon', OK:'Good', NO_EXPIRY:'No expiry' } as any)[status] || status;
   }
 
-  /* ════════════════════════════════════════
-     EXPIRY ALERTS
-     ════════════════════════════════════════ */
-  loadExpiring() {
+  /* ══════════════════════════════════════════════════════════
+     EXPIRY
+     ══════════════════════════════════════════════════════════ */
+  loadExpiry() {
     this.stockApi.getExpiring(this.expiryDays).subscribe({
-      next: res => this.expiringList = res
+      next: rows => this.expiryList = rows
     });
   }
 
-  /* ════════════════════════════════════════
-     STOCK LOGS
-     ════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════════
+     LOGS
+     ══════════════════════════════════════════════════════════ */
   loadLogs() {
-    this.stockApi.getLogs({
-      limit: 100,
-      action: this.logAction || undefined
-    }).subscribe({ next: res => this.logs = res });
+    this.stockApi.getLogs({ limit: 100, action: this.logAction || undefined })
+      .subscribe({ next: rows => this.logs = rows });
   }
 
   logActionClass(action: string) {
-    const map: Record<string, string> = {
-      STOCK_IN:     'la--in',
-      USAGE:        'la--usage',
-      WASTAGE:      'la--waste',
-      ADJUSTMENT:   'la--adj',
-      RETURN:       'la--return',
-      DAILY_REFILL: 'la--in'
-    };
-    return map[action] || '';
+    return ({ STOCK_IN:'la--in', DAILY_REFILL:'la--in', USAGE:'la--usage',
+              WASTAGE:'la--waste', ADJUSTMENT:'la--adj', RETURN:'la--return' } as any)[action] || '';
   }
 
-  pages(total: number) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  /* ════════════════════════════════════════
+  /* ══════════════════════════════════════════════════════════
      ITEMS MANAGEMENT
-     ════════════════════════════════════════ */
+     ══════════════════════════════════════════════════════════ */
   loadItems() {
     this.itemsLoading = true;
     this.stockApi.getStockItemsList({ limit: 200 }).subscribe({
-      next: res => { this.items = res.data; this.itemsLoading = false; },
+      next: res  => { this.items = res.data; this.itemsLoading = false; },
       error: ()  => { this.itemsLoading = false; }
     });
   }
@@ -346,25 +305,44 @@ export class StockPage implements OnInit {
   loadCategories() {
     if (this.categories.length) return;
     this.stockApi.getCategories().subscribe({
-      next: res => { this.categories = res.data || res; }
+      next: res => this.categories = res.data || res
     });
   }
 
-  startEdit(item: any) {
-    this.editingId = item.id;
-    this.editForm  = { name: item.name, category_id: item.category_id, min_qty: item.min_qty };
+  submitNewItem() {
+    if (!this.newItemForm.name || !this.newItemForm.base_unit || !this.newItemForm.unit_label) {
+      this.newItemError = 'Name, base unit and purchase unit are required'; return;
+    }
+    this.newItemError   = '';
+    this.newItemLoading = true;
+    this.stockApi.createStockItem(this.newItemForm).subscribe({
+      next: () => {
+        this.newItemLoading = false;
+        this.showNewItemForm = false;
+        this.newItemForm = { name: '', category_id: null, base_unit: 'gm', unit_label: 'kg', unit_value: 1000, min_qty: 0 };
+        this.dropdown = [];         // force dropdown reload on next Add Stock visit
+        this.loadItems();
+      },
+      error: err => { this.newItemLoading = false; this.newItemError = err.error?.msg || 'Create failed'; }
+    });
   }
 
-  cancelEdit() { this.editingId = null; }
+  startEditItem(item: any) {
+    this.editingItemId = item.id;
+    this.itemEditForm  = { name: item.name, category_id: item.category_id, min_qty: item.min_qty };
+  }
+
+  cancelEditItem() { this.editingItemId = null; }
 
   saveItem(item: any) {
-    this.stockApi.updateStockItem(item.id, this.editForm).subscribe({
+    this.stockApi.updateStockItem(item.id, this.itemEditForm).subscribe({
       next: () => {
-        item.name        = this.editForm.name;
-        item.category_id = this.editForm.category_id;
-        item.min_qty     = this.editForm.min_qty;
-        item.category_name = this.categories.find(c => c.id === Number(this.editForm.category_id))?.name || item.category_name;
-        this.editingId   = null;
+        item.name          = this.itemEditForm.name;
+        item.min_qty       = this.itemEditForm.min_qty;
+        item.category_id   = this.itemEditForm.category_id;
+        item.category_name = this.categories.find(c => c.id === Number(this.itemEditForm.category_id))?.name
+                             || item.category_name;
+        this.editingItemId = null;
       },
       error: err => alert(err.error?.msg || 'Update failed')
     });
@@ -372,28 +350,20 @@ export class StockPage implements OnInit {
 
   toggleItem(item: any) {
     this.stockApi.toggleStockItem(item.id).subscribe({
-      next: res => { item.is_active = res.is_active; },
+      next: res => item.is_active = res.is_active,
       error: err => alert(err.error?.msg || 'Toggle failed')
     });
   }
 
-  submitAddItem() {
-    if (!this.addItemForm.name || !this.addItemForm.base_unit || !this.addItemForm.unit_label) {
-      this.addItemError = 'Name, base unit and unit label are required'; return;
-    }
-    this.addItemError   = '';
-    this.addItemLoading = true;
-    this.stockApi.createStockItem(this.addItemForm).subscribe({
-      next: () => {
-        this.addItemLoading = false;
-        this.showAddForm    = false;
-        this.addItemForm    = { name: '', category_id: null, base_unit: 'gm', unit_label: 'kg', unit_value: 1000, min_qty: 0 };
-        this.loadItems();
-      },
-      error: err => {
-        this.addItemLoading = false;
-        this.addItemError   = err.error?.msg || 'Failed to create item';
-      }
-    });
+  /* ══════════════════════════════════════════════════════════
+     HELPERS
+     ══════════════════════════════════════════════════════════ */
+  fmtDate(d: string | null) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
+
+  pageRange(n: number) { return Array.from({ length: n }, (_, i) => i + 1); }
 }
+
+function today() { return new Date().toISOString().split('T')[0]; }

@@ -19,7 +19,10 @@
     <div class="left-header">
       <div class="left-title">
         <h1>New Order</h1>
-        <span class="left-sub">Select items to add to cart</span>
+        <div class="stock-chips">
+          <span class="sc-chip sc-out" *ngIf="outStockCount > 0">{{ outStockCount }} Out</span>
+          <span class="sc-chip sc-low" *ngIf="lowStockCount > 0">{{ lowStockCount }} Low</span>
+        </div>
       </div>
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
@@ -76,6 +79,18 @@
           <div class="prod-name">{{ p.name }}</div>
           <div class="prod-price" *ngIf="!p.is_manual_price">₹ {{ p.price }}</div>
           <div class="prod-price manual" *ngIf="p.is_manual_price">Custom Price</div>
+        </div>
+
+        <!-- Stock count chip (tap to quick-refill) -->
+        <div
+          class="prod-stock"
+          *ngIf="p.stock_item_id != null"
+          [class.ps-out]="isOutOfStock(p)"
+          [class.ps-low]="isLowStock(p) && !isOutOfStock(p)"
+          [class.ps-ok]="!isLowStock(p) && !isOutOfStock(p)"
+          (click)="openRefill(p, $event)"
+          title="Tap to refill">
+          {{ getIntQty(p.stock_qty) }} {{ p.stock_unit }}
         </div>
 
         <!-- Add indicator -->
@@ -289,6 +304,50 @@
 
   </aside>
 
+</div>
+
+<!-- ══ QUICK REFILL SHEET ══ -->
+<div class="refill-overlay" *ngIf="refillItem" (click)="closeRefill()">
+  <div class="refill-sheet" (click)="$event.stopPropagation()">
+    <div class="rs-header">
+      <div>
+        <div class="rs-title">Quick Refill</div>
+        <div class="rs-item">{{ refillItem.name }}</div>
+      </div>
+      <button class="rs-close" (click)="closeRefill()">✕</button>
+    </div>
+
+    <div class="rs-current">
+      Current stock:
+      <strong [class.rs-val-out]="isOutOfStock(refillItem)" [class.rs-val-low]="isLowStock(refillItem)">
+        {{ getIntQty(refillItem.stock_qty) }} {{ refillItem.stock_unit }}
+      </strong>
+    </div>
+
+    <div class="rs-input-row">
+      <input
+        class="rs-input"
+        type="number"
+        min="1"
+        step="1"
+        placeholder="Add qty ({{ refillItem.stock_unit }})"
+        [(ngModel)]="refillQty"
+        (keyup.enter)="submitRefill()"
+        autofocus />
+    </div>
+
+    <div class="rs-quick-btns">
+      <button class="rs-qbtn" (click)="refillQty = 10">+10</button>
+      <button class="rs-qbtn" (click)="refillQty = 25">+25</button>
+      <button class="rs-qbtn" (click)="refillQty = 50">+50</button>
+      <button class="rs-qbtn" (click)="refillQty = 100">+100</button>
+    </div>
+
+    <button class="rs-submit" (click)="submitRefill()" [disabled]="refillLoading || !refillQty">
+      <span *ngIf="!refillLoading">Refill Stock</span>
+      <span *ngIf="refillLoading">Saving…</span>
+    </button>
+  </div>
 </div>
 
 <!-- ══ MOBILE TAB BAR ══ -->
