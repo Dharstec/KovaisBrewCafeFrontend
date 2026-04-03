@@ -268,30 +268,41 @@
         ══════════════════════════════════════════ -->
         <div class="big-summary">
 
-          <!-- Row 1: 3 main numbers -->
-          <div class="bs-row">
-            <div class="bs-cell target-cell">
-              <div class="bs-lbl">Sales Target</div>
-              <div class="bs-val">{{ fmt(achievement.sales_target) }}</div>
-              <div class="bs-sub">goal for this period</div>
-            </div>
-            <div class="bs-cell sales-cell">
+          <!-- Row 1: Sales Achieved (Cash + UPI) -->
+          <div class="bs-row bs-row--single">
+            <div class="bs-cell sales-cell wide">
               <div class="bs-lbl">Sales Achieved</div>
               <div class="bs-val">{{ fmt(achievement.actual_sales) }}</div>
-              <div class="bs-sub">{{ achievement.total_bills }} bills · {{ achievement.days_elapsed }} days</div>
+              <div class="bs-sub">
+                Cash {{ fmt(achievement.cash_sales) }} &nbsp;+&nbsp; UPI {{ fmt(achievement.upi_sales) }}
+                &nbsp;·&nbsp; {{ achievement.total_bills }} bills
+              </div>
             </div>
+          </div>
+
+          <!-- Row 2: Expenses breakdown -->
+          <div class="bs-row">
             <div class="bs-cell expense-cell">
               <div class="bs-lbl">Daily Expenses</div>
               <div class="bs-val">{{ fmt(achievement.spent_expenses) }}</div>
               <div class="bs-sub">operational costs</div>
             </div>
+            <div class="bs-cell advance-cell">
+              <div class="bs-lbl">Advance Paid</div>
+              <div class="bs-val">{{ fmt(achievement.employee_advance_total) }}</div>
+              <div class="bs-sub">employee advances</div>
+            </div>
           </div>
 
-          <!-- Row 2: In Hand highlight -->
+          <!-- Row 3: In Hand -->
           <div class="in-hand-row" [class.positive]="achievement.in_hand >= 0" [class.negative]="achievement.in_hand < 0">
             <div class="ih-left">
-              <div class="ih-label">In Hand (Net)</div>
-              <div class="ih-formula">{{ fmt(achievement.actual_sales) }} sales − {{ fmt(achievement.total_expenses) }} expenses</div>
+              <div class="ih-label">In Hand</div>
+              <div class="ih-formula">
+                {{ fmt(achievement.actual_sales) }}
+                − {{ fmt(achievement.spent_expenses) }}
+                − {{ fmt(achievement.employee_advance_total) }}
+              </div>
             </div>
             <div class="ih-value">{{ fmt(achievement.in_hand) }}</div>
           </div>
@@ -361,28 +372,6 @@
 
         </div><!-- /big-summary -->
 
-        <!-- ── Payment Split ── -->
-        <div class="payment-split">
-          <div class="ps-item cash">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/>
-            </svg>
-            <div>
-              <div class="ps-lbl">Cash</div>
-              <div class="ps-val">{{ fmt(achievement.cash_sales) }}</div>
-            </div>
-          </div>
-          <div class="ps-divider"></div>
-          <div class="ps-item upi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5M2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-            <div>
-              <div class="ps-lbl">UPI</div>
-              <div class="ps-val">{{ fmt(achievement.upi_sales) }}</div>
-            </div>
-          </div>
-        </div>
 
         <!-- ── Expense Budget Tracking ── -->
         <div class="section-divider"><span>Expense Budget Tracking</span></div>
@@ -401,6 +390,11 @@
           <div class="bo-row">
             <span class="bo-label">Budget Remaining</span>
             <span class="bo-val">{{ fmt(achievement.budget_remaining) }}</span>
+          </div>
+          <div class="bo-daily-needed" *ngIf="achievement.budget_remaining > 0 && achievement.days_left > 0">
+            <span class="bo-days">{{ achievement.days_left }} days left</span>
+            <span class="bo-arrow">→</span>
+            <span class="bo-need-val">need {{ fmt(achievement.budget_remaining / achievement.days_left) }}/day</span>
           </div>
           <div class="prog-track">
             <div class="prog-fill"

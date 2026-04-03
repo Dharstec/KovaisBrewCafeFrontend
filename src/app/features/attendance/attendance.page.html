@@ -1,95 +1,320 @@
 <div class="att">
 
-  <!-- Header -->
+  <!-- ═══ PAGE HEADER ═══════════════════════════════════════════════════════ -->
   <div class="att-header">
-    <div class="att-header-left">
+    <div>
       <h1 class="att-title">Attendance</h1>
-      <span class="att-subtitle">
-        {{ isAdmin ? 'Manage attendance by date' : "Today's attendance" }}
+      <span class="att-subtitle">{{ isAdmin ? 'Mark & track employee attendance' : "Today's attendance" }}</span>
+    </div>
+
+    <!-- Date picker shown only on Mark tab (admin) -->
+    <div class="date-wrap" *ngIf="isAdmin && view === 'mark'">
+      <svg class="date-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <input type="date" class="date-input" [(ngModel)]="markDate" (change)="loadMark()" />
+    </div>
+  </div>
+
+  <!-- ═══ TAB SWITCHER (admin only) ════════════════════════════════════════ -->
+  <div class="att-tabs" *ngIf="isAdmin">
+    <button class="att-tab" [class.att-tab--active]="view === 'mark'" (click)="setView('mark')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+      </svg>
+      Mark Attendance
+    </button>
+    <button class="att-tab" [class.att-tab--active]="view === 'report'" (click)="setView('report')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      Report
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       MARK TAB
+  ════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="view === 'mark'">
+
+    <!-- Today's Stats Row -->
+    <div class="stats-row" *ngIf="markList.length > 0">
+      <div class="stat-chip stat-chip--p">
+        <span class="stat-num">{{ todayStats.P }}</span>
+        <span class="stat-lbl">Present</span>
+      </div>
+      <div class="stat-chip stat-chip--a">
+        <span class="stat-num">{{ todayStats.A }}</span>
+        <span class="stat-lbl">Absent</span>
+      </div>
+      <div class="stat-chip stat-chip--h">
+        <span class="stat-num">{{ todayStats.H }}</span>
+        <span class="stat-lbl">Half Day</span>
+      </div>
+      <div class="stat-chip stat-chip--l">
+        <span class="stat-num">{{ todayStats.L }}</span>
+        <span class="stat-lbl">Late</span>
+      </div>
+      <div class="stat-chip stat-chip--hl">
+        <span class="stat-num">{{ todayStats.HL }}</span>
+        <span class="stat-lbl">Holiday</span>
+      </div>
+    </div>
+
+    <!-- Status Legend -->
+    <div class="legend-row">
+      <span class="legend-item" *ngFor="let s of statuses">
+        <span class="legend-dot" [style.background]="STATUS_META[s].color"></span>
+        <span>{{ s }} — {{ STATUS_META[s].label }}</span>
       </span>
     </div>
-    <div class="att-header-right" *ngIf="isAdmin">
-      <div class="date-wrap">
-        <svg class="date-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        <input type="date" class="date-input" [(ngModel)]="date" (change)="load()" />
+
+    <!-- Section title -->
+    <div class="section-title">{{ markList.length }} Employees</div>
+
+    <!-- Employee Cards -->
+    <div class="emp-grid" *ngIf="markList.length > 0; else emptyMark">
+      <div class="emp-card"
+           [class.emp-card--p]="emp.status === 'P'"
+           [class.emp-card--a]="emp.status === 'A'"
+           [class.emp-card--h]="emp.status === 'H'"
+           [class.emp-card--l]="emp.status === 'L'"
+           [class.emp-card--hl]="emp.status === 'HL'"
+           *ngFor="let emp of markList">
+
+        <!-- Top row: avatar + name + current status badge -->
+        <div class="emp-top">
+          <div class="emp-avatar">{{ emp.name.charAt(0).toUpperCase() }}</div>
+          <div class="emp-info">
+            <div class="emp-name">{{ emp.name }}</div>
+            <div class="emp-role">Employee</div>
+          </div>
+          <span class="emp-status-badge"
+                [style.background]="STATUS_META[emp.status].bg"
+                [style.color]="STATUS_META[emp.status].color">
+            {{ STATUS_META[emp.status].label }}
+          </span>
+        </div>
+
+        <!-- Status buttons (admin) -->
+        <div class="status-btns" *ngIf="isAdmin">
+          <button *ngFor="let s of statuses"
+                  class="stb"
+                  [class.stb--active]="emp.status === s"
+                  [style.color]="emp.status === s ? '#fff' : STATUS_META[s].color"
+                  [style.background]="emp.status === s ? STATUS_META[s].color : STATUS_META[s].bg"
+                  [style.border-color]="STATUS_META[s].color"
+                  (click)="emp.status = s"
+                  type="button">
+            {{ s }}
+          </button>
+        </div>
+
+        <!-- Time inputs (admin, when status has times) -->
+        <div class="time-row" *ngIf="isAdmin && hasTime(emp.status)">
+          <div class="time-field">
+            <label class="time-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 11 12 6 7 11"/><line x1="12" y1="6" x2="12" y2="18"/></svg>
+              Check-in
+            </label>
+            <input type="time" class="time-input" [(ngModel)]="emp.check_in" />
+          </div>
+          <div class="time-field">
+            <label class="time-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 13 12 18 7 13"/><line x1="12" y1="6" x2="12" y2="18"/></svg>
+              Check-out
+            </label>
+            <input type="time" class="time-input" [(ngModel)]="emp.check_out" />
+          </div>
+        </div>
+
+        <!-- Read-only time display (staff) -->
+        <div class="time-row-ro" *ngIf="!isAdmin && hasTime(emp.status) && (emp.check_in || emp.check_out)">
+          <span class="time-ro-chip time-ro-in"  *ngIf="emp.check_in">↑ {{ emp.check_in }}</span>
+          <span class="time-ro-chip time-ro-out" *ngIf="emp.check_out">↓ {{ emp.check_out }}</span>
+        </div>
+
+        <!-- Read-only badge (staff) -->
+        <div class="status-btns-ro" *ngIf="!isAdmin">
+          <span class="badge-ro"
+                [style.background]="STATUS_META[emp.status].bg"
+                [style.color]="STATUS_META[emp.status].color">
+            {{ STATUS_META[emp.status].label }}
+          </span>
+        </div>
+
       </div>
     </div>
-  </div>
 
-  <!-- Section Title -->
-  <div class="section-title">Employee List</div>
-
-  <!-- Employee Grid -->
-  <div class="emp-grid" *ngIf="list && list.length > 0; else emptyState">
-    <div class="emp-card" *ngFor="let emp of list">
-
-      <!-- Avatar -->
-      <div class="emp-avatar">
-        {{ emp.name.charAt(0).toUpperCase() }}
+    <ng-template #emptyMark>
+      <div class="empty-state">
+        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <p class="empty-title">No employees found</p>
+        <p class="empty-sub">Select a date to load attendance records.</p>
       </div>
+    </ng-template>
 
-      <!-- Info -->
-      <div class="emp-info">
-        <div class="emp-name">{{ emp.name }}</div>
-        <div class="emp-role">Employee</div>
+    <!-- Save Bar (admin) -->
+    <div class="save-bar" *ngIf="isAdmin && markList.length > 0">
+      <div class="save-bar-inner">
+        <span class="save-success-msg" *ngIf="saveSuccess">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Saved!
+        </span>
+        <button class="save-btn" type="button" (click)="saveMark()" [disabled]="markSaving">
+          <svg *ngIf="!markSaving" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span class="save-spinner" *ngIf="markSaving"></span>
+          {{ markSaving ? 'Saving...' : 'Save Attendance' }}
+        </button>
       </div>
-
-      <!-- Status Toggle (Admin) -->
-      <div class="status-toggle" *ngIf="isAdmin">
-        <button
-          class="toggle-btn toggle-p"
-          [class.active-p]="emp.status === 'P'"
-          (click)="emp.status = 'P'"
-          type="button"
-        >P</button>
-        <button
-          class="toggle-btn toggle-a"
-          [class.active-a]="emp.status === 'A'"
-          (click)="emp.status = 'A'"
-          type="button"
-        >A</button>
-      </div>
-
-      <!-- Read-only Status Badge -->
-      <div class="status-badge-wrap" *ngIf="!isAdmin">
-        <span class="badge-p" *ngIf="emp.status === 'P'">Present</span>
-        <span class="badge-a" *ngIf="emp.status === 'A'">Absent</span>
-      </div>
-
     </div>
-  </div>
 
-  <!-- Empty State -->
-  <ng-template #emptyState>
-    <div class="empty-state">
-      <div class="empty-icon-wrap">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       REPORT TAB
+  ════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="view === 'report'">
+
+    <!-- Filter Bar -->
+    <div class="report-filters">
+      <div class="rf-group">
+        <label class="rf-label">From</label>
+        <input type="date" class="rf-input" [(ngModel)]="reportStart" />
       </div>
-      <p class="empty-title">No employees found</p>
-      <p class="empty-sub">Select a date to load attendance records.</p>
-    </div>
-  </ng-template>
-
-  <!-- Save Bar -->
-  <div class="save-bar" *ngIf="isAdmin && list && list.length > 0">
-    <div class="save-bar-inner">
-      <button class="save-btn" type="button" (click)="save()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        Save Attendance
+      <div class="rf-group">
+        <label class="rf-label">To</label>
+        <input type="date" class="rf-input" [(ngModel)]="reportEnd" />
+      </div>
+      <div class="rf-group">
+        <label class="rf-label">Employee</label>
+        <select class="rf-input rf-select" [(ngModel)]="selectedEmpId">
+          <option value="">All Employees</option>
+          <option *ngFor="let e of allEmployees" [value]="e.id">{{ e.name }}</option>
+        </select>
+      </div>
+      <button class="rf-load-btn" (click)="loadReport()" [disabled]="reportLoading">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Load Report
       </button>
     </div>
-  </div>
+
+    <!-- Status Legend -->
+    <div class="legend-row">
+      <span class="legend-item" *ngFor="let s of statuses">
+        <span class="legend-dot" [style.background]="STATUS_META[s].color"></span>
+        {{ STATUS_META[s].label }}
+      </span>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="reportLoading">
+      <div class="spinner"></div>
+      Loading report...
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="report-summary" *ngIf="!reportLoading && reportEmployees.length > 0">
+      <div class="rs-card">
+        <div class="rs-val">{{ reportEmployees.length }}</div>
+        <div class="rs-lbl">Employees</div>
+      </div>
+      <div class="rs-card">
+        <div class="rs-val">{{ reportDates.length }}</div>
+        <div class="rs-lbl">Days in Range</div>
+      </div>
+      <div class="rs-card rs-card--highlight">
+        <div class="rs-val">{{ avgAttendance }}%</div>
+        <div class="rs-lbl">Avg Attendance</div>
+      </div>
+    </div>
+
+    <!-- Attendance Grid -->
+    <div class="grid-wrap" *ngIf="!reportLoading && filteredReport.length > 0">
+      <table class="att-grid">
+
+        <!-- Header row -->
+        <thead>
+          <tr>
+            <th class="ag-name-th">Employee</th>
+            <th *ngFor="let d of reportDates"
+                class="ag-date-th"
+                [class.ag-date-th--weekend]="isWeekend(d)">
+              <div class="ag-day-num">{{ dayNum(d) }}</div>
+              <div class="ag-day-name">{{ dayName(d) }}</div>
+            </th>
+            <!-- Count header per status -->
+            <th class="ag-count-th" *ngFor="let s of statuses"
+                [style.color]="STATUS_META[s].color"
+                [title]="STATUS_META[s].label">
+              {{ s }}
+            </th>
+            <th class="ag-pct-th">%</th>
+          </tr>
+        </thead>
+
+        <!-- Body rows -->
+        <tbody>
+          <tr *ngFor="let emp of filteredReport; let odd = odd"
+              [class.ag-row--odd]="odd">
+
+            <td class="ag-name-td">
+              <div class="ag-emp-avatar">{{ emp.employee_name.charAt(0).toUpperCase() }}</div>
+              <span class="ag-emp-name">{{ emp.employee_name }}</span>
+            </td>
+
+            <!-- Daily status cells -->
+            <td *ngFor="let d of reportDates"
+                class="ag-cell"
+                [class.ag-cell--weekend]="isWeekend(d)">
+              <ng-container *ngIf="emp.cells[d] as cell">
+                <span class="ag-dot"
+                      [style.background]="STATUS_META[cell.status].bg"
+                      [style.color]="STATUS_META[cell.status].color"
+                      [title]="cellTip(cell)">
+                  {{ cell.status }}
+                </span>
+              </ng-container>
+              <span class="ag-empty" *ngIf="!emp.cells[d]">—</span>
+            </td>
+
+            <!-- Count per status -->
+            <td class="ag-count-td" *ngFor="let s of statuses">
+              <span class="ag-count"
+                    [style.color]="STATUS_META[s].color"
+                    [class.ag-count--zero]="emp.counts[s] === 0">
+                {{ emp.counts[s] }}
+              </span>
+            </td>
+
+            <!-- Attendance % -->
+            <td class="ag-pct-td">
+              <span class="ag-pct"
+                    [class.ag-pct--good]="emp.attendance_pct >= 80"
+                    [class.ag-pct--warn]="emp.attendance_pct >= 60 && emp.attendance_pct < 80"
+                    [class.ag-pct--bad]="emp.attendance_pct < 60">
+                {{ emp.attendance_pct }}%
+              </span>
+            </td>
+
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+
+    <!-- Empty Report -->
+    <div class="empty-state" *ngIf="!reportLoading && reportEmployees.length > 0 && filteredReport.length === 0">
+      <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <p class="empty-title">No records for selected employee</p>
+    </div>
+
+    <div class="empty-state" *ngIf="!reportLoading && reportEmployees.length === 0">
+      <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <p class="empty-title">No records found</p>
+      <p class="empty-sub">No attendance marked for this date range.</p>
+    </div>
+
+  </ng-container>
 
 </div>

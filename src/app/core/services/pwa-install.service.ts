@@ -4,14 +4,13 @@ import { Injectable, signal } from '@angular/core';
 export class PwaInstallService {
   private deferredPrompt: any = null;
 
-  /** true = Android Chrome has a native install prompt ready */
-  canInstall   = signal(false);
-  /** true = iOS Safari (must use Share → Add to Home Screen) */
-  isIos        = signal(false);
-  /** true = already running as installed PWA */
-  isInstalled  = signal(false);
-  /** true = user dismissed the banner (persisted 30 days) */
-  isDismissed  = signal(false);
+  canInstall    = signal(false);
+  isIos         = signal(false);
+  /** iOS but NOT in Safari — must open Safari first */
+  iosNotSafari  = signal(false);
+  isInstalled   = signal(false);
+  isDismissed   = signal(false);
+  showIosGuide  = signal(false);
 
   constructor() {
     if (typeof window === 'undefined') return;
@@ -23,19 +22,29 @@ export class PwaInstallService {
       return;
     }
 
-    // iOS detection
-    const ua = navigator.userAgent.toLowerCase();
-    if (/iphone|ipad|ipod/.test(ua) && !(window as any).MSStream) {
+    const ua = navigator.userAgent;
+    const isIosDevice = /iphone|ipad|ipod/i.test(ua) && !(window as any).MSStream;
+
+    if (isIosDevice) {
       this.isIos.set(true);
+      const isSafari = /safari/i.test(ua) && !/CriOS|FxiOS|OPiOS|EdgiOS/i.test(ua);
+      if (!isSafari) this.iosNotSafari.set(true);
     }
 
-    // Check dismiss cookie
     const dismissed = localStorage.getItem('pwa_banner_dismissed');
     if (dismissed && Date.now() < Number(dismissed)) {
       this.isDismissed.set(true);
     }
 
-    // Android Chrome prompt
+    // Pick up the prompt captured in index.html before Angular booted
+    const early = (window as any).__pwaInstallPrompt;
+    if (early) {
+      this.deferredPrompt = early;
+      this.canInstall.set(true);
+      (window as any).__pwaInstallPrompt = null;
+    }
+
+    // Also listen for future firings (e.g. after dismissal / update)
     window.addEventListener('beforeinstallprompt', (e: Event) => {
       e.preventDefault();
       this.deferredPrompt = e;
@@ -59,16 +68,14 @@ export class PwaInstallService {
     if (!this.deferredPrompt) return;
     this.deferredPrompt.prompt();
     const { outcome } = await this.deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      this.isInstalled.set(true);
-    }
+    if (outcome === 'accepted') this.isInstalled.set(true);
     this.deferredPrompt = null;
     this.canInstall.set(false);
   }
 
   dismiss() {
-    // Suppress for 30 days
     localStorage.setItem('pwa_banner_dismissed', String(Date.now() + 30 * 24 * 60 * 60 * 1000));
     this.isDismissed.set(true);
+    this.showIosGuide.set(false);
   }
 }

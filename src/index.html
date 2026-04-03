@@ -8,6 +8,14 @@
     <link rel="icon" type="image/x-icon" href="assets/cafe_logo.webp">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#ff7a18">
+    <script>
+      // Capture beforeinstallprompt BEFORE Angular boots — event fires very early
+      window.__pwaInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__pwaInstallPrompt = e;
+      });
+    </script>
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Kovais Brew">
     <link rel="apple-touch-icon" href="assets/icons/apple-icon-180.png">

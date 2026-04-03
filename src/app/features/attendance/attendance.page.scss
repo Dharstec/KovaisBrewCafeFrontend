@@ -1,4 +1,4 @@
-// ─── Design Tokens ───────────────────────────────────────────────────────────
+// ─── Tokens ───────────────────────────────────────────────────────────────────
 $font:    'Inter', system-ui, sans-serif;
 $bg:      #f1f5f9;
 $surface: #ffffff;
@@ -9,12 +9,12 @@ $text3:   #94a3b8;
 $accent:  #f97316;
 $radius:  14px;
 
-// ─── Page Wrapper ─────────────────────────────────────────────────────────────
+// ─── Page ────────────────────────────────────────────────────────────────────
 .att {
   font-family: $font;
   background:  $bg;
   min-height:  100vh;
-  padding:     24px 24px 60px;
+  padding:     24px 24px 80px;
   box-sizing:  border-box;
 }
 
@@ -24,21 +24,14 @@ $radius:  14px;
   justify-content: space-between;
   align-items:     flex-start;
   gap:             16px;
-  margin-bottom:   28px;
-}
-
-.att-header-left {
-  display:        flex;
-  flex-direction: column;
-  gap:            4px;
+  margin-bottom:   20px;
 }
 
 .att-title {
-  margin:      0;
-  font-size:   28px;
+  margin:      0 0 4px;
+  font-size:   26px;
   font-weight: 800;
   color:       $text1;
-  line-height: 1.2;
 }
 
 .att-subtitle {
@@ -46,11 +39,6 @@ $radius:  14px;
   color:     $text2;
 }
 
-.att-header-right {
-  flex-shrink: 0;
-}
-
-// Date Wrap (dashboard-style)
 .date-wrap {
   display:       flex;
   align-items:   center;
@@ -59,20 +47,17 @@ $radius:  14px;
   border:        1px solid $border;
   border-radius: 10px;
   padding:       0 12px;
-  height:        42px;
-  box-shadow:    0 1px 3px rgba(0, 0, 0, .06);
-  transition:    border-color .2s, box-shadow .2s;
+  height:        40px;
+  box-shadow:    0 1px 3px rgba(0,0,0,.05);
+  flex-shrink:   0;
 
   &:focus-within {
     border-color: $accent;
-    box-shadow:   0 0 0 3px rgba(249, 115, 22, .12);
+    box-shadow:   0 0 0 3px rgba(249,115,22,.12);
   }
 }
 
-.date-icon {
-  color:       $text3;
-  flex-shrink: 0;
-}
+.date-icon { color: $text3; flex-shrink: 0; }
 
 .date-input {
   border:      none;
@@ -83,9 +68,43 @@ $radius:  14px;
   color:       $text1;
   height:      100%;
   cursor:      pointer;
+}
 
-  &::-webkit-calendar-picker-indicator {
-    cursor: pointer;
+// ─── Tabs ────────────────────────────────────────────────────────────────────
+.att-tabs {
+  display:       flex;
+  gap:           4px;
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: 12px;
+  padding:       4px;
+  width:         fit-content;
+  margin-bottom: 24px;
+  box-shadow:    0 1px 4px rgba(0,0,0,.04);
+}
+
+.att-tab {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           6px;
+  height:        34px;
+  padding:       0 16px;
+  border:        none;
+  border-radius: 9px;
+  background:    transparent;
+  color:         $text2;
+  font-family:   $font;
+  font-size:     13px;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    background .15s, color .15s;
+
+  &:hover { background: $bg; color: $text1; }
+
+  &--active {
+    background: $accent;
+    color:      #fff;
+    box-shadow: 0 2px 8px rgba(249,115,22,.3);
   }
 }
 
@@ -93,7 +112,7 @@ $radius:  14px;
 .section-title {
   display:        flex;
   align-items:    center;
-  gap:            10px;
+  gap:            8px;
   font-size:      11px;
   font-weight:    700;
   letter-spacing: .8px;
@@ -103,7 +122,6 @@ $radius:  14px;
 
   &::before {
     content:       '';
-    display:       block;
     width:         3px;
     height:        14px;
     background:    $accent;
@@ -112,163 +130,267 @@ $radius:  14px;
   }
 }
 
+// ─── Today Stats Row ─────────────────────────────────────────────────────────
+.stats-row {
+  display:       flex;
+  flex-wrap:     wrap;
+  gap:           10px;
+  margin-bottom: 18px;
+}
+
+.stat-chip {
+  display:        flex;
+  align-items:    center;
+  gap:            8px;
+  padding:        10px 16px;
+  border-radius:  12px;
+  border:         1px solid transparent;
+
+  .stat-num {
+    font-size:   20px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .stat-lbl {
+    font-size:   11px;
+    font-weight: 600;
+    opacity:     .85;
+  }
+}
+
+.stat-chip--p  { background: #dcfce7; color: #16a34a; border-color: rgba(22,163,74,.2); }
+.stat-chip--a  { background: #fee2e2; color: #ef4444; border-color: rgba(239,68,68,.2); }
+.stat-chip--h  { background: #fef3c7; color: #d97706; border-color: rgba(217,119,6,.2); }
+.stat-chip--l  { background: #ffedd5; color: #ea580c; border-color: rgba(234,88,12,.2); }
+.stat-chip--hl { background: #e0f2fe; color: #0369a1; border-color: rgba(3,105,161,.2); }
+
+// ─── Status Legend ────────────────────────────────────────────────────────────
+.legend-row {
+  display:       flex;
+  flex-wrap:     wrap;
+  gap:           12px 18px;
+  margin-bottom: 20px;
+  padding:       12px 16px;
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: 10px;
+}
+
+.legend-item {
+  display:     inline-flex;
+  align-items: center;
+  gap:         6px;
+  font-size:   12px;
+  font-weight: 600;
+  color:       $text2;
+}
+
+.legend-dot {
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  flex-shrink:   0;
+}
+
 // ─── Employee Grid ────────────────────────────────────────────────────────────
 .emp-grid {
   display:               grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap:                   12px;
 }
 
 // ─── Employee Card ────────────────────────────────────────────────────────────
 .emp-card {
-  display:       flex;
-  align-items:   center;
-  gap:           14px;
   background:    $surface;
-  border:        1px solid $border;
+  border:        1.5px solid $border;
   border-radius: $radius;
-  padding:       18px 20px;
-  box-shadow:    0 2px 8px rgba(0, 0, 0, .05);
-  transition:    box-shadow .2s, transform .2s;
+  padding:       16px 18px 14px;
+  box-shadow:    0 2px 6px rgba(0,0,0,.04);
+  transition:    box-shadow .2s, border-color .2s;
 
-  &:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
-    transform:  translateY(-1px);
-  }
+  &:hover { box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+
+  &--p  { border-color: rgba(22,163,74,.3);   background: linear-gradient(170deg,#f0fdf4 0%,#fff 55%); }
+  &--a  { border-color: rgba(239,68,68,.25);  background: linear-gradient(170deg,#fff5f5 0%,#fff 55%); }
+  &--h  { border-color: rgba(217,119,6,.25);  background: linear-gradient(170deg,#fffbeb 0%,#fff 55%); }
+  &--l  { border-color: rgba(234,88,12,.25);  background: linear-gradient(170deg,#fff7ed 0%,#fff 55%); }
+  &--hl { border-color: rgba(3,105,161,.2);   background: linear-gradient(170deg,#f0f9ff 0%,#fff 55%); }
 }
 
-// ─── Avatar ───────────────────────────────────────────────────────────────────
+.emp-top {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  margin-bottom: 14px;
+}
+
 .emp-avatar {
-  width:           40px;
-  height:          40px;
+  width:           38px;
+  height:          38px;
   border-radius:   50%;
-  background:      linear-gradient(135deg, $accent 0%, #fb923c 100%);
+  background:      linear-gradient(135deg,$accent 0%,#fb923c 100%);
   color:           #fff;
-  font-size:       16px;
+  font-size:       15px;
   font-weight:     700;
   display:         flex;
   align-items:     center;
   justify-content: center;
   flex-shrink:     0;
-  letter-spacing:  0;
-  user-select:     none;
 }
 
-// ─── Employee Info ────────────────────────────────────────────────────────────
-.emp-info {
-  display:        flex;
-  flex-direction: column;
-  gap:            2px;
-  flex:           1;
-  min-width:      0;
-}
-
+.emp-info { flex: 1; min-width: 0; }
 .emp-name {
-  font-size:     15px;
-  font-weight:   600;
+  font-size:     14px;
+  font-weight:   700;
   color:         $text1;
   white-space:   nowrap;
   overflow:      hidden;
   text-overflow: ellipsis;
 }
+.emp-role { font-size: 11px; color: $text3; }
 
-.emp-role {
-  font-size: 11px;
-  color:     $text3;
+.emp-status-badge {
+  padding:       3px 10px;
+  border-radius: 999px;
+  font-size:     11px;
+  font-weight:   700;
+  flex-shrink:   0;
 }
 
-// ─── Status Toggle ────────────────────────────────────────────────────────────
-.status-toggle {
-  display:     flex;
-  margin-left: auto;
-  flex-shrink: 0;
-  border:      1px solid $border;
+// ─── Status Buttons ───────────────────────────────────────────────────────────
+.status-btns {
+  display:       flex;
+  gap:           6px;
+  flex-wrap:     wrap;
+  margin-bottom: 4px;
+}
+
+.stb {
+  flex:          1;
+  min-width:     36px;
+  height:        32px;
+  border:        1.5px solid;
   border-radius: 8px;
-  overflow:    hidden;
-}
+  font-family:   $font;
+  font-size:     11px;
+  font-weight:   800;
+  cursor:        pointer;
+  transition:    background .15s, color .15s, transform .1s;
+  letter-spacing: .3px;
 
-.toggle-btn {
-  width:       42px;
-  height:      34px;
-  border:      none;
-  background:  $bg;
-  color:       $text3;
-  font-size:   12px;
-  font-weight: 700;
-  cursor:      pointer;
-  transition:  background .15s, color .15s;
-  font-family: $font;
+  &:hover { opacity: .85; transform: translateY(-1px); }
+  &:active { transform: translateY(0); }
 
-  &:first-child {
-    border-right: 1px solid $border;
-  }
-
-  &:hover {
-    background: #e2e8f0;
-    color:      $text2;
+  &--active {
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
   }
 }
 
-.toggle-btn.active-p {
-  background: #16a34a;
-  color:      #fff;
+// ─── Time Row ────────────────────────────────────────────────────────────────
+.time-row {
+  display:    flex;
+  gap:        10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid $border;
 }
 
-.toggle-btn.active-a {
-  background: #ef4444;
-  color:      #fff;
+.time-field {
+  flex:           1;
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
 }
 
-// ─── Read-only Status Badges ──────────────────────────────────────────────────
-.status-badge-wrap {
-  margin-left: auto;
-  flex-shrink: 0;
+.time-label {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            4px;
+  font-size:      10px;
+  font-weight:    700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color:          $text3;
 }
 
-.badge-p,
-.badge-a {
+.time-input {
+  width:         100%;
+  height:        34px;
+  border:        1px solid $border;
+  border-radius: 8px;
+  background:    $bg;
+  font-family:   $font;
+  font-size:     13px;
+  font-weight:   600;
+  color:         $text1;
+  padding:       0 10px;
+  box-sizing:    border-box;
+  outline:       none;
+  cursor:        pointer;
+
+  &:focus {
+    border-color: $accent;
+    box-shadow:   0 0 0 3px rgba(249,115,22,.12);
+  }
+}
+
+// Read-only times (staff)
+.time-row-ro {
+  display:    flex;
+  gap:        8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed $border;
+}
+
+.time-ro-chip {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           4px;
+  padding:       3px 10px;
+  border-radius: 999px;
+  font-size:     11px;
+  font-weight:   700;
+}
+
+.time-ro-in  { background: #dcfce7; color: #16a34a; }
+.time-ro-out { background: #e0f2fe; color: #0369a1; }
+
+.status-btns-ro { margin-top: 10px; }
+
+.badge-ro {
   display:       inline-block;
   padding:       4px 12px;
   border-radius: 999px;
   font-size:     12px;
-  font-weight:   600;
-}
-
-.badge-p {
-  background: #dcfce7;
-  color:      #16a34a;
-}
-
-.badge-a {
-  background: #fee2e2;
-  color:      #ef4444;
+  font-weight:   700;
 }
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 .empty-state {
-  display:         flex;
-  flex-direction:  column;
-  align-items:     center;
-  justify-content: center;
-  padding:         60px 20px;
-  text-align:      center;
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  padding:        56px 20px;
+  text-align:     center;
 }
 
-.empty-icon-wrap {
-  width:           80px;
-  height:          80px;
-  background:      rgba(249, 115, 22, .08);
+.empty-icon {
+  width:           72px;
+  height:          72px;
+  background:      rgba(249,115,22,.08);
   border-radius:   50%;
   display:         flex;
   align-items:     center;
   justify-content: center;
-  margin-bottom:   20px;
+  margin-bottom:   18px;
   color:           $accent;
 }
 
 .empty-title {
   margin:      0 0 6px;
-  font-size:   16px;
+  font-size:   15px;
   font-weight: 700;
   color:       $text1;
 }
@@ -281,92 +403,423 @@ $radius:  14px;
 
 // ─── Save Bar ────────────────────────────────────────────────────────────────
 .save-bar {
-  position:   fixed;
-  bottom:     0;
-  left:       0;
-  right:      0;
-  background: rgba(255, 255, 255, .92);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid $border;
-  z-index:    100;
-  padding:    12px 24px;
+  position:        fixed;
+  bottom:          0; left: 0; right: 0;
+  background:      rgba(255,255,255,.92);
+  backdrop-filter: blur(12px);
+  border-top:      1px solid $border;
+  z-index:         100;
+  padding:         12px 24px;
 }
 
 .save-bar-inner {
   display:         flex;
   justify-content: flex-end;
+  align-items:     center;
+  gap:             16px;
   max-width:       1400px;
   margin:          0 auto;
 }
 
+.save-success-msg {
+  display:     inline-flex;
+  align-items: center;
+  gap:         6px;
+  font-size:   13px;
+  font-weight: 600;
+  color:       #16a34a;
+  animation:   fadeIn .3s ease;
+}
+
 .save-btn {
-  display:         inline-flex;
-  align-items:     center;
-  gap:             8px;
-  height:          44px;
-  padding:         0 24px;
-  border:          none;
-  border-radius:   10px;
-  background:      linear-gradient(135deg, $accent 0%, #fb923c 100%);
-  color:           #fff;
-  font-family:     $font;
-  font-size:       14px;
-  font-weight:     700;
-  cursor:          pointer;
-  box-shadow:      0 4px 14px rgba(249, 115, 22, .35);
-  transition:      transform .15s, box-shadow .15s, opacity .15s;
+  display:     inline-flex;
+  align-items: center;
+  gap:         8px;
+  height:      42px;
+  padding:     0 24px;
+  border:      none;
+  border-radius: 10px;
+  background:  linear-gradient(135deg,$accent 0%,#fb923c 100%);
+  color:       #fff;
+  font-family: $font;
+  font-size:   14px;
+  font-weight: 700;
+  cursor:      pointer;
+  box-shadow:  0 4px 14px rgba(249,115,22,.35);
+  transition:  transform .15s, box-shadow .15s;
 
-  &:hover {
-    transform:  translateY(-1px);
-    box-shadow: 0 6px 20px rgba(249, 115, 22, .45);
-  }
+  &:hover  { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(249,115,22,.45); }
+  &:active { transform: translateY(0); }
+  &:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+}
 
-  &:active {
-    transform:  translateY(0);
-    box-shadow: 0 2px 8px rgba(249, 115, 22, .3);
+.save-spinner {
+  width:         14px;
+  height:        14px;
+  border:        2px solid rgba(255,255,255,.4);
+  border-top:    2px solid #fff;
+  border-radius: 50%;
+  animation:     spin .7s linear infinite;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORT TAB
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Filter Bar ──────────────────────────────────────────────────────────────
+.report-filters {
+  display:       flex;
+  flex-wrap:     wrap;
+  gap:           12px;
+  align-items:   flex-end;
+  margin-bottom: 18px;
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: $radius;
+  padding:       16px 20px;
+  box-shadow:    0 2px 8px rgba(0,0,0,.04);
+}
+
+.rf-group {
+  display:        flex;
+  flex-direction: column;
+  gap:            5px;
+}
+
+.rf-label {
+  font-size:      10px;
+  font-weight:    700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color:          $text3;
+}
+
+.rf-input {
+  height:        38px;
+  border:        1px solid $border;
+  border-radius: 8px;
+  background:    $bg;
+  font-family:   $font;
+  font-size:     13px;
+  color:         $text1;
+  padding:       0 12px;
+  outline:       none;
+  cursor:        pointer;
+  min-width:     140px;
+
+  &:focus {
+    border-color: $accent;
+    box-shadow:   0 0 0 3px rgba(249,115,22,.12);
   }
 }
 
+.rf-select { min-width: 160px; }
+
+.rf-load-btn {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           7px;
+  height:        38px;
+  padding:       0 20px;
+  border:        none;
+  border-radius: 9px;
+  background:    $accent;
+  color:         #fff;
+  font-family:   $font;
+  font-size:     13px;
+  font-weight:   700;
+  cursor:        pointer;
+  box-shadow:    0 2px 8px rgba(249,115,22,.3);
+  transition:    background .15s, transform .1s;
+
+  &:hover  { background: darken(#f97316, 6%); transform: translateY(-1px); }
+  &:active { transform: translateY(0); }
+  &:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+}
+
+// ─── Loading ──────────────────────────────────────────────────────────────────
+.loading-state {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             12px;
+  padding:         48px;
+  font-size:       14px;
+  color:           $text2;
+}
+
+.spinner {
+  width:         22px;
+  height:        22px;
+  border:        3px solid $border;
+  border-top:    3px solid $accent;
+  border-radius: 50%;
+  animation:     spin .7s linear infinite;
+}
+
+// ─── Report Summary ───────────────────────────────────────────────────────────
+.report-summary {
+  display:       flex;
+  flex-wrap:     wrap;
+  gap:           12px;
+  margin-bottom: 20px;
+}
+
+.rs-card {
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: 12px;
+  padding:       14px 24px;
+  min-width:     110px;
+  text-align:    center;
+  box-shadow:    0 1px 4px rgba(0,0,0,.04);
+
+  &--highlight {
+    background: linear-gradient(135deg, #fff7ed, #fff);
+    border-color: rgba(249,115,22,.3);
+  }
+}
+
+.rs-val {
+  font-size:   24px;
+  font-weight: 800;
+  color:       $text1;
+  line-height: 1;
+}
+
+.rs-lbl {
+  font-size:  11px;
+  color:      $text3;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+// ─── Attendance Grid ──────────────────────────────────────────────────────────
+.grid-wrap {
+  overflow-x:    auto;
+  overflow-y:    auto;
+  max-height:    70vh;
+  border-radius: $radius;
+  border:        1px solid $border;
+  box-shadow:    0 2px 12px rgba(0,0,0,.06);
+  background:    $surface;
+}
+
+.att-grid {
+  border-collapse: collapse;
+  white-space:     nowrap;
+  font-size:       12px;
+  width:           100%;
+
+  th, td {
+    border-right:  1px solid $border;
+    border-bottom: 1px solid $border;
+    padding:       0;
+    vertical-align: middle;
+  }
+
+  th:last-child, td:last-child { border-right: none; }
+}
+
+// Sticky header row
+thead th {
+  position:   sticky;
+  top:        0;
+  z-index:    2;
+  background: $bg;
+  font-weight: 700;
+  color:      $text2;
+}
+
+// Sticky name column
+.ag-name-th,
+.ag-name-td {
+  position:   sticky;
+  left:       0;
+  z-index:    3;
+  background: $surface;
+  min-width:  150px;
+  max-width:  180px;
+  text-align: left;
+}
+
+thead .ag-name-th {
+  z-index:    4;
+  background: $bg;
+  padding:    0 14px;
+  height:     52px;
+  font-size:  12px;
+}
+
+.ag-name-td {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  height: 44px;
+  border-right: 1.5px solid $border !important;
+}
+
+.ag-emp-avatar {
+  width:           28px;
+  height:          28px;
+  border-radius:   50%;
+  background:      linear-gradient(135deg,$accent 0%,#fb923c 100%);
+  color:           #fff;
+  font-size:       12px;
+  font-weight:     700;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+}
+
+.ag-emp-name {
+  font-weight:   600;
+  color:         $text1;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+  max-width:     110px;
+}
+
+// Date header
+.ag-date-th {
+  width:      36px;
+  min-width:  36px;
+  padding:    6px 0;
+  text-align: center;
+
+  &--weekend { background: #fafaf9; }
+}
+
+.ag-day-num {
+  font-size:   13px;
+  font-weight: 800;
+  color:       $text1;
+  line-height: 1;
+}
+
+.ag-day-name {
+  font-size:  9px;
+  color:      $text3;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+// Date cells
+.ag-cell {
+  width:      36px;
+  min-width:  36px;
+  text-align: center;
+  height:     44px;
+
+  &--weekend { background: #fafaf9; }
+}
+
+.ag-dot {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  width:           28px;
+  height:          24px;
+  border-radius:   6px;
+  font-size:       10px;
+  font-weight:     800;
+  cursor:          default;
+  letter-spacing:  .2px;
+}
+
+.ag-empty {
+  color:     $text3;
+  font-size: 12px;
+}
+
+// Count header/cells
+.ag-count-th {
+  min-width:  36px;
+  width:      36px;
+  text-align: center;
+  font-size:  11px;
+  font-weight: 800;
+  padding:    0 4px;
+  border-left: 1.5px solid $border !important;
+
+  &:first-of-type { border-left: 2px solid darken(#e2e8f0, 5%) !important; }
+}
+
+.ag-count-td {
+  min-width:  36px;
+  width:      36px;
+  text-align: center;
+  border-left: 1.5px solid $border !important;
+}
+
+.ag-count {
+  font-size:   12px;
+  font-weight: 700;
+
+  &--zero { color: $text3; font-weight: 400; }
+}
+
+// % column
+.ag-pct-th {
+  min-width:  54px;
+  text-align: center;
+  border-left: 2px solid darken(#e2e8f0, 5%) !important;
+}
+
+.ag-pct-td {
+  min-width:  54px;
+  text-align: center;
+  border-left: 2px solid darken(#e2e8f0, 5%) !important;
+}
+
+.ag-pct {
+  display:       inline-block;
+  padding:       2px 8px;
+  border-radius: 6px;
+  font-size:     12px;
+  font-weight:   800;
+
+  &--good { background: #dcfce7; color: #16a34a; }
+  &--warn { background: #fef3c7; color: #d97706; }
+  &--bad  { background: #fee2e2; color: #ef4444; }
+}
+
+.ag-row--odd { background: #fafafa; }
+.ag-row--odd .ag-name-td { background: #fafafa; }
+
+// ─── Animations ──────────────────────────────────────────────────────────────
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes fadeIn  { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
 // ─── Responsive ──────────────────────────────────────────────────────────────
 @media (max-width: 600px) {
-  .att {
-    padding: 16px 16px 80px;
-  }
+  .att { padding: 16px 14px 80px; }
 
-  .att-header {
-    flex-direction: column;
-    align-items:    stretch;
-    gap:            12px;
-    margin-bottom:  20px;
-  }
+  .att-header { flex-direction: column; align-items: stretch; gap: 12px; }
+  .att-title  { font-size: 22px; }
+  .att-tabs   { width: 100%; .att-tab { flex: 1; justify-content: center; } }
+  .date-wrap  { width: 100%; }
+  .date-input { flex: 1; }
 
-  .att-title {
-    font-size: 24px;
-  }
+  .stats-row { gap: 8px; }
+  .stat-chip { padding: 8px 12px; .stat-num { font-size: 18px; } }
 
-  .date-wrap {
-    width: 100%;
-  }
+  .emp-grid   { grid-template-columns: 1fr; }
+  .emp-card   { padding: 14px 14px 12px; }
 
-  .date-input {
-    flex: 1;
-    width: 100%;
-  }
+  .status-btns .stb { font-size: 10px; height: 28px; }
 
-  .emp-grid {
-    grid-template-columns: 1fr;
-  }
+  .save-bar { padding: 10px 14px; }
+  .save-btn { width: 100%; justify-content: center; }
 
-  .emp-card {
-    padding: 14px 16px;
-  }
+  .report-filters { padding: 14px 16px; }
+  .rf-input { min-width: 100%; }
+  .rf-load-btn { width: 100%; justify-content: center; }
 
-  .save-bar {
-    padding: 10px 16px;
-  }
-
-  .save-btn {
-    width: 100%;
-    justify-content: center;
-  }
+  .grid-wrap { max-height: 55vh; }
+  .ag-name-th, .ag-name-td { min-width: 120px; max-width: 130px; }
+  .ag-emp-name { max-width: 80px; }
 }

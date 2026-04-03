@@ -1,21 +1,80 @@
-<div class="pwa-banner" *ngIf="pwa.showBanner">
-
+<!-- ── ANDROID / Desktop: native install prompt ── -->
+<div class="pwa-banner" *ngIf="pwa.showBanner && pwa.canInstall()">
   <div class="pwa-banner__left">
     <img class="pwa-banner__icon" src="assets/icons/manifest-icon-192.maskable.png" alt="Kovais Brew" />
     <div class="pwa-banner__text">
       <span class="pwa-banner__title">Install Kovais Brew</span>
-      <span class="pwa-banner__sub" *ngIf="pwa.canInstall()">Add to your home screen for faster access</span>
-      <span class="pwa-banner__sub" *ngIf="pwa.isIos() && !pwa.canInstall()">
-        Tap <strong>Share</strong> → <strong>Add to Home Screen</strong>
-      </span>
+      <span class="pwa-banner__sub">Add to home screen for faster access</span>
     </div>
   </div>
-
   <div class="pwa-banner__actions">
-    <button class="pwa-banner__install" *ngIf="pwa.canInstall()" (click)="pwa.triggerInstall()">
-      Install
+    <button class="pwa-banner__install" (click)="pwa.triggerInstall()">Install</button>
+    <button class="pwa-banner__dismiss" (click)="pwa.dismiss()">✕</button>
+  </div>
+</div>
+
+<!-- ── iOS but NOT in Safari ── -->
+<div class="pwa-banner pwa-banner--warn" *ngIf="pwa.showBanner && pwa.isIos() && pwa.iosNotSafari() && !pwa.canInstall()">
+  <div class="pwa-banner__left">
+    <div class="pwa-banner__safari-icon">
+      <!-- Safari compass icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+      </svg>
+    </div>
+    <div class="pwa-banner__text">
+      <span class="pwa-banner__title">Open in Safari to install</span>
+      <span class="pwa-banner__sub">iPhone apps can only be installed from Safari</span>
+    </div>
+  </div>
+  <button class="pwa-banner__dismiss" (click)="pwa.dismiss()">✕</button>
+</div>
+
+<!-- ── iOS Safari: tap to show step-by-step guide ── -->
+<div class="pwa-banner pwa-banner--ios"
+     *ngIf="pwa.showBanner && pwa.isIos() && !pwa.iosNotSafari() && !pwa.canInstall()">
+
+  <!-- Collapsed bar -->
+  <div class="pwa-banner__left" (click)="pwa.showIosGuide.set(!pwa.showIosGuide())">
+    <img class="pwa-banner__icon" src="assets/icons/manifest-icon-192.maskable.png" alt="Kovais Brew" />
+    <div class="pwa-banner__text">
+      <span class="pwa-banner__title">Install Kovais Brew</span>
+      <span class="pwa-banner__sub">Tap here to see how to install</span>
+    </div>
+  </div>
+  <div class="pwa-banner__actions">
+    <button class="pwa-banner__how" (click)="pwa.showIosGuide.set(!pwa.showIosGuide())">
+      {{ pwa.showIosGuide() ? 'Hide' : 'How?' }}
     </button>
-    <button class="pwa-banner__dismiss" (click)="pwa.dismiss()" title="Dismiss">✕</button>
+    <button class="pwa-banner__dismiss" (click)="pwa.dismiss()">✕</button>
+  </div>
+
+  <!-- Expanded iOS guide steps -->
+  <div class="ios-guide" *ngIf="pwa.showIosGuide()">
+    <div class="ios-guide__step">
+      <span class="ios-guide__num">1</span>
+      <span class="ios-guide__text">
+        Tap the
+        <span class="ios-guide__inline-icon">
+          <!-- iOS Share icon (box with arrow up) -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </span>
+        <strong>Share</strong> button at the bottom of Safari
+      </span>
+    </div>
+    <div class="ios-guide__step">
+      <span class="ios-guide__num">2</span>
+      <span class="ios-guide__text">Scroll down and tap <strong>Add to Home Screen</strong></span>
+    </div>
+    <div class="ios-guide__step">
+      <span class="ios-guide__num">3</span>
+      <span class="ios-guide__text">Tap <strong>Add</strong> in the top-right corner</span>
+    </div>
   </div>
 
 </div>

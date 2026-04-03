@@ -40,7 +40,7 @@ export const appConfig: ApplicationConfig = {
             },
         ])),
         provideServiceWorker('ngsw-worker.js', {
-            enabled: true, // TEMPORARY force enable
+            enabled: !isDevMode(),
             registrationStrategy: 'registerWhenStable:30000'
         }),
         provideCharts(withDefaultRegisterables()) // ✅ REQUIRED
