@@ -32,10 +32,15 @@ export class CompletedPage implements OnInit {
   totalPages = 1;
   pages: number[] = [];
 
+  /* PLATFORM TABS */
+  platformFilter = '';
+
   /* TOTALS */
-  cashTotal  = 0;
-  upiTotal   = 0;
-  grandTotal = 0;
+  cashTotal    = 0;
+  upiTotal     = 0;
+  zomatoTotal  = 0;
+  swiggyTotal  = 0;
+  grandTotal   = 0;
 
   /* PRINT */
   printBillData: any = null;
@@ -54,18 +59,27 @@ export class CompletedPage implements OnInit {
       this.startDate,
       this.endDate,
       this.page,
-      this.limit
+      this.limit,
+      this.platformFilter || undefined
     ).subscribe({
       next: res => {
-        this.bills      = res.data;
-        this.totalPages = res.totalPages;
-        this.pages      = Array.from({ length: this.totalPages }, (_, i) => i + 1);
-        this.cashTotal  = Number(res.summary?.cash_total  || 0);
-        this.upiTotal   = Number(res.summary?.upi_total   || 0);
-        this.grandTotal = Number(res.summary?.grand_total || 0);
+        this.bills        = res.data;
+        this.totalPages   = res.totalPages;
+        this.pages        = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+        this.cashTotal    = Number(res.summary?.cash_total    || 0);
+        this.upiTotal     = Number(res.summary?.upi_total     || 0);
+        this.zomatoTotal  = Number(res.summary?.zomato_total  || 0);
+        this.swiggyTotal  = Number(res.summary?.swiggy_total  || 0);
+        this.grandTotal   = Number(res.summary?.grand_total   || 0);
       },
       error: () => this.toast.error('Load failed', 'Could not fetch completed bills.')
     });
+  }
+
+  setplatformFilter(p: string) {
+    this.platformFilter = p;
+    this.page = 1;
+    this.loadBills();
   }
 
   /* ADMIN ONLY */

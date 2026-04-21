@@ -68,6 +68,8 @@ export class ProductsPage implements OnInit {
     this.form = {
       name: '',
       price: 0,
+      zomato_price: '',
+      swiggy_price: '',
       category_id: '',
       image_url: '',
       is_sellable: true,

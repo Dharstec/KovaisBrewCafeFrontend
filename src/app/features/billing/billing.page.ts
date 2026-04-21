@@ -30,6 +30,7 @@ export class BillingPage implements OnInit, OnDestroy {
   categories       : any[]   = [];
   selectedCategory           = 'All';
   searchText                 = '';
+  platform                   = '';
 
   /* ── order ── */
   cart             : any[]   = [];
@@ -137,6 +138,8 @@ export class BillingPage implements OnInit, OnDestroy {
   ════════════════════════════════ */
   get filteredProducts() {
     let list = this.products;
+    if (this.platform === 'zomato') list = list.filter(p => p.zomato_price);
+    if (this.platform === 'swiggy') list = list.filter(p => p.swiggy_price);
     if (this.selectedCategory !== 'All') {
       list = list.filter(p => p.category === this.selectedCategory);
     }
@@ -147,10 +150,30 @@ export class BillingPage implements OnInit, OnDestroy {
     return list;
   }
 
+  effectivePrice(p: any): number {
+    if (this.platform === 'zomato' && p.zomato_price) return Number(p.zomato_price);
+    if (this.platform === 'swiggy' && p.swiggy_price) return Number(p.swiggy_price);
+    return Number(p.price);
+  }
+
+  setPlatform(p: string) {
+    if (this.platform === p) { this.platform = ''; this.paymentMethod = ''; this.clearBill(); return; }
+    if (this.cart.length > 0) {
+      if (!confirm('Changing platform will clear the current cart. Continue?')) return;
+    }
+    this.platform = p;
+    this.paymentMethod = (p === 'zomato' || p === 'swiggy') ? 'UPI' : '';
+    this.clearBill();
+  }
+
+  get isOnlinePlatform(): boolean {
+    return this.platform === 'zomato' || this.platform === 'swiggy';
+  }
+
   addProduct(product: any) {
     const existing = this.cart.find(item => item.productId === product.id);
     if (product.is_manual_price && existing) return;
-    this.store.add(product);
+    this.store.add({ ...product, price: this.effectivePrice(product) });
     if (window.innerWidth <= 900) this.showCart = true;
   }
 
@@ -207,7 +230,8 @@ export class BillingPage implements OnInit, OnDestroy {
         price:     Number(i.price),
         qty:       Number(i.qty)
       })),
-      local_id
+      local_id,
+      platform: this.platform || null
     };
 
     /* ── OFFLINE path ── */
@@ -249,7 +273,11 @@ export class BillingPage implements OnInit, OnDestroy {
      COMPLETE BILL
   ════════════════════════════════ */
   async completeBill() {
-    if (!this.paymentMethod) { this.showError('Select payment method'); return; }
+    if (this.isOnlinePlatform && !this.customerName?.trim()) {
+      this.showError('Order number is required for Zomato / Swiggy');
+      return;
+    }
+    if (!this.paymentMethod && !this.isOnlinePlatform) { this.showError('Select payment method'); return; }
 
     const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
     if (!snapshot.length) { this.showError('Cart is empty'); return; }
@@ -277,6 +305,7 @@ export class BillingPage implements OnInit, OnDestroy {
         items,
         payment_mode:  this.paymentMethod,
         grand_total:   this.finalTotal,
+        platform:      this.platform || null,
         created_at:     new Date().toISOString(),
         status:         'queued' as const
       };
@@ -289,10 +318,32 @@ export class BillingPage implements OnInit, OnDestroy {
     }
 
     /* ── ONLINE path ── */
-    const billId = this.store.getBillId();
-    if (!billId) { this.showError('Save bill before completing'); return; }
-
     this.isCompleting = true;
+
+    /* Zomato/Swiggy — create + complete in one shot (no pre-save needed) */
+    if (this.isOnlinePlatform) {
+      const local_id = this.store.getLocalId() || this.offlineQueue.generateId();
+      this.billApi.syncOffline({
+        customer_name: this.customerName?.trim() || '',
+        items,
+        payment_mode:  'UPI',
+        grand_total:   this.finalTotal,
+        local_id,
+        platform:      this.platform
+      }).subscribe({
+        next: (res: any) => {
+          this.isCompleting = false;
+          this.printReceipt(res.bill_id || 0, items, this.finalTotal, 'UPI', this.customerName);
+          this.clearBill();
+          this.refreshProducts();
+        },
+        error: () => { this.isCompleting = false; this.showError('Failed to complete bill'); }
+      });
+      return;
+    }
+
+    const billId = this.store.getBillId();
+    if (!billId) { this.isCompleting = false; this.showError('Save bill before completing'); return; }
 
     this.billApi.update(billId, { customer_name: this.customerName, items }).subscribe({
       next: () => {

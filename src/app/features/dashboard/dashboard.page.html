@@ -80,6 +80,28 @@
         <div class="kpi-sub kpi-link">View pending →</div>
       </div>
 
+      <div class="kpi-card kpi-zomato">
+        <div class="kpi-top">
+          <span class="kpi-label">Zomato Sales</span>
+          <div class="kpi-icon kpi-icon--zomato">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value zomato-val">{{ fmtCurrency(data.zomato_total) }}</div>
+        <div class="kpi-sub">{{ data.today_sales ? (data.zomato_total / data.today_sales * 100 | number:'1.0-0') : 0 }}% of total</div>
+      </div>
+
+      <div class="kpi-card kpi-swiggy">
+        <div class="kpi-top">
+          <span class="kpi-label">Swiggy Sales</span>
+          <div class="kpi-icon kpi-icon--swiggy">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value swiggy-val">{{ fmtCurrency(data.swiggy_total) }}</div>
+        <div class="kpi-sub">{{ data.today_sales ? (data.swiggy_total / data.today_sales * 100 | number:'1.0-0') : 0 }}% of total</div>
+      </div>
+
     </div>
   </ng-container>
 

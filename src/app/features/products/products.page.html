@@ -53,6 +53,8 @@
 
         <div class="pc-price" *ngIf="p.is_sellable && !p.is_manual_price">
           &#8377; {{ p.price }}
+          <span class="pc-platform-price" *ngIf="p.zomato_price">Z: &#8377;{{ p.zomato_price }}</span>
+          <span class="pc-platform-price pc-platform-price--swiggy" *ngIf="p.swiggy_price">S: &#8377;{{ p.swiggy_price }}</span>
         </div>
 
         <div class="pc-tags">
@@ -134,6 +136,17 @@
           <div class="form-group" *ngIf="!form.is_manual_price">
             <label class="form-label">Price (&#8377;)</label>
             <input class="form-input" type="number" [(ngModel)]="form.price" placeholder="0.00" />
+          </div>
+        </div>
+
+        <div class="form-row" *ngIf="form.is_sellable">
+          <div class="form-group">
+            <label class="form-label">Zomato Price (&#8377;) <span class="form-hint">optional</span></label>
+            <input class="form-input" type="number" [(ngModel)]="form.zomato_price" placeholder="Leave blank if not on Zomato" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Swiggy Price (&#8377;) <span class="form-hint">optional</span></label>
+            <input class="form-input" type="number" [(ngModel)]="form.swiggy_price" placeholder="Leave blank if not on Swiggy" />
           </div>
         </div>
 

@@ -115,6 +115,7 @@ export class DashboardPage implements OnInit {
 
   data: DashboardSummary = {
     today_sales: 0, today_bills: 0, cash_total: 0, upi_total: 0,
+    zomato_total: 0, swiggy_total: 0,
     pending_bills: 0, products: 0, categories: 0, employees: 0,
     attendance: { present: 0, absent: 0 },
     stock: { total_items: 0, low_stock: 0, out_of_stock: 0 }

@@ -32,6 +32,19 @@
       </div>
     </div>
 
+    <!-- Platform Selector -->
+    <div class="platform-bar">
+      <button class="plat-btn" [class.active]="platform === ''" (click)="setPlatform('')">
+        Regular
+      </button>
+      <button class="plat-btn plat-btn--zomato" [class.active]="platform === 'zomato'" (click)="setPlatform('zomato')">
+        Zomato
+      </button>
+      <button class="plat-btn plat-btn--swiggy" [class.active]="platform === 'swiggy'" (click)="setPlatform('swiggy')">
+        Swiggy
+      </button>
+    </div>
+
     <!-- Category Tabs -->
     <div class="category-bar">
       <button
@@ -75,7 +88,7 @@
         <!-- Info -->
         <div class="prod-info">
           <div class="prod-name">{{ p.name }}</div>
-          <div class="prod-price" *ngIf="!p.is_manual_price">₹ {{ p.price }}</div>
+          <div class="prod-price" *ngIf="!p.is_manual_price">₹ {{ effectivePrice(p) }}</div>
           <div class="prod-price manual" *ngIf="p.is_manual_price">Custom Price</div>
         </div>
 
@@ -130,15 +143,18 @@
     <!-- ── Customer & Payment ── -->
     <div class="order-meta">
       <div class="meta-field">
-        <label>👤 Customer Name</label>
+        <label>
+          {{ isOnlinePlatform ? '🔖 Order Number' : '👤 Customer Name' }}
+          <span class="required" *ngIf="isOnlinePlatform">*</span>
+        </label>
         <input
-          placeholder="Optional — e.g. Table 4"
+          [placeholder]="isOnlinePlatform ? 'Enter Zomato / Swiggy order number' : 'Optional — e.g. Table 4'"
           [(ngModel)]="customerName"
           autocomplete="off"
         />
       </div>
 
-      <div class="meta-field">
+      <div class="meta-field" *ngIf="!isOnlinePlatform">
         <label>💳 Payment Method <span class="required">*</span></label>
         <div class="pay-options">
           <button
@@ -154,6 +170,12 @@
             📲 UPI
           </button>
         </div>
+      </div>
+
+      <div class="meta-field platform-note" *ngIf="isOnlinePlatform">
+        <span class="platform-note__badge" [class.zomato]="platform === 'zomato'" [class.swiggy]="platform === 'swiggy'">
+          {{ platform === 'zomato' ? 'Zomato' : 'Swiggy' }} — UPI payment
+        </span>
       </div>
     </div>
 
@@ -259,6 +281,7 @@
     <div class="action-btns">
 
       <button
+        *ngIf="!isOnlinePlatform"
         class="action-btn save"
         (click)="savePending()"
         [disabled]="isSaving || !cart.length">
@@ -270,7 +293,7 @@
       <button
         class="action-btn complete"
         *ngIf="cart.length"
-        [disabled]="!paymentMethod || isCompleting"
+        [disabled]="(!paymentMethod && !isOnlinePlatform) || isCompleting"
         (click)="completeBill()">
         <span class="btn-spinner" *ngIf="isCompleting"></span>
         <span *ngIf="!isCompleting">✅ Complete Bill</span>

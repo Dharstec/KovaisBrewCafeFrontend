@@ -17,11 +17,27 @@
         <span class="sum-pill__label">UPI</span>
         <span class="sum-pill__val">&#8377; {{ upiTotal | number:'1.2-2' }}</span>
       </div>
+      <div class="sum-pill sum-pill--zomato" *ngIf="zomatoTotal > 0">
+        <span class="sum-pill__label">Zomato</span>
+        <span class="sum-pill__val">&#8377; {{ zomatoTotal | number:'1.2-2' }}</span>
+      </div>
+      <div class="sum-pill sum-pill--swiggy" *ngIf="swiggyTotal > 0">
+        <span class="sum-pill__label">Swiggy</span>
+        <span class="sum-pill__val">&#8377; {{ swiggyTotal | number:'1.2-2' }}</span>
+      </div>
       <div class="sum-pill sum-pill--total">
         <span class="sum-pill__label">Total</span>
         <span class="sum-pill__val">&#8377; {{ grandTotal | number:'1.2-2' }}</span>
       </div>
     </div>
+  </div>
+
+  <!-- ══ PLATFORM TABS ══ -->
+  <div class="platform-tabs">
+    <button class="ptab" [class.active]="platformFilter === ''" (click)="setplatformFilter('')">All</button>
+    <button class="ptab ptab--regular" [class.active]="platformFilter === 'regular'" (click)="setplatformFilter('regular')">Regular</button>
+    <button class="ptab ptab--zomato"  [class.active]="platformFilter === 'zomato'"  (click)="setplatformFilter('zomato')">Zomato</button>
+    <button class="ptab ptab--swiggy"  [class.active]="platformFilter === 'swiggy'"  (click)="setplatformFilter('swiggy')">Swiggy</button>
   </div>
 
   <!-- ══ DATE FILTER (ADMIN ONLY) ══ -->
@@ -84,6 +100,8 @@
                 [class.pay-badge--upi]="b.payment_mode === 'UPI'">
             {{ b.payment_mode }}
           </span>
+          <span class="platform-badge platform-badge--zomato" *ngIf="b.platform === 'zomato'">Zomato</span>
+          <span class="platform-badge platform-badge--swiggy" *ngIf="b.platform === 'swiggy'">Swiggy</span>
           <span class="discount-note" *ngIf="b.discount_amount > 0">
             &#127991; -&#8377;{{ b.discount_amount }} off
           </span>

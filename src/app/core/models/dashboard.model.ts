@@ -1,9 +1,11 @@
 export interface DashboardSummary {
-  today_sales:   number;
-  today_bills:   number;
-  cash_total:    number;
-  upi_total:     number;
-  pending_bills: number;
+  today_sales:    number;
+  today_bills:    number;
+  cash_total:     number;
+  upi_total:      number;
+  zomato_total:   number;
+  swiggy_total:   number;
+  pending_bills:  number;
 
   products:   number;
   categories: number;

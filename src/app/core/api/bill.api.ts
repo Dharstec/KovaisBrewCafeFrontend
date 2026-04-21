@@ -17,7 +17,7 @@ export class BillApi {
 
   syncOffline(payload: {
     customer_name: string; items: any[]; payment_mode: string;
-    grand_total: number; discount_amount?: number; local_id: string;
+    grand_total: number; discount_amount?: number; local_id: string; platform?: string | null;
   }) {
     return this.http.post<any>(`${environment.apiUrl}/bills/sync`, payload);
   }
@@ -42,13 +42,14 @@ export class BillApi {
     return this.http.post(`${environment.apiUrl}/bill/cancel/${id}`, {});
   }
 
-  completed(startDate?: string, endDate?: string, page = 1, limit = 6) {
+  completed(startDate?: string, endDate?: string, page = 1, limit = 20, platform?: string) {
     return this.http.get<any>(
       `${environment.apiUrl}/completed`,
       {
         params: {
           ...(startDate && { start_date: startDate }),
           ...(endDate   && { end_date:   endDate   }),
+          ...(platform  && { platform }),
           page,
           limit
         }
