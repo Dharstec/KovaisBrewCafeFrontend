@@ -93,7 +93,7 @@ export class BillingPage implements OnInit, OnDestroy {
         this.products = res;
         try { localStorage.setItem('pos_products', JSON.stringify(res)); } catch {}
       },
-      error: () => {} // already loaded from cache above
+      error: () => {}  // already loaded from cache above
     });
 
     this.store.cart$.subscribe(c => {
@@ -234,12 +234,12 @@ export class BillingPage implements OnInit, OnDestroy {
 
     if (billId) {
       this.billApi.update(billId, payload).subscribe({
-        next: () => { this.isSaving = false; this.clearBill(); },
+        next: () => { this.isSaving = false; this.clearBill(); this.refreshProducts(); },
         error: (err) => { this.isSaving = false; this.showError(err?.error?.message || 'Failed to update bill'); }
       });
     } else {
       this.billApi.create(payload).subscribe({
-        next: () => { this.isSaving = false; this.clearBill(); },
+        next: () => { this.isSaving = false; this.clearBill(); this.refreshProducts(); },
         error: (err) => { this.isSaving = false; this.showError(err?.error?.message || 'Failed to create bill'); }
       });
     }
@@ -305,6 +305,7 @@ export class BillingPage implements OnInit, OnDestroy {
             this.isCompleting = false;
             this.printReceipt(billId, items, this.finalTotal, this.paymentMethod, this.customerName);
             this.clearBill();
+            this.refreshProducts();
           },
           error: () => { this.isCompleting = false; this.showError('Failed to complete bill'); }
         });
@@ -409,6 +410,16 @@ export class BillingPage implements OnInit, OnDestroy {
 
 
 
+
+  refreshProducts() {
+    this.productApi.getAllBilling().subscribe({
+      next: (res: any[]) => {
+        this.products = res;
+        try { localStorage.setItem('pos_products', JSON.stringify(res)); } catch {}
+      },
+      error: () => {}
+    });
+  }
 
   trackByProductId(_: number, item: any) { return item.productId; }
 

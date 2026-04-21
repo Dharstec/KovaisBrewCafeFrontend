@@ -38,6 +38,10 @@ export class BillApi {
     return this.http.post(`${environment.apiUrl}/apply/${id}`, body);
   }
 
+  cancel(id: number) {
+    return this.http.post(`${environment.apiUrl}/bill/cancel/${id}`, {});
+  }
+
   completed(startDate?: string, endDate?: string, page = 1, limit = 6) {
     return this.http.get<any>(
       `${environment.apiUrl}/completed`,

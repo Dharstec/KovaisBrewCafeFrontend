@@ -58,7 +58,16 @@
       <!-- FOOTER -->
       <div class="bc-footer">
         <span class="bc-footer__badge">{{ b.items.length }} item{{ b.items.length !== 1 ? 's' : '' }}</span>
-        <span class="bc-footer__hint">Double-click to open &rarr;</span>
+        <div class="bc-footer__actions">
+          <button class="bc-btn bc-btn--edit" (click)="edit(b)" title="Edit bill">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="bc-btn bc-btn--cancel" (click)="cancelBill(b)" title="Cancel &amp; restore stock">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            Cancel
+          </button>
+        </div>
       </div>
 
     </div>

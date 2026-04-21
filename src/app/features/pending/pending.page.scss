@@ -245,6 +245,40 @@ $radius:  14px;
     font-weight: 600;
     letter-spacing: 0.2px;
   }
+
+  &__actions {
+    display: flex;
+    gap: 6px;
+  }
+}
+
+.bc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+
+  svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  &--edit {
+    background: #eff6ff;
+    color: #2563eb;
+    &:hover { background: #dbeafe; }
+  }
+
+  &--cancel {
+    background: #fff5f5;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    &:hover { background: #fee2e2; }
+  }
 }
 
 // ═══════════════════════════════════════════

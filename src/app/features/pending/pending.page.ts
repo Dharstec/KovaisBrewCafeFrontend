@@ -51,6 +51,20 @@ export class PendingPage implements OnInit {
     }
   }
 
+  cancelBill(bill: any) {
+    if (!confirm('Cancel this bill? Stock will be restored.')) return;
+
+    if (bill.isOffline) {
+      this.offlineQueue.remove(bill.local_id).then(() => this.loadBills());
+      return;
+    }
+
+    this.api.cancel(bill.id).subscribe({
+      next: () => this.loadBills(),
+      error: (err) => alert(err.error?.message || 'Failed to cancel bill')
+    });
+  }
+
   edit(bill: any) {
     if (bill.isOffline) {
       // Load offline bill into store (no server bill_id yet)
