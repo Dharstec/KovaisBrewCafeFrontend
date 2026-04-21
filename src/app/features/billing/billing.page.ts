@@ -242,6 +242,7 @@ export class BillingPage implements OnInit, OnDestroy {
         bill_id:       this.store.getBillId(),
         customer_name: payload.customer_name,
         items:         payload.items,
+        platform:      this.platform || null,
         created_at:    new Date().toISOString(),
         status:        'queued' as const
       };
@@ -299,15 +300,16 @@ export class BillingPage implements OnInit, OnDestroy {
     if (!navigator.onLine) {
       const offlineBill = {
         local_id,
-        type:           'complete' as const,
-        bill_id:        this.store.getBillId(),
-        customer_name:  this.customerName?.trim() || '',
+        type:            'complete' as const,
+        bill_id:         this.store.getBillId(),
+        customer_name:   this.customerName?.trim() || '',
         items,
-        payment_mode:  this.paymentMethod,
-        grand_total:   this.finalTotal,
-        platform:      this.platform || null,
-        created_at:     new Date().toISOString(),
-        status:         'queued' as const
+        payment_mode:    this.paymentMethod,
+        grand_total:     this.finalTotal,
+        discount_amount: this.couponDiscount || 0,
+        platform:        this.platform || null,
+        created_at:      new Date().toISOString(),
+        status:          'queued' as const
       };
       await this.offlineQueue.add(offlineBill);
       this.syncPending++;
@@ -348,9 +350,10 @@ export class BillingPage implements OnInit, OnDestroy {
     this.billApi.update(billId, { customer_name: this.customerName, items }).subscribe({
       next: () => {
         this.billApi.complete(billId, {
-          customer_name: this.customerName,
-          grand_total:   this.finalTotal,
-          payment_mode:  this.paymentMethod
+          customer_name:   this.customerName,
+          grand_total:     this.finalTotal,
+          payment_mode:    this.paymentMethod,
+          discount_amount: this.couponDiscount || 0
         }).subscribe({
           next:  () => {
             this.isCompleting = false;
@@ -380,32 +383,34 @@ export class BillingPage implements OnInit, OnDestroy {
             this.billApi.create({
               customer_name: bill.customer_name,
               items:         bill.items,
-              local_id:      bill.local_id
+              local_id:      bill.local_id,
+              platform:      bill.platform || null
             })
           );
         } else {
           // type === 'complete'
           if (bill.bill_id) {
-            // Was previously saved online as pending
             await firstValueFrom(
               this.billApi.update(bill.bill_id, { customer_name: bill.customer_name, items: bill.items })
             );
             await firstValueFrom(
               this.billApi.complete(bill.bill_id, {
-                customer_name: bill.customer_name,
-                grand_total:   bill.grand_total,
-                payment_mode:  bill.payment_mode
+                customer_name:   bill.customer_name,
+                grand_total:     bill.grand_total,
+                payment_mode:    bill.payment_mode,
+                discount_amount: bill.discount_amount || 0
               })
             );
           } else {
-            // Never hit the server — create + complete in one shot
             await firstValueFrom(
               this.billApi.syncOffline({
-                customer_name: bill.customer_name,
-                items:         bill.items,
-                payment_mode:  bill.payment_mode!,
-                grand_total:   bill.grand_total!,
-                local_id:      bill.local_id
+                customer_name:   bill.customer_name,
+                items:           bill.items,
+                payment_mode:    bill.payment_mode!,
+                grand_total:     bill.grand_total!,
+                discount_amount: bill.discount_amount || 0,
+                local_id:        bill.local_id,
+                platform:        bill.platform || null
               })
             );
           }

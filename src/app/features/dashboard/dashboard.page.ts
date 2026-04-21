@@ -69,7 +69,7 @@ export class DashboardPage implements OnInit {
   stockAlerts: StockAlerts | null = null;
 
   /* ── Range Report ── */
-  rangeStart    = (() => { const d = new Date(); d.toISOString().split('T')[0]; return d.toISOString().split('T')[0]; })();
+  rangeStart    = new Date().toISOString().split('T')[0];
   rangeEnd      = new Date().toISOString().split('T')[0];
   rangeData: any = null;
   loadingRange  = false;

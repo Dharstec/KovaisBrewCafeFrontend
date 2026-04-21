@@ -76,7 +76,7 @@ export class CompletedPage implements OnInit {
     });
   }
 
-  setplatformFilter(p: string) {
+  setPlatformFilter(p: string) {
     this.platformFilter = p;
     this.page = 1;
     this.loadBills();

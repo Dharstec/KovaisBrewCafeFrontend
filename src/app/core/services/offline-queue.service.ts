@@ -9,6 +9,7 @@ export interface OfflineBill {
   payment_mode?: string;
   grand_total?: number;
   discount_amount?: number;
+  platform?: string | null;
   created_at: string;
   status: 'queued' | 'synced';
 }

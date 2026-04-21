@@ -34,10 +34,10 @@
 
   <!-- ══ PLATFORM TABS ══ -->
   <div class="platform-tabs">
-    <button class="ptab" [class.active]="platformFilter === ''" (click)="setplatformFilter('')">All</button>
-    <button class="ptab ptab--regular" [class.active]="platformFilter === 'regular'" (click)="setplatformFilter('regular')">Regular</button>
-    <button class="ptab ptab--zomato"  [class.active]="platformFilter === 'zomato'"  (click)="setplatformFilter('zomato')">Zomato</button>
-    <button class="ptab ptab--swiggy"  [class.active]="platformFilter === 'swiggy'"  (click)="setplatformFilter('swiggy')">Swiggy</button>
+    <button class="ptab" [class.active]="platformFilter === ''" (click)="setPlatformFilter('')">All</button>
+    <button class="ptab ptab--regular" [class.active]="platformFilter === 'regular'" (click)="setPlatformFilter('regular')">Regular</button>
+    <button class="ptab ptab--zomato"  [class.active]="platformFilter === 'zomato'"  (click)="setPlatformFilter('zomato')">Zomato</button>
+    <button class="ptab ptab--swiggy"  [class.active]="platformFilter === 'swiggy'"  (click)="setPlatformFilter('swiggy')">Swiggy</button>
   </div>
 
   <!-- ══ DATE FILTER (ADMIN ONLY) ══ -->

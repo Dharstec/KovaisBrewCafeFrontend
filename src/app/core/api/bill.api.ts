@@ -7,7 +7,7 @@ export class BillApi {
 
   private http = inject(HttpClient);
 
-  create(payload: { customer_name: string; items: any[]; local_id?: string }) {
+  create(payload: { customer_name: string; items: any[]; local_id?: string; platform?: string | null }) {
     return this.http.post<any>(`${environment.apiUrl}/bills`, payload);
   }
 
