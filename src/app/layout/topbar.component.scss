@@ -76,7 +76,7 @@ $border: rgba(255,255,255,.06);
   display: flex;
   align-items: center;
   gap: 2px;
-  overflow-x: auto;
+  overflow-x: visible;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 

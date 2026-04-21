@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BillApi }           from '../../core/api/bill.api';
 import { BillingStore }      from '../../core/state/billing.store';
 import { OfflineQueueService } from '../../core/services/offline-queue.service';
+import { AuthApi }           from '../../core/api/auth.api';
 
 @Component({
   standalone: true,
@@ -18,9 +19,11 @@ export class PendingPage implements OnInit {
   store        = inject(BillingStore);
   router       = inject(Router);
   offlineQueue = inject(OfflineQueueService);
+  auth         = inject(AuthApi);
 
   bills: any[] = [];
-  isOnline = navigator.onLine;
+  isOnline  = navigator.onLine;
+  isAdmin   = this.auth.isAdmin();
 
   async ngOnInit() {
     this.isOnline = navigator.onLine;
