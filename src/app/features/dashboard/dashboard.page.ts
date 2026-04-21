@@ -9,6 +9,8 @@ import { DashboardApi } from '../../core/api/dashboard.api';
 import { DashboardSummary } from '../../core/models/dashboard.model';
 import { AuthApi } from '../../core/api/auth.api';
 import { ToastService } from '../../core/services/toast.service';
+import { StockApi } from '../../core/api/stock.api';
+import { StockAlerts } from '../../core/models/stock.model';
 
 const C = [
   '#f97316','#2563eb','#16a34a','#7c3aed','#e11d48',
@@ -35,9 +37,10 @@ const TOOLTIP_BASE: any = {
 })
 export class DashboardPage implements OnInit {
 
-  private auth  = inject(AuthApi);
-  private api   = inject(DashboardApi);
-  private toast = inject(ToastService);
+  private auth     = inject(AuthApi);
+  private api      = inject(DashboardApi);
+  private toast    = inject(ToastService);
+  private stockApi = inject(StockApi);
 
   isAdmin      = false;
   selectedDate = new Date().toISOString().split('T')[0];
@@ -57,6 +60,13 @@ export class DashboardPage implements OnInit {
   totalSpend    = 0;
   spendBreakdown: any[] = [];
   spendRecords:   any[] = [];
+
+  /* ── Cashier: per-product count for the selected date ── */
+  todayItems: { item_name: string; total_count: number }[] = [];
+  loadingTodayItems = false;
+
+  /* ── Cashier: stock alerts (expiry + low stock) ── */
+  stockAlerts: StockAlerts | null = null;
 
   /* ── Range Report ── */
   rangeStart    = (() => { const d = new Date(); d.toISOString().split('T')[0]; return d.toISOString().split('T')[0]; })();
@@ -263,6 +273,36 @@ export class DashboardPage implements OnInit {
     this.loadSummary(d);
     if (this.isAdmin) this.loadCharts(d);
     if (this.isAdmin) this.loadSpend(d);
+    if (!this.isAdmin) { this.loadTodayItems(d); this.loadStockAlerts(); }
+  }
+
+  private loadStockAlerts() {
+    this.stockApi.getAlerts().subscribe({
+      next: res => { this.stockAlerts = res; },
+      error: () => {}
+    });
+  }
+
+  fmtDate(d: string): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  private loadTodayItems(date?: string) {
+    this.loadingTodayItems = true;
+    this.api.getItemSalesChart(date, date, date).subscribe({
+      next: (res: any[]) => {
+        this.todayItems = (res || [])
+          .map(r => ({ item_name: r.item_name, total_count: Number(r.total_count) || 0 }))
+          .sort((a, b) => b.total_count - a.total_count);
+        this.loadingTodayItems = false;
+      },
+      error: () => { this.todayItems = []; this.loadingTodayItems = false; }
+    });
+  }
+
+  get todayItemsTotal(): number {
+    return this.todayItems.reduce((s, i) => s + i.total_count, 0);
   }
 
   private loadSummary(date?: string) {

@@ -48,7 +48,10 @@ export class BillingPage implements OnInit, OnDestroy {
   isSaving         = false;
   isCompleting     = false;
   showCart         = false;
-  syncPending      = 0;   // count of queued offline bills
+  syncPending      = 0;
+
+  /* ── ingredient popup ── */
+  ingredientModal: { product: any; items: any[]; loading: boolean } | null = null;
 
 
   /* ── listeners ── */
@@ -408,6 +411,30 @@ export class BillingPage implements OnInit, OnDestroy {
 
 
   trackByProductId(_: number, item: any) { return item.productId; }
+
+  cartQty(productId: number): number {
+    return this.cart.find(i => i.productId === productId)?.qty ?? 0;
+  }
+
+  availableServings(p: any): number {
+    return Math.max(0, Number(p.servings_possible) - this.cartQty(p.id));
+  }
+
+  showIngredients(event: Event, product: any) {
+    event.stopPropagation();
+    this.ingredientModal = { product, items: [], loading: true };
+    this.productApi.getRecipeByProduct(product.id).subscribe({
+      next: (items: any[]) => {
+        if (this.ingredientModal) {
+          this.ingredientModal.items   = items;
+          this.ingredientModal.loading = false;
+        }
+      },
+      error: () => { if (this.ingredientModal) this.ingredientModal.loading = false; }
+    });
+  }
+
+  closeIngredientModal() { this.ingredientModal = null; }
 
   showError(msg: string) {
     this.errorMsg   = msg;

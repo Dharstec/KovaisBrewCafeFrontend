@@ -1,0 +1,351 @@
+<div class="sal">
+
+  <!-- ═══ HEADER ═══════════════════════════════════════════════════════════ -->
+  <div class="sal-header">
+    <div>
+      <h1 class="sal-title">Salary</h1>
+      <span class="sal-sub">Calculate &amp; finalize monthly employee salary</span>
+    </div>
+  </div>
+
+  <!-- ═══ TABS ═════════════════════════════════════════════════════════════ -->
+  <div class="sal-tabs">
+    <button class="sal-tab" [class.sal-tab--active]="view === 'preview'" (click)="setView('preview')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      Monthly Preview
+    </button>
+    <button class="sal-tab" [class.sal-tab--active]="view === 'history'" (click)="setView('history')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Finalized History
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       PREVIEW TAB
+  ════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="view === 'preview'">
+
+    <!-- Controls -->
+    <div class="preview-bar">
+      <div class="rf-group">
+        <label class="rf-label">Month</label>
+        <input type="month" class="rf-input" [(ngModel)]="previewMonth" (change)="loadPreview()" />
+      </div>
+      <div class="preview-bar-info">
+        <span class="finalized-badge" *ngIf="alreadyFinalized">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Finalized
+        </span>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div> Loading preview...
+    </div>
+
+    <!-- Formula Card -->
+    <div class="formula-card" *ngIf="!loading && rows.length > 0">
+      <div class="formula-title">Salary Formula</div>
+      <div class="formula-body">
+        <span class="fc">Working Days = {{ formulaTotalDays }} total − WO − HL (paid rest days)</span>
+        <span class="fc-sep">·</span>
+        <span class="fc">Daily Rate = Base ÷ Working Days</span>
+        <span class="fc-sep">·</span>
+        <span class="fc">P &amp; L = full · H = ½ · WO &amp; HL = paid (no deduction)</span>
+        <span class="fc-sep">·</span>
+        <span class="fc">Net = Base − Absent Ded. − Half Ded. − Advance</span>
+      </div>
+    </div>
+
+    <!-- Summary totals row -->
+    <div class="summary-row" *ngIf="!loading && rows.length > 0">
+      <div class="sum-card">
+        <div class="sum-val">{{ rows.length }}</div>
+        <div class="sum-lbl">Employees</div>
+      </div>
+      <div class="sum-card sum-card--highlight">
+        <div class="sum-val">{{ fmt(previewTotalNet) }}</div>
+        <div class="sum-lbl">Total Net Payable</div>
+      </div>
+    </div>
+
+    <!-- Salary Table -->
+    <div class="sal-table-wrap" *ngIf="!loading && rows.length > 0">
+      <table class="sal-table">
+        <thead>
+          <tr>
+            <th class="st-name-th">Employee</th>
+            <th>Base Salary</th>
+            <th>Days</th>
+            <th>Daily Rate</th>
+            <th class="st-att-th">
+              <div class="att-headers">
+                <span title="Present">P</span>
+                <span title="Absent">A</span>
+                <span title="Half Day">H</span>
+                <span title="Late">L</span>
+                <span title="Holiday">HL</span>
+                <span title="Weekly Off">WO</span>
+              </div>
+            </th>
+            <th>Absent Ded.</th>
+            <th>Half Ded.</th>
+            <th>Advance Ded.</th>
+            <th class="st-net-th">Net Payable</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of rows; let odd = odd" [class.tr-odd]="odd" [class.tr-finalized]="r.finalized">
+            <td class="st-name-td">
+              <div class="emp-av">{{ r.employee_name.charAt(0).toUpperCase() }}</div>
+              <div>
+                <div class="emp-nm">{{ r.employee_name }}</div>
+                <div class="emp-days">{{ r.total_days }} days</div>
+              </div>
+            </td>
+            <td class="st-amt">{{ fmt(r.base_salary) }}</td>
+            <td class="st-days">
+              <div class="days-cell">
+                <span class="days-working">{{ r.working_days }}d</span>
+                <span class="days-meta">{{ r.total_days }} − {{ r.weekly_off_days }}WO − {{ r.holiday_days }}HL</span>
+              </div>
+            </td>
+            <td class="st-rate">{{ fmt(r.daily_rate) }}</td>
+            <td class="st-att">
+              <div class="att-vals">
+                <span class="av av--p">{{ r.present_days }}</span>
+                <span class="av av--a">{{ r.absent_days }}</span>
+                <span class="av av--h">{{ r.half_days }}</span>
+                <span class="av av--l">{{ r.late_days }}</span>
+                <span class="av av--hl">{{ r.holiday_days }}</span>
+                <span class="av av--wo">{{ r.weekly_off_days }}</span>
+              </div>
+            </td>
+            <td class="st-ded">
+              <span *ngIf="r.absent_deduction > 0" class="ded-val">−{{ fmt(r.absent_deduction) }}</span>
+              <span *ngIf="r.absent_deduction === 0" class="ded-zero">—</span>
+            </td>
+            <td class="st-ded">
+              <span *ngIf="r.half_deduction > 0" class="ded-val">−{{ fmt(r.half_deduction) }}</span>
+              <span *ngIf="r.half_deduction === 0" class="ded-zero">—</span>
+            </td>
+            <td class="st-adv">
+              <!-- Editable advance if not finalized -->
+              <div class="adv-input-wrap" *ngIf="!r.finalized">
+                <span class="adv-prefix">₹</span>
+                <input
+                  type="number"
+                  class="adv-input"
+                  [(ngModel)]="r.advance_deduction"
+                  (ngModelChange)="recalc(r)"
+                  min="0"
+                  placeholder="0"
+                />
+              </div>
+              <span class="ded-val" *ngIf="r.finalized && r.advance_deduction > 0">−{{ fmt(r.advance_deduction) }}</span>
+              <span class="ded-zero" *ngIf="r.finalized && r.advance_deduction === 0">—</span>
+            </td>
+            <td class="st-net">
+              <span class="net-val" [class.net-zero]="r.net_payable === 0">{{ fmt(r.net_payable) }}</span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="7" class="st-total-lbl">Total Net Payable</td>
+            <td class="st-total-val">{{ fmt(previewTotalNet) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!loading && rows.length === 0">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        </svg>
+      </div>
+      <p class="empty-title">No employees found</p>
+    </div>
+
+    <!-- Finalize Bar -->
+    <div class="finalize-bar" *ngIf="!loading && rows.length > 0 && !alreadyFinalized">
+      <div class="finalize-bar-inner">
+        <div class="finalize-note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Edit advance amounts if needed, then finalize to lock this month's salary.
+        </div>
+        <span class="save-success-msg" *ngIf="finalizeSuccess">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Finalized!
+        </span>
+        <button class="finalize-btn" (click)="finalize()" [disabled]="finalizing">
+          <span class="btn-spinner" *ngIf="finalizing"></span>
+          <svg *ngIf="!finalizing" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          {{ finalizing ? 'Finalizing...' : 'Finalize Salary' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Re-finalize (already finalized) -->
+    <div class="finalize-bar finalize-bar--done" *ngIf="!loading && rows.length > 0 && alreadyFinalized">
+      <div class="finalize-bar-inner">
+        <span class="finalized-info">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Salary for {{ monthLabel(previewMonth) }} is finalized.
+        </span>
+        <button class="refinalize-btn" (click)="finalize()" [disabled]="finalizing">Re-Finalize</button>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       HISTORY TAB
+  ════════════════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="view === 'history'">
+
+    <!-- Filters -->
+    <div class="hist-bar">
+      <div class="rf-group">
+        <label class="rf-label">Month</label>
+        <select class="rf-input rf-select" [(ngModel)]="historyMonth" (change)="loadHistory()">
+          <option *ngFor="let m of historyMonths" [value]="m">{{ monthLabel(m) }}</option>
+        </select>
+      </div>
+      <div class="rf-group">
+        <label class="rf-label">Employee</label>
+        <select class="rf-input rf-select" [(ngModel)]="selectedHistEmp">
+          <option value="">All Employees</option>
+          <option *ngFor="let n of historyEmployees" [value]="n">{{ n }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-state" *ngIf="historyLoading">
+      <div class="spinner"></div> Loading history...
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-row" *ngIf="!historyLoading && filteredHistory.length > 0">
+      <div class="sum-card">
+        <div class="sum-val">{{ filteredHistory.length }}</div>
+        <div class="sum-lbl">Records</div>
+      </div>
+      <div class="sum-card sum-card--highlight">
+        <div class="sum-val">{{ fmt(totalNetPayable) }}</div>
+        <div class="sum-lbl">Total Paid</div>
+      </div>
+    </div>
+
+    <!-- History Cards (one per employee) -->
+    <div class="hist-list" *ngIf="!historyLoading && filteredHistory.length > 0">
+      <div class="hist-card" *ngFor="let r of filteredHistory">
+
+        <!-- Card Header -->
+        <div class="hc-header">
+          <div class="emp-av">{{ r.employee_name.charAt(0).toUpperCase() }}</div>
+          <div class="hc-name-block">
+            <div class="hc-name">{{ r.employee_name }}</div>
+            <div class="hc-month">{{ monthLabel(r.month) }}</div>
+          </div>
+          <div class="hc-net">
+            <div class="hc-net-val">{{ fmt(r.net_payable) }}</div>
+            <div class="hc-net-lbl">Net Payable</div>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="hc-body">
+          <!-- Attendance row -->
+          <div class="hc-section-title">Attendance</div>
+          <div class="hc-att-row">
+            <div class="hc-att-cell">
+              <div class="hc-att-val hc-att-p">{{ r.present_days }}</div>
+              <div class="hc-att-lbl">Present</div>
+            </div>
+            <div class="hc-att-cell">
+              <div class="hc-att-val hc-att-a">{{ r.absent_days }}</div>
+              <div class="hc-att-lbl">Absent</div>
+            </div>
+            <div class="hc-att-cell">
+              <div class="hc-att-val hc-att-h">{{ r.half_days }}</div>
+              <div class="hc-att-lbl">Half Day</div>
+            </div>
+            <div class="hc-att-cell">
+              <div class="hc-att-val hc-att-l">{{ r.late_days }}</div>
+              <div class="hc-att-lbl">Late</div>
+            </div>
+            <div class="hc-att-cell">
+              <div class="hc-att-val hc-att-hl">{{ r.holiday_days }}</div>
+              <div class="hc-att-lbl">Holiday</div>
+            </div>
+            <div class="hc-att-cell">
+              <div class="hc-att-val hc-att-wo">{{ r.weekly_off_days }}</div>
+              <div class="hc-att-lbl">Week Off</div>
+            </div>
+          </div>
+
+          <!-- Salary breakdown -->
+          <div class="hc-section-title" style="margin-top:16px">Salary Breakdown</div>
+          <div class="hc-breakdown">
+            <div class="hb-row">
+              <span class="hb-lbl">Working Days ({{ r.total_days }} − {{ r.weekly_off_days }}WO − {{ r.holiday_days }}HL)</span>
+              <span class="hb-val">{{ r.working_days }} days</span>
+            </div>
+            <div class="hb-row">
+              <span class="hb-lbl">Daily Rate</span>
+              <span class="hb-val">{{ fmt(r.daily_rate) }}</span>
+            </div>
+            <div class="hb-row">
+              <span class="hb-lbl">Base Salary</span>
+              <span class="hb-val">{{ fmt(r.base_salary) }}</span>
+            </div>
+            <div class="hb-row hb-row--ded" *ngIf="r.absent_deduction > 0">
+              <span class="hb-lbl">Absent Deduction ({{ r.absent_days }} × {{ fmt(r.daily_rate) }})</span>
+              <span class="hb-val hb-val--ded">−{{ fmt(r.absent_deduction) }}</span>
+            </div>
+            <div class="hb-row hb-row--ded" *ngIf="r.half_deduction > 0">
+              <span class="hb-lbl">Half Day Deduction ({{ r.half_days }} × {{ fmt(r.daily_rate / 2) }})</span>
+              <span class="hb-val hb-val--ded">−{{ fmt(r.half_deduction) }}</span>
+            </div>
+            <div class="hb-row hb-row--ded" *ngIf="r.advance_deduction > 0">
+              <span class="hb-lbl">Advance Deduction</span>
+              <span class="hb-val hb-val--ded">−{{ fmt(r.advance_deduction) }}</span>
+            </div>
+            <div class="hb-divider"></div>
+            <div class="hb-row hb-row--net">
+              <span class="hb-lbl">Net Payable</span>
+              <span class="hb-val hb-val--net">{{ fmt(r.net_payable) }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- No history -->
+    <div class="empty-state" *ngIf="!historyLoading && historyMonths.length === 0">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <p class="empty-title">No finalized salary records yet</p>
+      <p class="empty-sub">Finalize a month from the Preview tab first.</p>
+    </div>
+
+  </ng-container>
+
+</div>

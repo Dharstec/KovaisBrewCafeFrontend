@@ -85,8 +85,6 @@ export class StockPage implements OnInit {
   }
 
   setTab(tab: Tab) {
-    const adminTabs: Tab[] = ['add', 'purchases', 'logs', 'items'];
-    if (adminTabs.includes(tab) && !this.isAdmin) return;
     this.activeTab = tab;
     if (tab === 'stock'     && !this.stocks.length)   this.loadStock();
     if (tab === 'add'       && !this.dropdown.length) this.loadDropdown();
@@ -288,7 +286,16 @@ export class StockPage implements OnInit {
 
   logActionClass(action: string) {
     return ({ STOCK_IN:'la--in', DAILY_REFILL:'la--in', USAGE:'la--usage',
-              WASTAGE:'la--waste', ADJUSTMENT:'la--adj', RETURN:'la--return' } as any)[action] || '';
+              USAGE_RESERVED:'la--usage', WASTAGE:'la--waste',
+              ADJUSTMENT:'la--adj', RETURN:'la--return' } as any)[action] || '';
+  }
+
+  logActionLabel(action: string) {
+    return ({
+      STOCK_IN: 'Stock In', DAILY_REFILL: 'Refill', USAGE: 'Used',
+      USAGE_RESERVED: 'Reserved', WASTAGE: 'Wastage',
+      ADJUSTMENT: 'Adjustment', RETURN: 'Returned'
+    } as any)[action] || action;
   }
 
   /* ══════════════════════════════════════════════════════════

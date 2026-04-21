@@ -121,6 +121,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/targets/targets.page')
         .then(m => m.TargetsPage)
+  },
+
+  /* 💰 SALARY — Admin only */
+  {
+    path: 'salary',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/salary/salary.page')
+        .then(m => m.SalaryPage)
   }
 
 ];

@@ -2,6 +2,7 @@ import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthApi } from '../core/api/auth.api';
+import { StockApi } from '../core/api/stock.api';
 
 @Component({
   selector: 'app-topbar',
@@ -12,8 +13,9 @@ import { AuthApi } from '../core/api/auth.api';
 })
 export class TopbarComponent implements OnInit {
 
-  auth   = inject(AuthApi);
-  router = inject(Router);
+  auth     = inject(AuthApi);
+  router   = inject(Router);
+  stockApi = inject(StockApi);
 
   menuOpen      = false;
   hrOpen        = false;   // desktop HR dropdown
@@ -22,6 +24,8 @@ export class TopbarComponent implements OnInit {
 
   menu    = this.auth.getMenu();
   isAdmin = this.auth.isAdmin();
+
+  alertCount = 0;
 
   deferredPrompt: any;
   showInstallBtn = false;
@@ -48,6 +52,11 @@ export class TopbarComponent implements OnInit {
       e.preventDefault();
       this.deferredPrompt = e;
       this.showInstallBtn = true;
+    });
+
+    this.stockApi.getAlerts().subscribe({
+      next: res => { this.alertCount = (res.expiring_count || 0) + (res.low_stock_count || 0); },
+      error: () => {}
     });
   }
 

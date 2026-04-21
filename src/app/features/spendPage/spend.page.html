@@ -62,26 +62,30 @@
     <table>
       <thead>
         <tr>
-          <th>Date</th>
+          <th>Purchase Date</th>
           <th>Reason</th>
-          <th>Payment</th>
-          <th class="right">Amount</th>
+          <th class="right">Total</th>
+          <th class="right">Paid</th>
+          <th class="right">Due</th>
           <th class="center" *ngIf="isAdmin">Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let s of spendList">
+        <tr *ngFor="let s of spendList" [class.row-partial]="s.amount_due > 0 && s.total_paid > 0" [class.row-unpaid]="s.total_paid == 0">
           <td class="td-date">{{ s.spent_date }}</td>
           <td class="td-reason">{{ s.reason }}</td>
-          <td>
-            <span class="pay-badge" [class.cash]="s.payment_mode === 'CASH'" [class.upi]="s.payment_mode === 'UPI'">
-              {{ s.payment_mode }}
-            </span>
-          </td>
           <td class="td-amount right">₹{{ s.amount | number:'1.0-2' }}</td>
+          <td class="td-amount right">
+            <span *ngIf="s.total_paid > 0" class="paid-val">₹{{ s.total_paid | number:'1.0-2' }}</span>
+            <span *ngIf="s.total_paid == 0" class="no-pay-date">—</span>
+          </td>
+          <td class="td-amount right">
+            <span *ngIf="s.amount_due > 0" class="due-val">₹{{ s.amount_due | number:'1.0-2' }}</span>
+            <span *ngIf="s.amount_due <= 0" class="paid-full">✓ Paid</span>
+          </td>
           <td class="center" *ngIf="isAdmin">
             <div class="act-btns">
-              <button class="act-btn edit" (click)="openEdit(s)">
+              <button class="act-btn edit" (click)="openEdit(s)" title="Edit / Add Payments">
                 <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </button>
               <button class="act-btn del" (click)="deleteSpend(s.id)">
@@ -91,7 +95,7 @@
           </td>
         </tr>
         <tr *ngIf="spendList.length === 0">
-          <td colspan="5" class="td-empty">
+          <td [attr.colspan]="isAdmin ? 6 : 5" class="td-empty">
             <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 110 20A10 10 0 0112 2zm0 6v4l3 2"/></svg>
             No records found
           </td>
@@ -173,25 +177,140 @@
       </div>
 
       <div class="field">
-        <label>Date</label>
+        <label>Purchase Date</label>
         <div class="date-input-wrap">
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
           <input type="date" [(ngModel)]="form.date" [max]="maxDate" />
         </div>
       </div>
 
-      <div class="field">
-        <label>Payment Mode</label>
-        <div class="pay-toggle">
-          <button type="button" [class.active]="form.payment_mode === 'CASH'" (click)="form.payment_mode = 'CASH'">
-            <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M6 12h.01M18 12h.01"/></svg>
-            Cash
-          </button>
-          <button type="button" [class.active]="form.payment_mode === 'UPI'" (click)="form.payment_mode = 'UPI'">
-            <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
-            UPI
+      <!-- ── ADD MODE: inline pay-now section ── -->
+      <ng-container *ngIf="!isEdit">
+        <div class="pay-now-block">
+          <div class="pay-now-head">
+            <span>Payment</span>
+            <span class="field-hint">Leave amount empty to pay later</span>
+          </div>
+          <div class="apb-row">
+            <div class="apb-field">
+              <label>Payment Date</label>
+              <div class="date-input-wrap">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <input type="date" [(ngModel)]="paymentForm.payment_date" [max]="maxDate" />
+              </div>
+            </div>
+            <div class="apb-field">
+              <label>Paid Amount</label>
+              <div class="amount-wrap">
+                <span class="currency-prefix">₹</span>
+                <input type="number" placeholder="0.00 (optional)" [(ngModel)]="paymentForm.amount" />
+              </div>
+            </div>
+          </div>
+          <div class="field" style="margin-top:0">
+            <label>Payment Mode</label>
+            <div class="pay-toggle">
+              <button type="button" [class.active]="paymentForm.payment_mode === 'CASH'" (click)="paymentForm.payment_mode = 'CASH'">
+                <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M6 12h.01M18 12h.01"/></svg>
+                Cash
+              </button>
+              <button type="button" [class.active]="paymentForm.payment_mode === 'UPI'" (click)="paymentForm.payment_mode = 'UPI'">
+                <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+                UPI
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── EDIT MODE: payment history + add more ── -->
+      <div class="payments-section" *ngIf="isEdit">
+
+        <div class="payments-summary">
+          <div class="ps-row">
+            <span class="ps-label">Total Amount</span>
+            <span class="ps-val">₹{{ form.amount | number:'1.0-2' }}</span>
+          </div>
+          <div class="ps-row">
+            <span class="ps-label">Total Paid</span>
+            <span class="ps-val paid-val">₹{{ totalPaid | number:'1.0-2' }}</span>
+          </div>
+          <div class="ps-row">
+            <span class="ps-label">Remaining Due</span>
+            <span class="ps-val" [class.due-val]="amountDue > 0" [class.paid-full]="amountDue <= 0">
+              {{ amountDue > 0 ? ('₹' + (amountDue | number:'1.0-2')) : '✓ Fully Paid' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Existing payments -->
+        <div class="payments-list" *ngIf="payments.length > 0">
+          <div class="pl-head">Payment History</div>
+          <div class="pl-row" *ngFor="let p of payments">
+            <div class="pl-left">
+              <span class="pl-date">{{ p.payment_date_fmt }}</span>
+              <span class="pl-mode" [class.mode-upi]="p.payment_mode === 'UPI'">{{ p.payment_mode }}</span>
+              <span class="pl-note" *ngIf="p.note">{{ p.note }}</span>
+            </div>
+            <div class="pl-right">
+              <span class="pl-amount">₹{{ p.amount | number:'1.0-2' }}</span>
+              <button class="pl-del" (click)="removePayment(p.id)" title="Remove payment">
+                <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add more payment -->
+        <div class="add-payment-block" *ngIf="amountDue > 0">
+          <div class="apb-head">Add Payment</div>
+          <div class="apb-row">
+            <div class="apb-field">
+              <label>Payment Date</label>
+              <div class="date-input-wrap">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <input type="date" [(ngModel)]="paymentForm.payment_date" [max]="maxDate" />
+              </div>
+            </div>
+            <div class="apb-field">
+              <label>Amount</label>
+              <div class="amount-wrap">
+                <span class="currency-prefix">₹</span>
+                <input type="number" placeholder="0.00" [(ngModel)]="paymentForm.amount" />
+              </div>
+            </div>
+          </div>
+          <div class="apb-row">
+            <div class="apb-field">
+              <label>Payment Mode</label>
+              <div class="pay-toggle">
+                <button type="button" [class.active]="paymentForm.payment_mode === 'CASH'" (click)="paymentForm.payment_mode = 'CASH'">
+                  <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M6 12h.01M18 12h.01"/></svg>
+                  Cash
+                </button>
+                <button type="button" [class.active]="paymentForm.payment_mode === 'UPI'" (click)="paymentForm.payment_mode = 'UPI'">
+                  <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
+                  UPI
+                </button>
+              </div>
+            </div>
+            <div class="apb-field">
+              <label>Note <span class="field-hint">(optional)</span></label>
+              <input type="text" placeholder="e.g. partial payment" [(ngModel)]="paymentForm.note" />
+            </div>
+          </div>
+          <div class="apb-error" *ngIf="paymentError">{{ paymentError }}</div>
+          <button class="btn-add-payment" (click)="addPayment()" [disabled]="paymentLoading">
+            <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            {{ paymentLoading ? 'Saving…' : 'Add Payment' }}
           </button>
         </div>
+
+        <div class="fully-paid-note" *ngIf="amountDue <= 0 && payments.length > 0">
+          <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+          All payments recorded
+        </div>
+
       </div>
 
     </div>

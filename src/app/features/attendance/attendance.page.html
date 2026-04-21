@@ -59,6 +59,10 @@
         <span class="stat-num">{{ todayStats.HL }}</span>
         <span class="stat-lbl">Holiday</span>
       </div>
+      <div class="stat-chip stat-chip--wo">
+        <span class="stat-num">{{ todayStats.WO }}</span>
+        <span class="stat-lbl">Weekly Off</span>
+      </div>
     </div>
 
     <!-- Status Legend -->
@@ -80,6 +84,7 @@
            [class.emp-card--h]="emp.status === 'H'"
            [class.emp-card--l]="emp.status === 'L'"
            [class.emp-card--hl]="emp.status === 'HL'"
+           [class.emp-card--wo]="emp.status === 'WO'"
            *ngFor="let emp of markList">
 
         <!-- Top row: avatar + name + current status badge -->
@@ -179,12 +184,8 @@
     <!-- Filter Bar -->
     <div class="report-filters">
       <div class="rf-group">
-        <label class="rf-label">From</label>
-        <input type="date" class="rf-input" [(ngModel)]="reportStart" />
-      </div>
-      <div class="rf-group">
-        <label class="rf-label">To</label>
-        <input type="date" class="rf-input" [(ngModel)]="reportEnd" />
+        <label class="rf-label">Month</label>
+        <input type="month" class="rf-input" [(ngModel)]="reportMonth" (change)="loadReport()" />
       </div>
       <div class="rf-group">
         <label class="rf-label">Employee</label>
@@ -193,10 +194,6 @@
           <option *ngFor="let e of allEmployees" [value]="e.id">{{ e.name }}</option>
         </select>
       </div>
-      <button class="rf-load-btn" (click)="loadReport()" [disabled]="reportLoading">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        Load Report
-      </button>
     </div>
 
     <!-- Status Legend -->

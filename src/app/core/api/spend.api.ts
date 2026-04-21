@@ -60,4 +60,19 @@ export class  SpendService {
   delete(id: number) {
     return this.http.delete<any>(`${this.API}/${id}`);
   }
+
+  /* =============================
+     SPLIT PAYMENTS
+     ============================= */
+  getPayments(spentId: number) {
+    return this.http.get<any[]>(`${this.API}/${spentId}/payments`);
+  }
+
+  addPayment(spentId: number, body: { payment_date: string; amount: number; payment_mode: string; note?: string }) {
+    return this.http.post<any>(`${this.API}/${spentId}/payments`, body);
+  }
+
+  deletePayment(spentId: number, paymentId: number) {
+    return this.http.delete<any>(`${this.API}/${spentId}/payments/${paymentId}`);
+  }
 }

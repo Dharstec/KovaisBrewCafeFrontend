@@ -41,8 +41,15 @@ export class SpendPage implements OnInit {
     payment_mode: 'CASH'
   };
 
-  showForm = false;
-  isEdit   = false;
+  showForm    = false;
+  isEdit      = false;
+  activeSpendId: number | null = null;
+
+  /* ── Split payments ── */
+  payments: any[]  = [];
+  paymentForm = { payment_date: '', amount: null as number | null, payment_mode: 'CASH', note: '' };
+  paymentError  = '';
+  paymentLoading = false;
 
   /* ── Reason combobox ── */
   uniqueReasons:   string[] = [];
@@ -93,20 +100,84 @@ export class SpendPage implements OnInit {
     this.showReasonDrop = false;
   }
 
-  /* After save, refresh reasons so new one appears next time */
   save() {
-    this.spendApi.create(this.form).subscribe(() => {
-      this.closeForm();
-      this.loadSpend();
-      this.loadReasons();
+    this.spendApi.create(this.form).subscribe((res: any) => {
+      const id = res.id ?? res.data?.id ?? null;
+      const amt = this.paymentForm.amount;
+      if (id && amt && Number(amt) > 0) {
+        this.spendApi.addPayment(id, {
+          payment_date: this.paymentForm.payment_date || this.maxDate,
+          amount:       Number(amt),
+          payment_mode: this.paymentForm.payment_mode,
+          note:         this.paymentForm.note || undefined
+        }).subscribe(() => {
+          this.loadSpend();
+          this.loadReasons();
+          this.closeForm();
+        });
+      } else {
+        this.loadSpend();
+        this.loadReasons();
+        this.closeForm();
+      }
     });
   }
 
   update() {
     this.spendApi.update(this.form.id, this.form).subscribe(() => {
-      this.closeForm();
       this.loadSpend();
       this.loadReasons();
+    });
+  }
+
+  /* ── Payments ── */
+  loadPayments(spentId: number) {
+    this.spendApi.getPayments(spentId).subscribe({
+      next: rows => { this.payments = rows; },
+      error: () => {}
+    });
+  }
+
+  get totalPaid(): number {
+    return this.payments.reduce((s, p) => s + Number(p.amount), 0);
+  }
+
+  get amountDue(): number {
+    return Math.max(0, Number(this.form.amount || 0) - this.totalPaid);
+  }
+
+  addPayment() {
+    if (!this.paymentForm.payment_date) { this.paymentError = 'Select payment date'; return; }
+    if (!this.paymentForm.amount || this.paymentForm.amount <= 0) { this.paymentError = 'Enter amount'; return; }
+    if (!this.activeSpendId) { this.paymentError = 'Save the spend record first'; return; }
+
+    this.paymentError   = '';
+    this.paymentLoading = true;
+
+    this.spendApi.addPayment(this.activeSpendId, {
+      payment_date: this.paymentForm.payment_date,
+      amount:       this.paymentForm.amount,
+      payment_mode: this.paymentForm.payment_mode,
+      note:         this.paymentForm.note || undefined
+    }).subscribe({
+      next: () => {
+        this.paymentLoading = false;
+        this.paymentForm    = { payment_date: this.maxDate, amount: null, payment_mode: 'CASH', note: '' };
+        this.loadPayments(this.activeSpendId!);
+        this.loadSpend();
+      },
+      error: err => {
+        this.paymentLoading = false;
+        this.paymentError   = err.error?.message || 'Failed to add payment';
+      }
+    });
+  }
+
+  removePayment(paymentId: number) {
+    if (!confirm('Remove this payment?')) return;
+    this.spendApi.deletePayment(this.activeSpendId!, paymentId).subscribe(() => {
+      this.loadPayments(this.activeSpendId!);
+      this.loadSpend();
     });
   }
 
@@ -176,9 +247,14 @@ export class SpendPage implements OnInit {
       date:         this.toInputDate(item.spent_date),
       payment_mode: item.payment_mode || 'CASH'
     };
-    this.reasonInput = item.reason;
-    this.isEdit      = true;
-    this.showForm    = true;
+    this.reasonInput   = item.reason;
+    this.activeSpendId = item.id;
+    this.isEdit        = true;
+    this.showForm      = true;
+    this.payments      = [];
+    this.paymentError  = '';
+    this.paymentForm   = { payment_date: this.maxDate, amount: null, payment_mode: 'CASH', note: '' };
+    this.loadPayments(item.id);
   }
 
   deleteSpend(id: number) {
@@ -189,6 +265,9 @@ export class SpendPage implements OnInit {
   closeForm() {
     this.showForm       = false;
     this.showReasonDrop = false;
+    this.activeSpendId  = null;
+    this.payments       = [];
+    this.paymentError   = '';
     this.resetForm();
   }
 

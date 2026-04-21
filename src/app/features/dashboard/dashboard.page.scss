@@ -921,6 +921,85 @@ $radius:  14px;
   .range-controls { width: 100%; }
 }
 
+/* ── Stock Alert Cards (cashier view) ── */
+.alert-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  border-left: 4px solid #ef4444;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+
+  &.lowstock-card { border-left-color: #f97316; }
+}
+
+.alert-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  h3 { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 2px; }
+  p  { font-size: 12px; color: #64748b; margin: 0; }
+}
+
+.alert-icon {
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #fee2e2;
+  &.lowstock-icon { background: #ffedd5; }
+}
+
+.alert-table {
+  font-size: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.alert-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.2fr 1fr;
+  padding: 7px 0;
+  border-bottom: 1px solid #f8fafc;
+  gap: 8px;
+  align-items: center;
+
+  &.alert-header {
+    font-weight: 600;
+    color: #94a3b8;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &.expired      { background: #fff1f2; }
+  &.expiring-today { background: #fff7ed; }
+  &.expiring-soon  { background: #fffbeb; }
+}
+
+.ar-name  { font-weight: 600; color: #1e293b; }
+.ar-days  { font-weight: 700; }
+.red-days    { color: #ef4444; }
+.orange-days { color: #f97316; }
+
+.alert-footer {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.alert-link {
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
 @media (max-width: 600px) {
   .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
   .kpi-card { padding: 14px 14px 12px; }

@@ -389,6 +389,108 @@
     </div>
   </ng-container>
 
+  <!-- ══ CASHIER: ITEMS SOLD TODAY ══ -->
+  <ng-container *ngIf="!isAdmin">
+    <div class="section-title">Items Sold — {{ isToday ? 'Today' : displayDate }}</div>
+
+    <div class="chart-card mb24">
+      <div class="chart-card-head">
+        <div>
+          <h3>Per Product Count</h3>
+          <p>Completed bills only · {{ todayItemsTotal }} units total</p>
+        </div>
+        <div class="chart-badge">{{ todayItems.length }} items</div>
+      </div>
+
+      <ng-container *ngIf="todayItems.length > 0; else noItemsCashier">
+        <div class="spend-records">
+          <div class="spend-row" *ngFor="let it of todayItems">
+            <div class="sr-left">
+              <div class="sr-reason">{{ it.item_name }}</div>
+            </div>
+            <div class="sr-amount">{{ it.total_count }}</div>
+          </div>
+        </div>
+        <div class="spend-total-row">
+          <span>Total Units</span>
+          <span class="st-val">{{ todayItemsTotal }}</span>
+        </div>
+      </ng-container>
+
+      <ng-template #noItemsCashier>
+        <div class="chart-empty">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          {{ loadingTodayItems ? 'Loading...' : 'No items sold yet' }}
+        </div>
+      </ng-template>
+    </div>
+  </ng-container>
+
+  <!-- ══ CASHIER: STOCK ALERTS ══ -->
+  <ng-container *ngIf="!isAdmin && stockAlerts && (stockAlerts.expiring_count > 0 || stockAlerts.low_stock_count > 0)">
+    <div class="section-title">Stock Alerts</div>
+
+    <!-- Expiring within 30 days -->
+    <ng-container *ngIf="stockAlerts.expiring_count > 0">
+      <div class="alert-card expiry-card">
+        <div class="alert-card-head">
+          <div class="alert-icon expiry-icon">⏰</div>
+          <div>
+            <h3>{{ stockAlerts.expiring_count }} item batch(es) expiring within 30 days</h3>
+            <p>Check stock and use before expiry date</p>
+          </div>
+        </div>
+        <div class="alert-table">
+          <div class="alert-row alert-header">
+            <span>Item</span>
+            <span>Qty</span>
+            <span>Expiry Date</span>
+            <span>Days Left</span>
+          </div>
+          <div class="alert-row" *ngFor="let e of stockAlerts.expiring"
+               [class.expired]="e.status === 'EXPIRED'"
+               [class.expiring-today]="e.status === 'EXPIRING_TODAY'"
+               [class.expiring-soon]="e.status === 'EXPIRING_SOON'">
+            <span class="ar-name">{{ e.item_name }}</span>
+            <span>{{ e.remaining_qty }} {{ e.unit }}</span>
+            <span>{{ fmtDate(e.expiry_date) }}</span>
+            <span class="ar-days" [class.red-days]="e.days_to_expiry <= 7" [class.orange-days]="e.days_to_expiry > 7">
+              {{ e.days_to_expiry < 0 ? 'Expired' : e.days_to_expiry + ' days' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Low stock -->
+    <ng-container *ngIf="stockAlerts.low_stock_count > 0">
+      <div class="alert-card lowstock-card">
+        <div class="alert-card-head">
+          <div class="alert-icon lowstock-icon">📉</div>
+          <div>
+            <h3>{{ stockAlerts.low_stock_count }} item(s) running low</h3>
+            <p>Inform manager to reorder</p>
+          </div>
+        </div>
+        <div class="alert-table">
+          <div class="alert-row alert-header">
+            <span>Item</span>
+            <span>Current Qty</span>
+            <span>Minimum Qty</span>
+          </div>
+          <div class="alert-row" *ngFor="let s of stockAlerts.low_stock">
+            <span class="ar-name">{{ s.name }}</span>
+            <span class="red-days">{{ s.current_qty }} {{ s.base_unit }}</span>
+            <span>{{ s.min_qty }} {{ s.base_unit }}</span>
+          </div>
+        </div>
+        <div class="alert-footer">
+          <a routerLink="/stock" [queryParams]="{ filter: 'low' }" class="alert-link">View All Low Stock →</a>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+
   <!-- ══ STOCK STATUS ══ -->
   <div class="section-title">Stock Status</div>
   <div class="snap-grid">

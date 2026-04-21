@@ -5,14 +5,15 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { AuthApi } from '../../core/api/auth.api';
 
-export type AttStatus = 'P' | 'A' | 'H' | 'L' | 'HL';
+export type AttStatus = 'P' | 'A' | 'H' | 'L' | 'HL' | 'WO';
 
 export const STATUS_META: Record<AttStatus, { label: string; color: string; bg: string }> = {
-  P:  { label: 'Present',  color: '#16a34a', bg: '#dcfce7' },
-  A:  { label: 'Absent',   color: '#ef4444', bg: '#fee2e2' },
-  H:  { label: 'Half Day', color: '#d97706', bg: '#fef3c7' },
-  L:  { label: 'Late',     color: '#ea580c', bg: '#ffedd5' },
-  HL: { label: 'Holiday',  color: '#0369a1', bg: '#e0f2fe' },
+  P:  { label: 'Present',     color: '#16a34a', bg: '#dcfce7' },
+  A:  { label: 'Absent',      color: '#ef4444', bg: '#fee2e2' },
+  H:  { label: 'Half Day',    color: '#d97706', bg: '#fef3c7' },
+  L:  { label: 'Late',        color: '#ea580c', bg: '#ffedd5' },
+  HL: { label: 'Holiday',     color: '#0369a1', bg: '#e0f2fe' },
+  WO: { label: 'Weekly Off',  color: '#6b7280', bg: '#f3f4f6' },
 };
 
 interface MarkRow {
@@ -57,7 +58,7 @@ export class AttendancePage implements OnInit {
   view: View = 'mark';
 
   STATUS_META = STATUS_META;
-  statuses: AttStatus[] = ['P', 'A', 'H', 'L', 'HL'];
+  statuses: AttStatus[] = ['P', 'A', 'H', 'L', 'HL', 'WO'];
 
   // ── Mark tab ────────────────────────────────────────────────────────────────
   markDate   = new Date().toISOString().slice(0, 10);
@@ -65,15 +66,15 @@ export class AttendancePage implements OnInit {
   markSaving = false;
   saveSuccess = false;
 
-  todayStats = { P: 0, A: 0, H: 0, L: 0, HL: 0, total: 0 };
+  todayStats = { P: 0, A: 0, H: 0, L: 0, HL: 0, WO: 0, total: 0 };
 
   // Employee list (populated on first loadMark, used in report filter)
   allEmployees: { id: number; name: string }[] = [];
 
   // ── Report tab ──────────────────────────────────────────────────────────────
-  reportStart   = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                    .toISOString().slice(0, 10);
-  reportEnd     = new Date().toISOString().slice(0, 10);
+  reportMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+  reportStart = '';
+  reportEnd   = '';
   selectedEmpId = '';
   reportLoading = false;
   reportEmployees: ReportEmployee[] = [];
@@ -86,7 +87,7 @@ export class AttendancePage implements OnInit {
 
   setView(v: View) {
     this.view = v;
-    if (v === 'report' && this.reportEmployees.length === 0) {
+    if (v === 'report') {
       this.loadReport();
     }
   }
@@ -122,13 +123,19 @@ export class AttendancePage implements OnInit {
   }
 
   computeStats() {
-    const c: any = { P: 0, A: 0, H: 0, L: 0, HL: 0, total: this.markList.length };
+    const c: any = { P: 0, A: 0, H: 0, L: 0, HL: 0, WO: 0, total: this.markList.length };
     for (const r of this.markList) c[r.status]++;
     this.todayStats = c;
   }
 
   // ── Report ───────────────────────────────────────────────────────────────────
   loadReport() {
+    const [y, m] = this.reportMonth.split('-').map(Number);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const lastDay = new Date(y, m, 0).getDate(); // day 0 of next month = last day of this month
+    this.reportStart = `${y}-${pad(m)}-01`;
+    this.reportEnd   = `${y}-${pad(m)}-${pad(lastDay)}`;
+
     this.reportLoading  = true;
     this.reportEmployees = [];
     const url = `${environment.apiUrl}/attendance/history?start=${this.reportStart}&end=${this.reportEnd}`;
@@ -147,9 +154,10 @@ export class AttendancePage implements OnInit {
     let cur = this.reportStart;
     while (cur <= this.reportEnd) {
       dates.push(cur);
-      const d = new Date(cur + 'T12:00:00');
-      d.setDate(d.getDate() + 1);
-      cur = d.toISOString().slice(0, 10);
+      const [cy, cm, cd] = cur.split('-').map(Number);
+      const next = new Date(cy, cm - 1, cd + 1);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      cur = `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
     }
     this.reportDates = dates;
 
@@ -163,7 +171,7 @@ export class AttendancePage implements OnInit {
         employee_id:    emp.employee_id,
         employee_name:  emp.employee_name,
         cells,
-        counts:         emp.counts  || { P: 0, A: 0, H: 0, L: 0, HL: 0 },
+        counts:         emp.counts  || { P: 0, A: 0, H: 0, L: 0, HL: 0, WO: 0 },
         attendance_pct: emp.attendance_pct || 0
       };
     });
@@ -175,7 +183,7 @@ export class AttendancePage implements OnInit {
       if (!exists) {
         this.reportEmployees.push({
           employee_id: e.id, employee_name: e.name,
-          cells: {}, counts: { P: 0, A: 0, H: 0, L: 0, HL: 0 }, attendance_pct: 0
+          cells: {}, counts: { P: 0, A: 0, H: 0, L: 0, HL: 0, WO: 0 }, attendance_pct: 0
         });
       }
     }

@@ -49,6 +49,15 @@ export class StockApi {
     });
   }
 
+  getAlerts() {
+    return this.http.get<{
+      expiring: any[];
+      low_stock: any[];
+      expiring_count: number;
+      low_stock_count: number;
+    }>(`${this.base}/stock/alerts`);
+  }
+
   getLogs(params?: { stock_item_id?: number; action?: string; limit?: number; offset?: number }) {
     let p = new HttpParams();
     if (params?.stock_item_id) p = p.set('stock_item_id', params.stock_item_id);

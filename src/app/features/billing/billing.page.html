@@ -49,9 +49,16 @@
       <div
         class="prod-card"
         *ngFor="let p of filteredProducts"
+        [class.out-of-stock]="p.servings_possible !== null && availableServings(p) <= 0"
+        [class.stock-low-card]="p.servings_possible !== null && availableServings(p) > 0 && availableServings(p) <= 5"
         (click)="addProduct(p)">
 
-        <!-- Badges -->
+        <!-- Stock badge -->
+        <ng-container *ngIf="p.servings_possible !== null">
+          <div class="stock-badge stock-out" *ngIf="availableServings(p) <= 0">Out of Stock</div>
+          <div class="stock-badge stock-low" *ngIf="availableServings(p) > 0 && availableServings(p) <= 5">~{{ availableServings(p) }} left</div>
+          <div class="stock-badge stock-ok"  *ngIf="availableServings(p) > 5">{{ availableServings(p) }} left</div>
+        </ng-container>
 
         <!-- Image -->
         <div class="prod-img">
@@ -72,8 +79,13 @@
           <div class="prod-price manual" *ngIf="p.is_manual_price">Custom Price</div>
         </div>
 
-        <!-- Add indicator -->
-        <div class="prod-add">+</div>
+        <!-- Add indicator + info icon -->
+        <div class="prod-footer">
+          <button class="info-btn" *ngIf="p.servings_possible !== null" (click)="showIngredients($event, p)" title="View ingredients">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </button>
+          <div class="prod-add">+</div>
+        </div>
 
       </div>
 
@@ -283,6 +295,49 @@
 
   </aside>
 
+</div>
+
+<!-- ══ INGREDIENT MODAL ══ -->
+<div class="ing-overlay" *ngIf="ingredientModal" (click)="closeIngredientModal()"></div>
+<div class="ing-modal" *ngIf="ingredientModal">
+  <div class="ing-head">
+    <div>
+      <div class="ing-title">{{ ingredientModal.product.name }}</div>
+      <div class="ing-sub">Ingredients &amp; Stock</div>
+    </div>
+    <button class="ing-close" (click)="closeIngredientModal()">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="ing-loading" *ngIf="ingredientModal.loading">Loading…</div>
+
+  <div class="ing-body" *ngIf="!ingredientModal.loading">
+    <div class="ing-empty" *ngIf="ingredientModal.items.length === 0">No recipe ingredients found</div>
+    <div class="ing-row" *ngFor="let item of ingredientModal.items"
+         [class.ing-row-low]="item.servings_from_this !== null && +item.servings_from_this <= 5"
+         [class.ing-row-out]="item.servings_from_this !== null && +item.servings_from_this <= 0">
+      <div class="ing-name">{{ item.stock_item_name }}</div>
+      <div class="ing-right">
+        <span class="ing-uses">Uses {{ item.used_qty }} {{ item.unit_label || item.base_unit }}</span>
+        <span class="ing-stock"
+              [class.stock-ok]="item.current_qty > item.used_qty"
+              [class.stock-low]="item.current_qty > 0 && item.current_qty <= item.used_qty * 5"
+              [class.stock-zero]="item.current_qty <= 0">
+          {{ item.current_qty }} {{ item.unit_label || item.base_unit }} in stock
+        </span>
+      </div>
+    </div>
+
+    <div class="ing-summary" *ngIf="ingredientModal.items.length > 0">
+      <span *ngIf="ingredientModal.product.servings_possible > 0" class="sum-ok">
+        Can make ~{{ ingredientModal.product.servings_possible }} servings
+      </span>
+      <span *ngIf="ingredientModal.product.servings_possible <= 0" class="sum-out">
+        Out of stock — restock needed
+      </span>
+    </div>
+  </div>
 </div>
 
 <!-- ══ MOBILE TAB BAR ══ -->

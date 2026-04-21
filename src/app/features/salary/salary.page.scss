@@ -1,0 +1,688 @@
+// ─── Tokens ──────────────────────────────────────────────────────────────────
+$font:    'Inter', system-ui, sans-serif;
+$bg:      #f1f5f9;
+$surface: #ffffff;
+$border:  #e2e8f0;
+$text1:   #0f172a;
+$text2:   #475569;
+$text3:   #94a3b8;
+$accent:  #f97316;
+$green:   #16a34a;
+$red:     #ef4444;
+$radius:  14px;
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+.sal {
+  font-family: $font;
+  background:  $bg;
+  min-height:  100vh;
+  padding:     24px 24px 90px;
+  box-sizing:  border-box;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.sal-header {
+  margin-bottom: 20px;
+}
+.sal-title {
+  margin:      0 0 4px;
+  font-size:   26px;
+  font-weight: 800;
+  color:       $text1;
+}
+.sal-sub {
+  font-size: 13px;
+  color:     $text2;
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+.sal-tabs {
+  display:       flex;
+  gap:           4px;
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: 12px;
+  padding:       4px;
+  width:         fit-content;
+  margin-bottom: 24px;
+  box-shadow:    0 1px 4px rgba(0,0,0,.04);
+}
+
+.sal-tab {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           6px;
+  height:        34px;
+  padding:       0 16px;
+  border:        none;
+  border-radius: 9px;
+  background:    transparent;
+  color:         $text2;
+  font-family:   $font;
+  font-size:     13px;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    background .15s, color .15s;
+
+  &:hover { background: $bg; color: $text1; }
+  &--active {
+    background: $accent;
+    color:      #fff;
+    box-shadow: 0 2px 8px rgba(249,115,22,.3);
+  }
+}
+
+// ─── Controls bar ─────────────────────────────────────────────────────────────
+.preview-bar, .hist-bar {
+  display:       flex;
+  align-items:   flex-end;
+  gap:           16px;
+  flex-wrap:     wrap;
+  margin-bottom: 20px;
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: $radius;
+  padding:       16px 20px;
+  box-shadow:    0 1px 4px rgba(0,0,0,.04);
+}
+
+.preview-bar-info {
+  display:     flex;
+  align-items: flex-end;
+  gap:         10px;
+  padding-bottom: 2px;
+}
+
+.rf-group {
+  display:        flex;
+  flex-direction: column;
+  gap:            5px;
+}
+.rf-label {
+  font-size:      10px;
+  font-weight:    700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color:          $text3;
+}
+.rf-input {
+  height:        38px;
+  border:        1px solid $border;
+  border-radius: 8px;
+  background:    $bg;
+  font-family:   $font;
+  font-size:     13px;
+  color:         $text1;
+  padding:       0 12px;
+  outline:       none;
+  cursor:        pointer;
+  min-width:     150px;
+
+  &:focus {
+    border-color: $accent;
+    box-shadow:   0 0 0 3px rgba(249,115,22,.12);
+  }
+}
+.rf-select { min-width: 160px; }
+
+.finalized-badge {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           5px;
+  padding:       4px 12px;
+  border-radius: 999px;
+  font-size:     12px;
+  font-weight:   700;
+  background:    #dcfce7;
+  color:         $green;
+}
+
+// ─── Formula card ─────────────────────────────────────────────────────────────
+.formula-card {
+  background:    #fff7ed;
+  border:        1px solid rgba(249,115,22,.2);
+  border-radius: 10px;
+  padding:       12px 18px;
+  margin-bottom: 16px;
+}
+.formula-title {
+  font-size:   11px;
+  font-weight: 700;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color:       $accent;
+  margin-bottom: 6px;
+}
+.formula-body {
+  display:   flex;
+  flex-wrap: wrap;
+  gap:       6px;
+  align-items: center;
+}
+.fc {
+  font-size:  12px;
+  color:      $text2;
+  font-weight: 500;
+}
+.fc-sep { color: $text3; }
+
+// ─── Summary row ──────────────────────────────────────────────────────────────
+.summary-row {
+  display:       flex;
+  gap:           12px;
+  flex-wrap:     wrap;
+  margin-bottom: 20px;
+}
+.sum-card {
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: 12px;
+  padding:       14px 24px;
+  min-width:     110px;
+  text-align:    center;
+  box-shadow:    0 1px 4px rgba(0,0,0,.04);
+
+  &--highlight {
+    background:   linear-gradient(135deg, #fff7ed, #fff);
+    border-color: rgba(249,115,22,.3);
+  }
+}
+.sum-val {
+  font-size:   22px;
+  font-weight: 800;
+  color:       $text1;
+  line-height: 1;
+}
+.sum-lbl {
+  font-size:  11px;
+  color:      $text3;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+// ─── Salary Table ─────────────────────────────────────────────────────────────
+.sal-table-wrap {
+  overflow-x:    auto;
+  border-radius: $radius;
+  border:        1px solid $border;
+  box-shadow:    0 2px 12px rgba(0,0,0,.05);
+  background:    $surface;
+  margin-bottom: 80px;
+}
+
+.sal-table {
+  border-collapse: collapse;
+  white-space:     nowrap;
+  font-size:       13px;
+  width:           100%;
+
+  th, td {
+    border-bottom: 1px solid $border;
+    padding:       0 14px;
+    vertical-align: middle;
+  }
+  th:not(:last-child), td:not(:last-child) {
+    border-right: 1px solid $border;
+  }
+  thead th {
+    position:    sticky;
+    top:         0;
+    background:  $bg;
+    font-size:   11px;
+    font-weight: 700;
+    color:       $text2;
+    height:      44px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    z-index:     1;
+  }
+  tbody tr { height: 56px; }
+  tfoot td { height: 48px; }
+}
+
+.st-name-th { min-width: 180px; text-align: left; }
+.st-att-th  { min-width: 160px; }
+
+.att-headers {
+  display:         flex;
+  justify-content: space-around;
+  gap:             4px;
+
+  span {
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    width:           24px;
+    height:          22px;
+    border-radius:   5px;
+    font-size:       10px;
+    font-weight:     800;
+  }
+}
+
+.tr-odd { background: #fafafa; }
+.tr-finalized { background: linear-gradient(90deg, #f0fdf4 0%, transparent 40%); }
+
+.st-name-td {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  min-width:   180px;
+}
+
+.emp-av {
+  width:           32px;
+  height:          32px;
+  border-radius:   50%;
+  background:      linear-gradient(135deg, $accent, #fb923c);
+  color:           #fff;
+  font-size:       13px;
+  font-weight:     700;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  flex-shrink:     0;
+}
+.emp-nm   { font-size: 13px; font-weight: 700; color: $text1; }
+.emp-days { font-size: 11px; color: $text3; }
+
+.st-amt  { font-size: 13px; font-weight: 600; color: $text1; }
+.st-rate { font-size: 12px; color: $text2; }
+
+.st-att .att-vals {
+  display:         flex;
+  justify-content: space-around;
+  align-items:     center;
+  gap:             4px;
+}
+
+.av {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  width:           26px;
+  height:          22px;
+  border-radius:   5px;
+  font-size:       11px;
+  font-weight:     700;
+
+  &--p  { background: #dcfce7; color: #16a34a; }
+  &--a  { background: #fee2e2; color: #ef4444; }
+  &--h  { background: #fef3c7; color: #d97706; }
+  &--l  { background: #ffedd5; color: #ea580c; }
+  &--hl { background: #e0f2fe; color: #0369a1; }
+  &--wo { background: #f3f4f6; color: #6b7280; }
+}
+
+// Days column
+.st-days { min-width: 130px; }
+.days-cell {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+  padding:        4px 0;
+}
+.days-working {
+  font-size:   13px;
+  font-weight: 800;
+  color:       $text1;
+}
+.days-meta {
+  font-size:  10px;
+  color:      $text3;
+  font-weight: 500;
+}
+
+.st-ded { text-align: center; }
+.ded-val  { font-size: 12px; font-weight: 600; color: #ef4444; }
+.ded-zero { color: $text3; font-size: 13px; }
+
+// Advance input
+.st-adv { min-width: 130px; }
+
+.adv-input-wrap {
+  display:       flex;
+  align-items:   center;
+  border:        1px solid $border;
+  border-radius: 7px;
+  overflow:      hidden;
+  background:    $bg;
+  height:        32px;
+  width:         110px;
+
+  &:focus-within {
+    border-color: $accent;
+    box-shadow:   0 0 0 2px rgba(249,115,22,.12);
+  }
+}
+.adv-prefix {
+  padding:     0 8px;
+  font-size:   12px;
+  color:       $text3;
+  font-weight: 600;
+  border-right: 1px solid $border;
+  background:  $surface;
+  height:      100%;
+  display:     flex;
+  align-items: center;
+}
+.adv-input {
+  flex:        1;
+  border:      none;
+  outline:     none;
+  background:  transparent;
+  font-family: $font;
+  font-size:   13px;
+  font-weight: 600;
+  color:       $text1;
+  padding:     0 8px;
+  width:       0;
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button { -webkit-appearance: none; }
+}
+
+// Net payable column
+.st-net-th { min-width: 130px; color: $green !important; }
+.st-net     { min-width: 130px; }
+.net-val {
+  font-size:   14px;
+  font-weight: 800;
+  color:       $green;
+}
+.net-zero { color: $red !important; }
+
+// Table footer
+.st-total-lbl {
+  text-align:  right;
+  font-weight: 700;
+  font-size:   13px;
+  color:       $text2;
+  padding-right: 20px;
+}
+.st-total-val {
+  font-size:   16px;
+  font-weight: 800;
+  color:       $green;
+}
+
+// ─── Finalize Bar ─────────────────────────────────────────────────────────────
+.finalize-bar {
+  position:        fixed;
+  bottom:          0; left: 0; right: 0;
+  background:      rgba(255,255,255,.94);
+  backdrop-filter: blur(12px);
+  border-top:      1px solid $border;
+  z-index:         100;
+  padding:         12px 24px;
+
+  &--done {
+    background: rgba(240,253,244,.96);
+    border-top-color: rgba(22,163,74,.2);
+  }
+}
+
+.finalize-bar-inner {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             16px;
+  max-width:       1400px;
+  margin:          0 auto;
+  flex-wrap:       wrap;
+}
+
+.finalize-note {
+  display:     inline-flex;
+  align-items: center;
+  gap:         7px;
+  font-size:   13px;
+  color:       $text2;
+}
+
+.finalized-info {
+  display:     inline-flex;
+  align-items: center;
+  gap:         7px;
+  font-size:   13px;
+  font-weight: 600;
+  color:       $green;
+}
+
+.save-success-msg {
+  display:     inline-flex;
+  align-items: center;
+  gap:         6px;
+  font-size:   13px;
+  font-weight: 700;
+  color:       $green;
+  animation:   fadeIn .3s ease;
+}
+
+.finalize-btn {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           8px;
+  height:        42px;
+  padding:       0 28px;
+  border:        none;
+  border-radius: 10px;
+  background:    linear-gradient(135deg, $green, #15803d);
+  color:         #fff;
+  font-family:   $font;
+  font-size:     14px;
+  font-weight:   700;
+  cursor:        pointer;
+  box-shadow:    0 4px 14px rgba(22,163,74,.35);
+  transition:    transform .15s, box-shadow .15s;
+
+  &:hover  { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(22,163,74,.45); }
+  &:active { transform: translateY(0); }
+  &:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+}
+
+.refinalize-btn {
+  height:        36px;
+  padding:       0 18px;
+  border:        1.5px solid rgba(22,163,74,.4);
+  border-radius: 8px;
+  background:    transparent;
+  color:         $green;
+  font-family:   $font;
+  font-size:     13px;
+  font-weight:   700;
+  cursor:        pointer;
+  transition:    background .15s;
+
+  &:hover { background: #dcfce7; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+.btn-spinner {
+  width:         14px;
+  height:        14px;
+  border:        2px solid rgba(255,255,255,.4);
+  border-top:    2px solid #fff;
+  border-radius: 50%;
+  animation:     spin .7s linear infinite;
+}
+
+// ─── History Cards ─────────────────────────────────────────────────────────────
+.hist-list {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap:                   16px;
+  margin-bottom: 30px;
+}
+
+.hist-card {
+  background:    $surface;
+  border:        1px solid $border;
+  border-radius: $radius;
+  overflow:      hidden;
+  box-shadow:    0 2px 10px rgba(0,0,0,.05);
+}
+
+.hc-header {
+  display:         flex;
+  align-items:     center;
+  gap:             12px;
+  padding:         16px 20px;
+  background:      linear-gradient(135deg, #f0fdf4, #fff);
+  border-bottom:   1px solid $border;
+}
+
+.hc-name-block { flex: 1; }
+.hc-name  { font-size: 15px; font-weight: 700; color: $text1; }
+.hc-month { font-size: 11px; color: $text3; }
+
+.hc-net { text-align: right; }
+.hc-net-val {
+  font-size:   18px;
+  font-weight: 800;
+  color:       $green;
+  line-height: 1;
+}
+.hc-net-lbl { font-size: 10px; color: $text3; font-weight: 600; }
+
+.hc-body { padding: 16px 20px; }
+
+.hc-section-title {
+  font-size:      10px;
+  font-weight:    700;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color:          $text3;
+  margin-bottom:  10px;
+
+  &::before {
+    content:       '';
+    display:       inline-block;
+    width:         3px;
+    height:        11px;
+    background:    $accent;
+    border-radius: 2px;
+    margin-right:  6px;
+    vertical-align: middle;
+  }
+}
+
+.hc-att-row {
+  display:         flex;
+  justify-content: space-around;
+  gap:             8px;
+  margin-bottom:   4px;
+}
+
+.hc-att-cell {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            4px;
+}
+
+.hc-att-val {
+  font-size:     18px;
+  font-weight:   800;
+  line-height:   1;
+  padding:       4px 8px;
+  border-radius: 8px;
+
+  &.hc-att-p  { color: #16a34a; background: #dcfce7; }
+  &.hc-att-a  { color: #ef4444; background: #fee2e2; }
+  &.hc-att-h  { color: #d97706; background: #fef3c7; }
+  &.hc-att-l  { color: #ea580c; background: #ffedd5; }
+  &.hc-att-hl { color: #0369a1; background: #e0f2fe; }
+  &.hc-att-wo { color: #6b7280; background: #f3f4f6; }
+}
+
+.hc-att-lbl { font-size: 10px; color: $text3; font-weight: 600; }
+
+// Breakdown
+.hc-breakdown {
+  background:    $bg;
+  border-radius: 10px;
+  padding:       12px 14px;
+}
+
+.hb-row {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  padding:         5px 0;
+  font-size:       13px;
+
+  &--ded .hb-lbl { color: $text3; font-size: 12px; }
+  &--net { padding-top: 8px; }
+}
+
+.hb-lbl { color: $text2; font-weight: 500; }
+.hb-val {
+  font-weight: 700;
+  color:       $text1;
+
+  &--ded { color: $red; }
+  &--net { color: $green; font-size: 15px; font-weight: 800; }
+}
+
+.hb-divider {
+  height:     1px;
+  background: $border;
+  margin:     6px 0;
+}
+
+// ─── Loading / Empty ─────────────────────────────────────────────────────────
+.loading-state {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             12px;
+  padding:         48px;
+  font-size:       14px;
+  color:           $text2;
+}
+.spinner {
+  width:         22px; height: 22px;
+  border:        3px solid $border;
+  border-top:    3px solid $accent;
+  border-radius: 50%;
+  animation:     spin .7s linear infinite;
+}
+
+.empty-state {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  padding:        56px 20px;
+  text-align:     center;
+}
+.empty-icon {
+  width:           72px; height: 72px;
+  background:      rgba(249,115,22,.08);
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  margin-bottom:   18px;
+  color:           $accent;
+}
+.empty-title { margin: 0 0 6px; font-size: 15px; font-weight: 700; color: $text1; }
+.empty-sub   { margin: 0; font-size: 13px; color: $text3; }
+
+// ─── Animations ──────────────────────────────────────────────────────────────
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes fadeIn  { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+@media (max-width: 600px) {
+  .sal { padding: 16px 14px 90px; }
+  .sal-title { font-size: 22px; }
+  .sal-tabs { width: 100%; .sal-tab { flex: 1; justify-content: center; } }
+  .preview-bar, .hist-bar { padding: 14px 16px; }
+  .rf-input { min-width: 100%; }
+  .hist-list { grid-template-columns: 1fr; }
+  .finalize-bar { padding: 10px 14px; }
+  .finalize-btn { width: 100%; justify-content: center; }
+  .finalize-bar-inner { flex-direction: column; align-items: stretch; }
+  .sal-table-wrap { margin-bottom: 100px; }
+}
