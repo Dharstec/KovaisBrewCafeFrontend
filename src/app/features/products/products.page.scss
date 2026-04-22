@@ -24,6 +24,109 @@ $radius:  14px;
   min-height: 100vh;
 }
 
+// ── PACKING DEFAULTS PANEL
+.packing-defaults {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.pd-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: $text1;
+  margin-bottom: 10px;
+  svg { color: $accent; flex-shrink: 0; }
+}
+
+.pd-fields {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pd-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  label { font-size: 12px; font-weight: 600; color: $text2; white-space: nowrap; }
+}
+
+.pd-plat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  &--zomato { background: #e23744; }
+  &--swiggy  { background: #fc8019; }
+}
+
+.pd-input {
+  width: 72px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: $font;
+  color: $text1;
+  background: $bg;
+  outline: none;
+  &:focus { border-color: $accent; background: #fff; }
+}
+
+.pd-unit { font-size: 11px; color: $text3; }
+
+.pd-save {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: none;
+  background: $accent;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: $font;
+  cursor: pointer;
+  transition: opacity 150ms;
+  &:hover { opacity: 0.88; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.pd-msg  { font-size: 12px; font-weight: 600; color: #16a34a; }
+.pd-hint { font-size: 11px; color: $text3; margin: 6px 0 0; }
+
+.plat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  vertical-align: middle;
+  margin-right: 2px;
+  &--z { background: #e23744; }
+  &--s { background: #fc8019; }
+}
+
+.packing-row .form-hint { display: block; font-size: 10.5px; }
+
 // ═══════════════════════════════════════════
 //  HEADER
 // ═══════════════════════════════════════════
@@ -298,6 +401,12 @@ $radius:  14px;
     border: 1px solid #bfdbfe;
   }
 
+  &--direct {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+  }
+
   &--low {
     background: #fef2f2;
     color: #b91c1c;
@@ -555,7 +664,74 @@ $radius:  14px;
   }
 }
 
-// ── RECIPE BOX
+// ── STOCK TRACKING BOX
+.stock-track-box {
+  background: #f8fafc;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.stb-header {
+  margin-bottom: 12px;
+}
+.stb-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: $text1;
+  margin: 0 0 2px;
+}
+.stb-sub {
+  font-size: 12px;
+  color: $text3;
+  margin: 0;
+}
+
+.stb-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.stb-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1.5px solid $border;
+  background: $surface;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+  font-family: $font;
+  text-align: center;
+
+  &__icon  { font-size: 18px; }
+  &__label { font-size: 12px; font-weight: 700; color: $text1; }
+  &__desc  { font-size: 10px; color: $text3; }
+
+  &--active {
+    border-color: $accent;
+    background: #fff7ed;
+
+    .stb-mode__label { color: $accent; }
+  }
+
+  &:hover:not(&--active) {
+    border-color: $text3;
+    background: $bg;
+  }
+}
+
+.stb-direct, .stb-recipe {
+  border-top: 1px solid $border;
+  padding-top: 12px;
+}
+
+// ── RECIPE BOX (kept for backwards compat, now unused in products page)
 .recipe-box {
   background: #f8fafc;
   border: 1px solid $border;
@@ -692,6 +868,17 @@ $radius:  14px;
   transition: opacity 150ms ease;
 
   &:hover { opacity: 0.9; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.btn-cancel:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.save-error {
+  flex: 1;
+  color: $red;
+  font-size: 12.5px;
+  font-weight: 500;
+  margin: 0;
 }
 
 // ═══════════════════════════════════════════

@@ -185,7 +185,12 @@
 
         <div class="ci-top">
           <div class="ci-name">{{ i.name }}</div>
-          <div class="ci-total">₹ {{ i.price * i.qty | number:'1.2-2' }}</div>
+          <div class="ci-top-right">
+            <span class="ci-packing" *ngIf="isOnlinePlatform && packingForItem(i) > 0">
+              +₹{{ packingForItem(i) * i.qty | number:'1.2-2' }} pkg
+            </span>
+            <div class="ci-total">₹ {{ i.price * i.qty | number:'1.2-2' }}</div>
+          </div>
         </div>
 
         <div class="ci-bottom">
@@ -239,6 +244,16 @@
       <div class="total-row">
         <span>Subtotal</span>
         <span>₹ {{ subtotal | number:'1.2-2' }}</span>
+      </div>
+
+      <div class="total-row packing-total" *ngIf="isOnlinePlatform && packingTotal > 0">
+        <span>
+          <span class="plat-chip" [class.plat-chip--zomato]="platform==='zomato'" [class.plat-chip--swiggy]="platform==='swiggy'">
+            {{ platform === 'zomato' ? 'Z' : 'S' }}
+          </span>
+          Packing Charges
+        </span>
+        <span>+ ₹ {{ packingTotal | number:'1.2-2' }}</span>
       </div>
 
       <!-- Coupon — only after payment method selected -->

@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductApi } from '../../core/api/product.api';
+import { SettingsApi } from '../../core/api/settings.api';
+import { AuthApi } from '../../core/api/auth.api';
 
 @Component({
   standalone: true,
@@ -23,18 +25,46 @@ export class ProductsPage implements OnInit {
   limit = 10;
 
   show = false;
+  saving = false;
+  saveError = '';
 
   form: any = {};
 
   totalPages = 1;
   pages: number[] = [];
 
+  isAdmin = false;
 
-  constructor(private productApi: ProductApi) { }
+  /* ── Global packing defaults ── */
+  globalSettings = { zomato_packing_default: '0', swiggy_packing_default: '0' };
+  settingsSaving = false;
+  settingsMsg = '';
+
+  constructor(private productApi: ProductApi, private settingsApi: SettingsApi, private authApi: AuthApi) { }
 
   ngOnInit() {
+    this.isAdmin = this.authApi.isAdmin();
     this.loadProducts();
     this.loadCategories();
+    this.loadSettings();
+  }
+
+  loadSettings() {
+    this.settingsApi.get().subscribe({
+      next: s => this.globalSettings = { ...this.globalSettings, ...s }
+    });
+  }
+
+  saveSettings() {
+    this.settingsSaving = true;
+    this.settingsApi.update(this.globalSettings).subscribe({
+      next: () => {
+        this.settingsSaving = false;
+        this.settingsMsg = 'Saved!';
+        setTimeout(() => this.settingsMsg = '', 2000);
+      },
+      error: () => { this.settingsSaving = false; this.settingsMsg = 'Failed'; }
+    });
   }
 
   loadProducts() {
@@ -70,27 +100,36 @@ export class ProductsPage implements OnInit {
       price: 0,
       zomato_price: '',
       swiggy_price: '',
+      zomato_packing: '',
+      swiggy_packing: '',
       category_id: '',
       image_url: '',
+      stock_item_id: null,
+      stock_mode: 'none',
       is_sellable: true,
       is_manual_price: false,
       is_active: true
     };
     this.recipeItems = [];
+    this.saveError = '';
     this.loadStockProducts();
     this.show = true;
   }
 
   close() {
     this.show = false;
+    this.saving = false;
+    this.saveError = '';
   }
 
   edit(p: any) {
     this.loadStockProducts();
+    this.saveError = '';
 
     this.form = {
       ...p,
-      is_sellable: p.is_sellable === true || p.is_sellable === 'true'
+      is_sellable: p.is_sellable === true || p.is_sellable === 'true',
+      stock_mode: p.stock_item_id ? 'direct' : 'none'
     };
 
     this.recipeItems = [];
@@ -101,10 +140,19 @@ export class ProductsPage implements OnInit {
           stock_item_id: r.stock_item_id,
           used_qty: r.used_qty
         }));
+        if (this.recipeItems.length > 0) {
+          this.form.stock_mode = 'recipe';
+        }
       });
     }
 
     this.show = true;
+  }
+
+  setStockMode(mode: 'none' | 'direct' | 'recipe') {
+    this.form.stock_mode = mode;
+    if (mode !== 'direct')  this.form.stock_item_id = null;
+    if (mode !== 'recipe')  this.recipeItems = [];
   }
 
   addRecipe() {
@@ -116,26 +164,47 @@ export class ProductsPage implements OnInit {
   }
 
   save() {
-    const payload = { ...this.form };
+    if (!this.form.name?.trim())    { this.saveError = 'Product name is required'; return; }
+    if (!this.form.category_id)     { this.saveError = 'Please select a category'; return; }
+    if (this.form.is_sellable && !this.form.is_manual_price && !(this.form.price > 0)) {
+      this.saveError = 'Price must be greater than 0'; return;
+    }
+    if (this.saving) return;
 
+    this.saveError = '';
+    this.saving = true;
+
+    const { stock_mode, ...formData } = this.form;
+    const payload = { ...formData };
     const req = this.form.id
       ? this.productApi.productUpdate(this.form.id, payload)
       : this.productApi.productCreate(payload);
 
-    req.subscribe((res: any) => {
-      const productId = this.form.id || res?.product?.id || res?.id;
+    req.subscribe({
+      next: (res: any) => {
+        const productId = this.form.id || res?.product?.id || res?.id;
+        const shouldSaveRecipe = productId && this.form.is_sellable;
 
-      if (productId && this.form.is_sellable) {
-        this.productApi.saveRecipe({
-          sale_product_id: productId,
-          items: this.recipeItems
-        }).subscribe(() => {
+        if (shouldSaveRecipe) {
+          /* Always call saveRecipe — sends empty array to clear when switching away from recipe mode */
+          this.productApi.saveRecipe({
+            sale_product_id: productId,
+            items: this.form.stock_mode === 'recipe' ? this.recipeItems : []
+          }).subscribe({
+            next: () => { this.close(); this.loadProducts(); },
+            error: (err: any) => {
+              this.saving = false;
+              this.saveError = err.error?.msg || err.error?.message || 'Failed to save recipe';
+            }
+          });
+        } else {
           this.close();
           this.loadProducts();
-        });
-      } else {
-        this.close();
-        this.loadProducts();
+        }
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.saveError = err.error?.msg || err.error?.message || 'Failed to save product';
       }
     });
   }

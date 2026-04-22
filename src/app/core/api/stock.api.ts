@@ -88,6 +88,10 @@ export class StockApi {
     return this.http.patch<any>(`${this.base}/stock-items/${id}/toggle`, {});
   }
 
+  deleteStockItem(id: number) {
+    return this.http.delete<any>(`${this.base}/stock-items/${id}`);
+  }
+
   getCategories() {
     return this.http.get<any>(`${this.base}/category`);
   }

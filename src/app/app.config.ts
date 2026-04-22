@@ -29,7 +29,7 @@ export const appConfig: ApplicationConfig = {
                     })
                     : req;
                 return next(authReq).pipe(catchError((error: HttpErrorResponse) => {
-                    if (error.status === 401 || error.status === 403) {
+                    if (error.status === 401) {
                         if (typeof window !== 'undefined') {
                             localStorage.clear();
                         }

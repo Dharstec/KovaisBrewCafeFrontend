@@ -5,7 +5,10 @@ import { ActivatedRoute } from '@angular/router';
 import { AuthApi } from '../../core/api/auth.api';
 import { StockApi } from '../../core/api/stock.api';
 
-type Tab = 'stock' | 'add' | 'purchases' | 'expiry' | 'logs' | 'items';
+type Tab = 'stock' | 'purchases' | 'manage';
+type StockFilter = 'all' | 'low' | 'out' | 'expiring';
+type PurchaseView = 'history' | 'expiry';
+type ManageView = 'items' | 'logs';
 
 @Component({
   standalone: true,
@@ -22,13 +25,17 @@ export class StockPage implements OnInit {
   isAdmin   = false;
   activeTab: Tab = 'stock';
 
-  /* ─── TAB: STOCK LIST ──────────────────────────────────── */
-  stocks: any[]   = [];
-  stockLoading    = false;
-  searchTerm      = '';
-  filterType: 'low' | 'out' | null = null;
+  /* ─── TAB: STOCK ───────────────────────────────────────── */
+  stocks: any[]          = [];
+  stockLoading           = false;
+  searchTerm             = '';
+  stockFilter: StockFilter = 'all';
 
-  /* ─── TAB: ADD STOCK (admin) ────────────────────────────── */
+  /* ─── TAB: PURCHASES ────────────────────────────────────── */
+  purchaseView: PurchaseView = 'history';
+  showAddForm  = false;
+
+  // Add form
   dropdown: any[] = [];
   addForm = {
     stock_item_id: null as number | null,
@@ -43,7 +50,7 @@ export class StockPage implements OnInit {
   addLoading = false;
   addError   = '';
 
-  /* ─── TAB: PURCHASES (admin) ────────────────────────────── */
+  // History
   purchases: any[]   = [];
   purchasePage       = 1;
   purchaseTotal      = 0;
@@ -52,34 +59,37 @@ export class StockPage implements OnInit {
   editingPurchaseId: number | null = null;
   purchaseEditForm = { expiry_date: '', supplier: '', batch_no: '', notes: '' };
 
-  /* ─── TAB: EXPIRY ────────────────────────────────────────── */
+  // Expiry
   expiryList: any[] = [];
   expiryDays = 7;
 
-  /* ─── TAB: LOGS (admin) ──────────────────────────────────── */
-  logs: any[]  = [];
-  logAction    = '';
+  /* ─── TAB: MANAGE ────────────────────────────────────────── */
+  manageView: ManageView = 'items';
 
-  /* ─── TAB: ITEMS (admin) ─────────────────────────────────── */
-  items: any[]    = [];
+  items: any[]      = [];
   categories: any[] = [];
-  itemsLoading    = false;
-  showNewItemForm = false;
+  itemsLoading      = false;
+  itemSearch        = '';
+  showNewItemForm   = false;
   newItemForm = {
     name: '', category_id: null as number | null,
     base_unit: 'gm', unit_label: 'kg', unit_value: 1000, min_qty: 0
   };
   newItemError   = '';
   newItemLoading = false;
-  editingItemId: number | null = null;
+  editingItemId: number | null  = null;
   itemEditForm = { name: '', category_id: null as number | null, min_qty: 0 };
+
+  logs: any[] = [];
+  logAction   = '';
 
   /* ══════════════════════════════════════════════════════════ */
 
   ngOnInit() {
     this.isAdmin = this.auth.isAdmin();
     this.route.queryParams.subscribe(p => {
-      this.filterType = p['filter'] || null;
+      if (p['filter'] === 'low')  this.stockFilter = 'low';
+      if (p['filter'] === 'out')  this.stockFilter = 'out';
       this.loadStock();
     });
   }
@@ -87,15 +97,12 @@ export class StockPage implements OnInit {
   setTab(tab: Tab) {
     this.activeTab = tab;
     if (tab === 'stock'     && !this.stocks.length)   this.loadStock();
-    if (tab === 'add'       && !this.dropdown.length) this.loadDropdown();
     if (tab === 'purchases') { this.loadDropdown(); this.loadPurchases(1); }
-    if (tab === 'expiry')                             this.loadExpiry();
-    if (tab === 'logs')                               this.loadLogs();
-    if (tab === 'items')    { this.loadItems(); this.loadCategories(); }
+    if (tab === 'manage')   { this.loadItems(); this.loadCategories(); }
   }
 
   /* ══════════════════════════════════════════════════════════
-     STOCK LIST
+     STOCK
      ══════════════════════════════════════════════════════════ */
   loadStock() {
     this.stockLoading = true;
@@ -108,34 +115,33 @@ export class StockPage implements OnInit {
     });
   }
 
+  setStockFilter(f: StockFilter) { this.stockFilter = f; }
+
   get filteredStocks() {
     let list = this.stocks;
-    if (this.filterType === 'low') list = list.filter(s => s.is_low_stock && s.current_qty > 0);
-    if (this.filterType === 'out') list = list.filter(s => s.current_qty <= 0);
+    if (this.stockFilter === 'low')      list = list.filter(s => s.is_low_stock && s.current_qty > 0);
+    if (this.stockFilter === 'out')      list = list.filter(s => s.current_qty <= 0);
+    if (this.stockFilter === 'expiring') list = list.filter(s => s.nearest_expiry && s.expiring_count > 0);
     if (this.searchTerm.trim())
       list = list.filter(s => s.name.toLowerCase().includes(this.searchTerm.toLowerCase()));
     return list;
   }
 
+  get lowCount()      { return this.stocks.filter(s => s.is_low_stock && s.current_qty > 0).length; }
+  get outCount()      { return this.stocks.filter(s => s.current_qty <= 0).length; }
+  get expiringCount() { return this.stocks.filter(s => s.nearest_expiry && s.expiring_count > 0).length; }
+
   updateStock(s: any) {
     const qty = parseFloat(s._qty);
     if (!s._qty || isNaN(qty) || qty <= 0) { alert('Enter a valid quantity greater than 0'); return; }
-
     const reason: string = s._reason || 'DAILY_REFILL';
-    if (!this.isAdmin && reason !== 'DAILY_REFILL') {
-      alert('Not authorised'); return;
-    }
-
-    /* REFILL = add, WASTAGE = subtract, ADJUSTMENT = can be + or - */
+    if (!this.isAdmin && reason !== 'DAILY_REFILL') { alert('Not authorised'); return; }
     let change = qty;
     if (reason === 'WASTAGE') change = -qty;
-
     const currentQty = parseFloat(s.current_qty);
     const newQty     = parseFloat((currentQty + change).toFixed(3));
     if (newQty < 0) { alert('Stock cannot go below zero'); return; }
-
     if (!confirm(`${reason} — ${s.name}\n${currentQty} → ${newQty} ${s.base_unit}`)) return;
-
     this.stockApi.adjust({ product_id: s.id, change_qty: change, reason }).subscribe({
       next: () => { s.current_qty = newQty; s._qty = null; },
       error: err => alert(err.error?.message || 'Update failed')
@@ -145,15 +151,25 @@ export class StockPage implements OnInit {
   expiryClass(s: any) {
     if (!s.nearest_expiry) return '';
     const days = Math.floor((new Date(s.nearest_expiry).getTime() - Date.now()) / 86400000);
-    if (days < 0)   return 'exp--expired';
-    if (days <= 3)  return 'exp--today';
-    if (days <= 7)  return 'exp--soon';
+    if (days < 0)  return 'exp--expired';
+    if (days <= 3) return 'exp--today';
+    if (days <= 7) return 'exp--soon';
     return 'exp--ok';
   }
 
   /* ══════════════════════════════════════════════════════════
-     ADD STOCK
+     PURCHASES TAB
      ══════════════════════════════════════════════════════════ */
+  setPurchaseView(v: PurchaseView) {
+    this.purchaseView = v;
+    if (v === 'expiry') this.loadExpiry();
+  }
+
+  toggleAddForm() {
+    this.showAddForm = !this.showAddForm;
+    if (this.showAddForm) this.loadDropdown();
+  }
+
   loadDropdown() {
     if (this.dropdown.length) return;
     this.stockApi.getDropdown().subscribe({ next: rows => this.dropdown = rows });
@@ -164,15 +180,11 @@ export class StockPage implements OnInit {
   }
 
   submitAdd() {
-    if (!this.addForm.stock_item_id)    { this.addError = 'Select a stock item'; return; }
-    if (!this.addForm.qty || this.addForm.qty <= 0)
-                                         { this.addError = 'Enter quantity'; return; }
-    if (this.addForm.purchase_price == null || this.addForm.purchase_price < 0)
-                                         { this.addError = 'Enter purchase price'; return; }
-
+    if (!this.addForm.stock_item_id)                                   { this.addError = 'Select a stock item'; return; }
+    if (!this.addForm.qty || this.addForm.qty <= 0)                    { this.addError = 'Enter quantity'; return; }
+    if (this.addForm.purchase_price == null || this.addForm.purchase_price < 0) { this.addError = 'Enter purchase price'; return; }
     this.addError   = '';
     this.addLoading = true;
-
     const payload: any = {
       stock_item_id:  this.addForm.stock_item_id,
       purchase_date:  this.addForm.purchase_date || today(),
@@ -183,19 +195,16 @@ export class StockPage implements OnInit {
       batch_no:       this.addForm.batch_no      || undefined,
       notes:          this.addForm.notes         || undefined
     };
-
     this.stockApi.addEntry(payload).subscribe({
       next: (res: any) => {
-        this.addLoading = false;
-        alert(`Added!\n${res.item}  +${res.qty_added}\nNew total: ${res.new_total} ${res.base_unit}`);
+        this.addLoading  = false;
+        this.showAddForm = false;
         this.resetAddForm();
-        this.stocks = [];           // force reload on next visit
-        this.setTab('stock');
+        this.stocks = [];
+        this.loadPurchases(1);
+        alert(`Saved! ${res.item}  +${res.qty_added}  →  ${res.new_total} ${res.base_unit} total`);
       },
-      error: err => {
-        this.addLoading = false;
-        this.addError   = err.error?.message || 'Failed to add stock';
-      }
+      error: err => { this.addLoading = false; this.addError = err.error?.message || 'Failed to save'; }
     });
   }
 
@@ -207,16 +216,9 @@ export class StockPage implements OnInit {
     this.addError = '';
   }
 
-  /* ══════════════════════════════════════════════════════════
-     PURCHASES
-     ══════════════════════════════════════════════════════════ */
   loadPurchases(page = 1) {
     this.purchasePage = page;
-    this.stockApi.getEntries({
-      page,
-      limit: 20,
-      stock_item_id: this.purchaseFilterId ?? undefined
-    }).subscribe({
+    this.stockApi.getEntries({ page, limit: 20, stock_item_id: this.purchaseFilterId ?? undefined }).subscribe({
       next: res => {
         this.purchases          = res.data;
         this.purchaseTotal      = res.total;
@@ -225,18 +227,13 @@ export class StockPage implements OnInit {
     });
   }
 
-  onPurchaseFilterChange() {
-    this.editingPurchaseId = null;
-    this.loadPurchases(1);
-  }
+  onPurchaseFilterChange() { this.editingPurchaseId = null; this.loadPurchases(1); }
 
   startEditPurchase(e: any) {
     this.editingPurchaseId = e.id;
     this.purchaseEditForm  = {
       expiry_date: e.expiry_date ? e.expiry_date.substring(0, 10) : '',
-      supplier:    e.supplier   || '',
-      batch_no:    e.batch_no   || '',
-      notes:       e.notes      || ''
+      supplier: e.supplier || '', batch_no: e.batch_no || '', notes: e.notes || ''
     };
   }
 
@@ -245,89 +242,61 @@ export class StockPage implements OnInit {
   savePurchase(e: any) {
     this.stockApi.updateEntry(e.id, this.purchaseEditForm).subscribe({
       next: res => {
-        e.expiry_date   = res.entry.expiry_date;
-        e.supplier      = res.entry.supplier;
-        e.batch_no      = res.entry.batch_no;
-        e.notes         = res.entry.notes;
+        e.expiry_date = res.entry.expiry_date; e.supplier = res.entry.supplier;
+        e.batch_no    = res.entry.batch_no;   e.notes    = res.entry.notes;
         e.expiry_status = res.entry.expiry_status;
         this.editingPurchaseId = null;
-        this.stocks = [];           // force stock tab to reload expiry badges
+        this.stocks = [];
       },
       error: err => alert(err.error?.message || 'Save failed')
     });
   }
 
+  loadExpiry() {
+    this.stockApi.getExpiring(this.expiryDays).subscribe({ next: rows => this.expiryList = rows });
+  }
+
   expiryStatusClass(status: string) {
-    return ({ EXPIRED:'es--expired', EXPIRING_TODAY:'es--today',
-              EXPIRING_SOON:'es--soon', OK:'es--ok', NO_EXPIRY:'es--none' } as any)[status] || '';
+    return ({ EXPIRED:'es--expired', EXPIRING_TODAY:'es--today', EXPIRING_SOON:'es--soon', OK:'es--ok', NO_EXPIRY:'es--none' } as any)[status] || '';
   }
 
   expiryStatusLabel(status: string) {
-    return ({ EXPIRED:'Expired', EXPIRING_TODAY:'Expiring today',
-              EXPIRING_SOON:'Expiring soon', OK:'Good', NO_EXPIRY:'No expiry' } as any)[status] || status;
+    return ({ EXPIRED:'Expired', EXPIRING_TODAY:'Expiring today', EXPIRING_SOON:'Expiring soon', OK:'Good', NO_EXPIRY:'No expiry' } as any)[status] || status;
   }
 
   /* ══════════════════════════════════════════════════════════
-     EXPIRY
+     MANAGE TAB
      ══════════════════════════════════════════════════════════ */
-  loadExpiry() {
-    this.stockApi.getExpiring(this.expiryDays).subscribe({
-      next: rows => this.expiryList = rows
-    });
+  setManageView(v: ManageView) {
+    this.manageView = v;
+    if (v === 'logs') this.loadLogs();
   }
 
-  /* ══════════════════════════════════════════════════════════
-     LOGS
-     ══════════════════════════════════════════════════════════ */
-  loadLogs() {
-    this.stockApi.getLogs({ limit: 100, action: this.logAction || undefined })
-      .subscribe({ next: rows => this.logs = rows });
-  }
-
-  logActionClass(action: string) {
-    return ({ STOCK_IN:'la--in', DAILY_REFILL:'la--in', USAGE:'la--usage',
-              USAGE_RESERVED:'la--usage', WASTAGE:'la--waste',
-              ADJUSTMENT:'la--adj', RETURN:'la--return' } as any)[action] || '';
-  }
-
-  logActionLabel(action: string) {
-    return ({
-      STOCK_IN: 'Stock In', DAILY_REFILL: 'Refill', USAGE: 'Used',
-      USAGE_RESERVED: 'Reserved', WASTAGE: 'Wastage',
-      ADJUSTMENT: 'Adjustment', RETURN: 'Returned'
-    } as any)[action] || action;
-  }
-
-  /* ══════════════════════════════════════════════════════════
-     ITEMS MANAGEMENT
-     ══════════════════════════════════════════════════════════ */
   loadItems() {
     this.itemsLoading = true;
-    this.stockApi.getStockItemsList({ limit: 200 }).subscribe({
+    this.stockApi.getStockItemsList({ limit: 200, search: this.itemSearch || undefined }).subscribe({
       next: res  => { this.items = res.data; this.itemsLoading = false; },
       error: ()  => { this.itemsLoading = false; }
     });
   }
 
+  searchItems() { this.loadItems(); }
+
   loadCategories() {
     if (this.categories.length) return;
-    this.stockApi.getCategories().subscribe({
-      next: res => this.categories = res.data || res
-    });
+    this.stockApi.getCategories().subscribe({ next: res => this.categories = res.data || res });
   }
 
   submitNewItem() {
     if (!this.newItemForm.name || !this.newItemForm.base_unit || !this.newItemForm.unit_label) {
       this.newItemError = 'Name, base unit and purchase unit are required'; return;
     }
-    this.newItemError   = '';
-    this.newItemLoading = true;
+    this.newItemError = ''; this.newItemLoading = true;
     this.stockApi.createStockItem(this.newItemForm).subscribe({
       next: () => {
-        this.newItemLoading = false;
-        this.showNewItemForm = false;
+        this.newItemLoading = false; this.showNewItemForm = false;
         this.newItemForm = { name: '', category_id: null, base_unit: 'gm', unit_label: 'kg', unit_value: 1000, min_qty: 0 };
-        this.dropdown = [];         // force dropdown reload on next Add Stock visit
+        this.dropdown = [];
         this.loadItems();
       },
       error: err => { this.newItemLoading = false; this.newItemError = err.error?.msg || 'Create failed'; }
@@ -344,11 +313,10 @@ export class StockPage implements OnInit {
   saveItem(item: any) {
     this.stockApi.updateStockItem(item.id, this.itemEditForm).subscribe({
       next: () => {
-        item.name          = this.itemEditForm.name;
-        item.min_qty       = this.itemEditForm.min_qty;
-        item.category_id   = this.itemEditForm.category_id;
-        item.category_name = this.categories.find(c => c.id === Number(this.itemEditForm.category_id))?.name
-                             || item.category_name;
+        item.name        = this.itemEditForm.name;
+        item.min_qty     = this.itemEditForm.min_qty;
+        item.category_id = this.itemEditForm.category_id;
+        item.category_name = this.categories.find(c => c.id === Number(this.itemEditForm.category_id))?.name || item.category_name;
         this.editingItemId = null;
       },
       error: err => alert(err.error?.msg || 'Update failed')
@@ -362,14 +330,34 @@ export class StockPage implements OnInit {
     });
   }
 
-  /* ══════════════════════════════════════════════════════════
-     HELPERS
-     ══════════════════════════════════════════════════════════ */
+  deleteItem(item: any) {
+    if (!confirm(`Delete "${item.name}"? This cannot be undone.`)) return;
+    this.stockApi.deleteStockItem(item.id).subscribe({
+      next: () => { this.items = this.items.filter(i => i.id !== item.id); },
+      error: err => alert(err.error?.msg || 'Delete failed')
+    });
+  }
+
+  loadLogs() {
+    this.stockApi.getLogs({ limit: 100, action: this.logAction || undefined })
+      .subscribe({ next: rows => this.logs = rows });
+  }
+
+  logActionClass(action: string) {
+    return ({ STOCK_IN:'la--in', DAILY_REFILL:'la--in', USAGE:'la--usage',
+              USAGE_RESERVED:'la--usage', WASTAGE:'la--waste', ADJUSTMENT:'la--adj', RETURN:'la--return' } as any)[action] || '';
+  }
+
+  logActionLabel(action: string) {
+    return ({ STOCK_IN:'Stock In', DAILY_REFILL:'Refill', USAGE:'Used',
+              USAGE_RESERVED:'Reserved', WASTAGE:'Wastage', ADJUSTMENT:'Adjustment', RETURN:'Returned' } as any)[action] || action;
+  }
+
+  /* ══════════════════════════════════════════════════════════ */
   fmtDate(d: string | null) {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
-
   pageRange(n: number) { return Array.from({ length: n }, (_, i) => i + 1); }
 }
 

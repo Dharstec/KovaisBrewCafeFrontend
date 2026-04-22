@@ -8,6 +8,7 @@ import { ProductApi }        from '../../core/api/product.api';
 import { BillApi }           from '../../core/api/bill.api';
 import { OfflineQueueService } from '../../core/services/offline-queue.service';
 import { PrinterService }    from '../../core/services/printer.service';
+import { SettingsApi }       from '../../core/api/settings.api';
 
 @Component({
   standalone: true,
@@ -24,6 +25,7 @@ export class BillingPage implements OnInit, OnDestroy {
   billApi      = inject(BillApi);
   offlineQueue = inject(OfflineQueueService);
   printer      = inject(PrinterService);
+  settingsApi  = inject(SettingsApi);
 
   /* ── catalogue ── */
   products         : any[]   = [];
@@ -51,6 +53,9 @@ export class BillingPage implements OnInit, OnDestroy {
   showCart         = false;
   syncPending      = 0;
 
+  /* ── packing charges ── */
+  packingDefaults = { zomato: 0, swiggy: 0 };
+
   /* ── ingredient popup ── */
   ingredientModal: { product: any; items: any[]; loading: boolean } | null = null;
 
@@ -66,8 +71,26 @@ export class BillingPage implements OnInit, OnDestroy {
     return this.store.getTotal();
   }
 
+  /* Packing charge for a single cart line */
+  packingForItem(item: any): number {
+    if (!this.isOnlinePlatform) return 0;
+    const product = this.products.find(p => p.id === item.productId);
+    if (!product) return 0;
+    if (this.platform === 'zomato') {
+      if (item.price < 100) return 0;  // no packing charge for Zomato items below ₹100
+      return product.zomato_packing != null ? Number(product.zomato_packing) : this.packingDefaults.zomato;
+    }
+    return product.swiggy_packing != null ? Number(product.swiggy_packing) : this.packingDefaults.swiggy;
+  }
+
+  get packingTotal(): number {
+    if (!this.isOnlinePlatform) return 0;
+    const total = this.cart.reduce((sum, item) => sum + this.packingForItem(item) * item.qty, 0);
+    return this.platform === 'zomato' ? Math.min(total, 40) : total;
+  }
+
   get finalTotal(): number {
-    const t = this.subtotal - this.couponDiscount;
+    const t = this.subtotal + this.packingTotal - this.couponDiscount;
     return t > 0 ? t : 0;
   }
 
@@ -103,6 +126,12 @@ export class BillingPage implements OnInit, OnDestroy {
     });
 
     this.loadCategories();
+    this.settingsApi.get().subscribe({
+      next: s => {
+        this.packingDefaults.zomato = Number(s.zomato_packing_default) || 0;
+        this.packingDefaults.swiggy = Number(s.swiggy_packing_default) || 0;
+      }
+    });
 
     // Count queued offline bills
     const q = await this.offlineQueue.getAll();

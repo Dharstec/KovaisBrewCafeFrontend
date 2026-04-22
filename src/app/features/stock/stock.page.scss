@@ -45,8 +45,10 @@ $radius:  14px;
 
   &__sub {
     font-size: 13px;
-    color: $text2;
-    margin: 4px 0 0;
+    color: $text3;
+    margin: 3px 0 0;
+    font-weight: 500;
+    letter-spacing: 0.1px;
   }
 }
 
@@ -54,13 +56,13 @@ $radius:  14px;
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 240px;
-  height: 40px;
+  width: 260px;
+  height: 42px;
   background: $surface;
-  border: 1px solid $border;
-  border-radius: 10px;
-  padding: 0 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  border: 1.5px solid $border;
+  border-radius: 12px;
+  padding: 0 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
   transition: border-color 150ms, box-shadow 150ms;
 
   &:focus-within {
@@ -68,12 +70,12 @@ $radius:  14px;
     box-shadow: 0 0 0 3px rgba(249,115,22,.12);
   }
 
-  &__icon { color: $text3; flex-shrink: 0; }
+  svg { color: $text3; flex-shrink: 0; }
 
-  &__input {
+  input {
     border: none; outline: none;
     background: transparent;
-    font-size: 13px; font-family: $font; color: $text1; width: 100%;
+    font-size: 13.5px; font-family: $font; color: $text1; width: 100%;
     &::placeholder { color: $text3; }
   }
 }
@@ -118,6 +120,90 @@ $radius:  14px;
     color: #fff;
     box-shadow: 0 2px 8px rgba(249,115,22,.30);
   }
+}
+
+// ── Tab alert badge ──
+.tab-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
+  &--red    { background: #ef4444; color: #fff; }
+  &--orange { background: $accent;  color: #fff; }
+}
+.tab--active .tab-badge { background: rgba(255,255,255,.3); color: #fff; }
+
+// ═══════════════════════════════════════════
+//  STOCK TOOLBAR — filter pills
+// ═══════════════════════════════════════════
+.stock-toolbar {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+
+.filter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.fpill {
+  height: 34px; padding: 0 16px;
+  border: 1.5px solid $border; border-radius: 999px;
+  background: $surface; color: $text2;
+  font-size: 12.5px; font-weight: 600; font-family: $font; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 150ms;
+  &:hover { border-color: $accent; color: $accent; }
+  &--active { background: $text1; border-color: $text1; color: #fff; }
+  &--orange.fpill--active { background: $accent;  border-color: $accent;  }
+  &--red.fpill--active    { background: #ef4444;  border-color: #ef4444;  }
+  &--yellow.fpill--active { background: #d97706;  border-color: #d97706;  }
+
+  &__count {
+    background: rgba(255,255,255,.25); border-radius: 999px;
+    padding: 1px 6px; font-size: 11px;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  PURCHASES TOOLBAR
+// ═══════════════════════════════════════════
+.purch-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+
+.btn-add-purchase {
+  display: flex; align-items: center; gap: 8px;
+  height: 38px; padding: 0 20px;
+  border: none; border-radius: 8px;
+  background: linear-gradient(135deg, $accent 0%, #ea580c 100%);
+  color: #fff; font-size: 13px; font-weight: 700; font-family: $font;
+  cursor: pointer; box-shadow: 0 2px 8px rgba(249,115,22,.30);
+  transition: opacity 150ms;
+  &:hover { opacity: .9; }
+}
+
+// ═══════════════════════════════════════════
+//  MANAGE TOOLBAR
+// ═══════════════════════════════════════════
+.manage-toolbar {
+  display: flex; align-items: center; margin-bottom: 16px;
+}
+
+// ═══════════════════════════════════════════
+//  SUB-VIEW PILLS (inside tabs)
+// ═══════════════════════════════════════════
+.sub-pills {
+  display: flex; gap: 4px;
+  background: $bg; border: 1px solid $border;
+  border-radius: 10px; padding: 4px;
+}
+
+.spill {
+  height: 32px; padding: 0 18px;
+  border: none; border-radius: 7px;
+  background: transparent; color: $text2;
+  font-size: 13px; font-weight: 600; font-family: $font; cursor: pointer;
+  transition: background 120ms, color 120ms;
+  &:hover { background: $surface; color: $text1; }
+  &--active { background: $surface; color: $text1; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
 }
 
 // ═══════════════════════════════════════════
@@ -579,7 +665,9 @@ td {
 // ═══════════════════════════════════════════
 .items-toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
@@ -616,6 +704,45 @@ td {
   cursor: pointer;
   transition: background 150ms, border-color 150ms;
   &:hover { background: $bg; border-color: $accent; color: $accent; }
+}
+
+.btn-merge {
+  height: 30px; padding: 0 14px; margin-left: 6px;
+  border: 1px solid #bfdbfe; border-radius: 6px;
+  background: #eff6ff; color: #2563eb;
+  font-size: 12px; font-weight: 600; font-family: $font;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+  &:hover { background: #dbeafe; border-color: #2563eb; }
+}
+
+.btn-delete {
+  height: 30px; padding: 0 14px; margin-left: 6px;
+  border: 1px solid #fca5a5; border-radius: 6px;
+  background: #fff5f5; color: #ef4444;
+  font-size: 12px; font-weight: 600; font-family: $font;
+  cursor: pointer;
+  transition: background 150ms, border-color 150ms;
+  &:hover { background: #fee2e2; border-color: #ef4444; }
+}
+
+.row--merging td { background: #eff6ff; }
+
+.merge-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  flex-wrap: wrap;
+
+  &__label { font-size: 13px; color: $text2; white-space: nowrap; }
+
+  &__select {
+    height: 34px; border: 1px solid $border; border-radius: 8px;
+    padding: 0 10px; font-size: 13px; font-family: $font;
+    background: $surface; color: $text1; min-width: 240px;
+    &:focus { outline: none; border-color: #2563eb; }
+  }
 }
 
 .row--inactive td { opacity: .5; }

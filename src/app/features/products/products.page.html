@@ -9,6 +9,35 @@
     <button class="btn-add" (click)="open()">+ Add Product</button>
   </div>
 
+  <!-- ══ GLOBAL PACKING DEFAULTS (admin only) ══ -->
+  <div class="packing-defaults" *ngIf="isAdmin">
+    <div class="pd-label">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 110-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 100-5C13 2 12 7 12 7z"/></svg>
+      Default Packing Charges
+    </div>
+    <div class="pd-fields">
+      <div class="pd-field">
+        <span class="pd-plat pd-plat--zomato">Z</span>
+        <label>Zomato default</label>
+        <input class="pd-input" type="number" min="0" step="0.5"
+          [(ngModel)]="globalSettings.zomato_packing_default" placeholder="0" />
+        <span class="pd-unit">₹ per item</span>
+      </div>
+      <div class="pd-field">
+        <span class="pd-plat pd-plat--swiggy">S</span>
+        <label>Swiggy default</label>
+        <input class="pd-input" type="number" min="0" step="0.5"
+          [(ngModel)]="globalSettings.swiggy_packing_default" placeholder="0" />
+        <span class="pd-unit">₹ per item</span>
+      </div>
+      <button class="pd-save" (click)="saveSettings()" [disabled]="settingsSaving">
+        {{ settingsSaving ? 'Saving…' : 'Save Defaults' }}
+      </button>
+      <span class="pd-msg" *ngIf="settingsMsg">{{ settingsMsg }}</span>
+    </div>
+    <p class="pd-hint">Applied to all products unless a product has its own packing charge set below.</p>
+  </div>
+
   <!-- ══ FILTER BAR ══ -->
   <div class="prd-filter">
     <div class="search-wrap">
@@ -60,7 +89,8 @@
         <div class="pc-tags">
           <span class="pc-tag pc-tag--sell" *ngIf="p.is_sellable">Sell</span>
           <span class="pc-tag pc-tag--stock" *ngIf="p.recipe_count > 0">Recipe ✓</span>
-          <span class="pc-tag pc-tag--low" *ngIf="p.is_sellable && p.recipe_count == 0">No Recipe</span>
+          <span class="pc-tag pc-tag--direct" *ngIf="p.stock_item_id && p.recipe_count == 0">Direct Stock</span>
+          <span class="pc-tag pc-tag--low" *ngIf="p.is_sellable && !p.stock_item_id && p.recipe_count == 0">No Tracking</span>
         </div>
       </div>
 
@@ -141,48 +171,97 @@
 
         <div class="form-row" *ngIf="form.is_sellable">
           <div class="form-group">
-            <label class="form-label">Zomato Price (&#8377;) <span class="form-hint">optional</span></label>
+            <label class="form-label"><span class="plat-badge plat-badge--z">Z</span> Zomato Price (&#8377;) <span class="form-hint">optional</span></label>
             <input class="form-input" type="number" [(ngModel)]="form.zomato_price" placeholder="Leave blank if not on Zomato" />
           </div>
           <div class="form-group">
-            <label class="form-label">Swiggy Price (&#8377;) <span class="form-hint">optional</span></label>
+            <label class="form-label"><span class="plat-badge plat-badge--s">S</span> Swiggy Price (&#8377;) <span class="form-hint">optional</span></label>
             <input class="form-input" type="number" [(ngModel)]="form.swiggy_price" placeholder="Leave blank if not on Swiggy" />
           </div>
         </div>
 
-        <!-- RECIPE / INGREDIENTS -->
-        <div class="recipe-box" *ngIf="form.is_sellable">
-          <div class="recipe-box__header">
-            <div>
-              <h4 class="recipe-box__title">Ingredients / Recipe</h4>
-              <p class="recipe-box__sub">Raw materials used per sale</p>
-            </div>
-            <span class="recipe-badge">Stock Based</span>
+        <div class="form-row packing-row" *ngIf="form.is_sellable">
+          <div class="form-group">
+            <label class="form-label"><span class="plat-badge plat-badge--z">Z</span> Zomato Packing (&#8377;)
+              <span class="form-hint">blank = use default (₹{{ globalSettings.zomato_packing_default }})</span>
+            </label>
+            <input class="form-input" type="number" min="0" step="0.5"
+              [(ngModel)]="form.zomato_packing" placeholder="Leave blank to use default" />
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="plat-badge plat-badge--s">S</span> Swiggy Packing (&#8377;)
+              <span class="form-hint">blank = use default (₹{{ globalSettings.swiggy_packing_default }})</span>
+            </label>
+            <input class="form-input" type="number" min="0" step="0.5"
+              [(ngModel)]="form.swiggy_packing" placeholder="Leave blank to use default" />
+          </div>
+        </div>
+
+        <!-- STOCK TRACKING -->
+        <div class="stock-track-box" *ngIf="form.is_sellable">
+          <div class="stb-header">
+            <h4 class="stb-title">Stock Tracking</h4>
+            <p class="stb-sub">How is stock managed when this product is sold?</p>
           </div>
 
-          <div class="recipe-table">
-            <div class="recipe-row recipe-row--header">
-              <span>Raw Item</span>
-              <span>Usage Qty</span>
-              <span></span>
-            </div>
+          <div class="stb-modes">
+            <button class="stb-mode" [class.stb-mode--active]="form.stock_mode === 'none'"
+              (click)="setStockMode('none')">
+              <span class="stb-mode__icon">&#9711;</span>
+              <span class="stb-mode__label">No Tracking</span>
+              <span class="stb-mode__desc">Services, add-ons</span>
+            </button>
+            <button class="stb-mode" [class.stb-mode--active]="form.stock_mode === 'direct'"
+              (click)="setStockMode('direct')">
+              <span class="stb-mode__icon">&#8594;</span>
+              <span class="stb-mode__label">Direct Stock</span>
+              <span class="stb-mode__desc">Buy &amp; sell (Coke, chips)</span>
+            </button>
+            <button class="stb-mode" [class.stb-mode--active]="form.stock_mode === 'recipe'"
+              (click)="setStockMode('recipe')">
+              <span class="stb-mode__icon">&#9881;</span>
+              <span class="stb-mode__label">Recipe / Made</span>
+              <span class="stb-mode__desc">Prepared from ingredients</span>
+            </button>
+          </div>
 
-            <div class="recipe-row" *ngFor="let r of recipeItems; let i = index">
-              <select class="form-input" [(ngModel)]="r.stock_item_id">
-                <option value="">Select stock item</option>
-                <option *ngFor="let s of stockProducts" [value]="s.id">
-                  {{ s.name }} ({{ s.unit_label }} — {{ s.current_qty }} in stock)
+          <!-- Direct Stock: link to a single stock item -->
+          <div class="stb-direct" *ngIf="form.stock_mode === 'direct'">
+            <div class="form-group">
+              <label class="form-label">Linked Stock Item
+                <span class="form-hint">1 unit sold = 1 unit deducted from this stock item</span>
+              </label>
+              <select class="form-input" [(ngModel)]="form.stock_item_id">
+                <option [ngValue]="null">Select stock item…</option>
+                <option *ngFor="let s of stockProducts" [ngValue]="s.id">
+                  {{ s.name }} ({{ s.current_qty }} {{ s.unit_label }} in stock)
                 </option>
               </select>
-
-              <input class="form-input" type="number" step="0.001" min="0.001" [(ngModel)]="r.used_qty"
-                placeholder="qty per sale" />
-
-              <button class="btn-recipe-remove" (click)="removeRecipe(i)">&#10005;</button>
             </div>
           </div>
 
-          <button class="btn-add-ingredient" (click)="addRecipe()">+ Add Ingredient</button>
+          <!-- Recipe: ingredients list -->
+          <div class="stb-recipe" *ngIf="form.stock_mode === 'recipe'">
+            <div class="recipe-table">
+              <div class="recipe-row recipe-row--header">
+                <span>Raw Material</span>
+                <span>Qty Used per Sale</span>
+                <span></span>
+              </div>
+              <div class="recipe-row" *ngFor="let r of recipeItems; let i = index">
+                <select class="form-input" [(ngModel)]="r.stock_item_id">
+                  <option value="">Select stock item</option>
+                  <option *ngFor="let s of stockProducts" [value]="s.id">
+                    {{ s.name }} ({{ s.unit_label }} — {{ s.current_qty }} in stock)
+                  </option>
+                </select>
+                <input class="form-input" type="number" step="0.001" min="0.001"
+                  [(ngModel)]="r.used_qty" placeholder="qty per sale" />
+                <button class="btn-recipe-remove" (click)="removeRecipe(i)">&#10005;</button>
+              </div>
+            </div>
+            <button class="btn-add-ingredient" (click)="addRecipe()">+ Add Ingredient</button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -194,8 +273,11 @@
 
       <!-- MODAL FOOTER -->
       <div class="modal__footer">
-        <button class="btn-cancel" (click)="close()">Cancel</button>
-        <button class="btn-save" (click)="save()">Save Product</button>
+        <p class="save-error" *ngIf="saveError">{{ saveError }}</p>
+        <button class="btn-cancel" (click)="close()" [disabled]="saving">Cancel</button>
+        <button class="btn-save" (click)="save()" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save Product' }}
+        </button>
       </div>
 
     </div>
