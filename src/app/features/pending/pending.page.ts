@@ -75,7 +75,7 @@ export class PendingPage implements OnInit {
     } else {
       this.store.load(
         bill.items.map((i: any) => ({
-          productId: i.productid,
+          productId: i.productId ?? i.productid,
           name:      i.name,
           price:     Number(i.price),
           qty:       Number(i.qty)

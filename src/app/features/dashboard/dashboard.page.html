@@ -88,7 +88,10 @@
           </div>
         </div>
         <div class="kpi-value zomato-val">{{ fmtCurrency(data.zomato_total) }}</div>
-        <div class="kpi-sub">{{ data.today_sales ? (data.zomato_total / data.today_sales * 100 | number:'1.0-0') : 0 }}% of total</div>
+        <div class="platform-commission-row">
+          <span class="comm-deduct">− {{ fmtCurrency(zomatoCommission) }} <span class="comm-pct">(30% cut)</span></span>
+          <span class="comm-net">Net {{ fmtCurrency(zomatoNet) }}</span>
+        </div>
       </div>
 
       <div class="kpi-card kpi-swiggy">
@@ -99,7 +102,25 @@
           </div>
         </div>
         <div class="kpi-value swiggy-val">{{ fmtCurrency(data.swiggy_total) }}</div>
-        <div class="kpi-sub">{{ data.today_sales ? (data.swiggy_total / data.today_sales * 100 | number:'1.0-0') : 0 }}% of total</div>
+        <div class="platform-commission-row">
+          <span class="comm-deduct">− {{ fmtCurrency(swiggyCommission) }} <span class="comm-pct">(30% cut)</span></span>
+          <span class="comm-net">Net {{ fmtCurrency(swiggyNet) }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-actual">
+        <div class="kpi-top">
+          <span class="kpi-label">Actual Revenue</span>
+          <div class="kpi-icon green">
+            <svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value green-val">{{ fmtCurrency(actualRevenue) }}</div>
+        <div class="actual-revenue-breakdown">
+          <span>Regular ₹{{ regularTotal | number:'1.0-0' }}</span>
+          <span *ngIf="data.zomato_total > 0">+ Z ₹{{ zomatoNet | number:'1.0-0' }}</span>
+          <span *ngIf="data.swiggy_total > 0">+ S ₹{{ swiggyNet | number:'1.0-0' }}</span>
+        </div>
       </div>
 
     </div>

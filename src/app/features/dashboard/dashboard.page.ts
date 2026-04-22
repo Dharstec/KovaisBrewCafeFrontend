@@ -523,6 +523,16 @@ export class DashboardPage implements OnInit {
 
   get cashPct():       number { const t = (this.data.cash_total || 0) + (this.data.upi_total || 0); return t ? Math.round((this.data.cash_total / t) * 100) : 0; }
   get upiPct():        number { return 100 - this.cashPct; }
+
+  /* Platform commission (30%) deductions */
+  get zomatoCommission(): number { return (this.data.zomato_total || 0) * 0.30; }
+  get zomatoNet():        number { return (this.data.zomato_total || 0) * 0.70; }
+  get swiggyCommission(): number { return (this.data.swiggy_total || 0) * 0.30; }
+  get swiggyNet():        number { return (this.data.swiggy_total || 0) * 0.70; }
+
+  /* Actual money received = regular (cash+upi) + platform net (after 30% cut) */
+  get regularTotal(): number { return (this.data.cash_total || 0) + (this.data.upi_total || 0); }
+  get actualRevenue(): number { return this.regularTotal + this.zomatoNet + this.swiggyNet; }
   get attendancePct(): number { const t = (this.data.attendance.present || 0) + (this.data.attendance.absent || 0); return t ? Math.round((this.data.attendance.present / t) * 100) : 0; }
 
   get hasRangeChart() { return (this.rangeChartData.datasets?.[0]?.data?.length || 0) > 0; }

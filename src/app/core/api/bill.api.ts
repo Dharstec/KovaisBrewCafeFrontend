@@ -42,6 +42,14 @@ export class BillApi {
     return this.http.post(`${environment.apiUrl}/bill/cancel/${id}`, {});
   }
 
+  editCompleted(id: number, payload: { customer_name: string; items: any[] }) {
+    return this.http.put<any>(`${environment.apiUrl}/bills/completed/${id}`, payload);
+  }
+
+  deleteCompleted(id: number) {
+    return this.http.delete<any>(`${environment.apiUrl}/bills/completed/${id}`);
+  }
+
   completed(startDate?: string, endDate?: string, page = 1, limit = 20, platform?: string) {
     return this.http.get<any>(
       `${environment.apiUrl}/completed`,
