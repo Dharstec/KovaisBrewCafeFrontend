@@ -9,6 +9,7 @@ import { BillApi }           from '../../core/api/bill.api';
 import { OfflineQueueService } from '../../core/services/offline-queue.service';
 import { PrinterService }    from '../../core/services/printer.service';
 import { SettingsApi }       from '../../core/api/settings.api';
+import { AuthApi }           from '../../core/api/auth.api';
 
 @Component({
   standalone: true,
@@ -26,6 +27,7 @@ export class BillingPage implements OnInit, OnDestroy {
   offlineQueue = inject(OfflineQueueService);
   printer      = inject(PrinterService);
   settingsApi  = inject(SettingsApi);
+  authApi      = inject(AuthApi);
 
   /* ── catalogue ── */
   products         : any[]   = [];
@@ -55,6 +57,11 @@ export class BillingPage implements OnInit, OnDestroy {
 
   /* ── packing charges ── */
   packingDefaults = { zomato: 0, swiggy: 0 };
+
+  /* ── admin: backdated billing ── */
+  isAdmin  = false;
+  billDate = '';
+  todayStr = new Date().toISOString().split('T')[0];
 
   /* ── ingredient popup ── */
   ingredientModal: { product: any; items: any[]; loading: boolean } | null = null;
@@ -99,6 +106,7 @@ export class BillingPage implements OnInit, OnDestroy {
      LIFECYCLE
   ════════════════════════════════ */
   async ngOnInit() {
+    this.isAdmin = this.authApi.isAdmin();
     this.isOnlineStatus = navigator.onLine;
     window.addEventListener('online',  this.onlineHandler);
     window.addEventListener('offline', this.offlineHandler);
@@ -260,7 +268,8 @@ export class BillingPage implements OnInit, OnDestroy {
         qty:       Number(i.qty)
       })),
       local_id,
-      platform: this.platform || null
+      platform:  this.platform || null,
+      bill_date: this.billDate || null
     };
 
     /* ── OFFLINE path ── */
@@ -360,7 +369,8 @@ export class BillingPage implements OnInit, OnDestroy {
         payment_mode:  'UPI',
         grand_total:   this.finalTotal,
         local_id,
-        platform:      this.platform
+        platform:      this.platform,
+        bill_date:     this.billDate || null
       }).subscribe({
         next: (res: any) => {
           this.isCompleting = false;
@@ -382,7 +392,8 @@ export class BillingPage implements OnInit, OnDestroy {
           customer_name:   this.customerName,
           grand_total:     this.finalTotal,
           payment_mode:    this.paymentMethod,
-          discount_amount: this.couponDiscount || 0
+          discount_amount: this.couponDiscount || 0,
+          bill_date:       this.billDate || null
         }).subscribe({
           next:  () => {
             this.isCompleting = false;
@@ -486,6 +497,7 @@ export class BillingPage implements OnInit, OnDestroy {
     this.store.clear();
     this.customerName  = '';
     this.paymentMethod = '';
+    this.billDate      = '';
     this.resetCoupon();
   }
 

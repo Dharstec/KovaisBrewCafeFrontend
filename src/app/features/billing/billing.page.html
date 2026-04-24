@@ -140,6 +140,15 @@
       <span>✅ {{ successMsg }}</span>
     </div>
 
+    <!-- ── Admin: Backdate bill ── -->
+    <div class="backdate-bar" *ngIf="isAdmin">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <label>Bill Date</label>
+      <input type="date" [(ngModel)]="billDate" [max]="todayStr" />
+      <span class="backdate-today" *ngIf="!billDate">Today</span>
+      <button class="backdate-clear" *ngIf="billDate" (click)="billDate=''">✕ Today</button>
+    </div>
+
     <!-- ── Customer & Payment ── -->
     <div class="order-meta">
       <div class="meta-field">

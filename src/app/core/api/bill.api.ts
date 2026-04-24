@@ -17,7 +17,7 @@ export class BillApi {
 
   syncOffline(payload: {
     customer_name: string; items: any[]; payment_mode: string;
-    grand_total: number; discount_amount?: number; local_id: string; platform?: string | null;
+    grand_total: number; discount_amount?: number; local_id: string; platform?: string | null; bill_date?: string | null;
   }) {
     return this.http.post<any>(`${environment.apiUrl}/bills/sync`, payload);
   }
