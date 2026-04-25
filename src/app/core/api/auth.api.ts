@@ -15,11 +15,32 @@ export class AuthApi {
     return this.http.post<any>(`${environment.apiUrl}/login`, payload);
   }
 
+  getShops() {
+    return this.http.get<any>(`${environment.apiUrl}/shops`);
+  }
+
   /* ---------- SESSION ---------- */
   saveSession(data: any) {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem('token', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user_data));
+      // Cashier: shop_id is fixed; admin (shop_id null): default to 1, can switch later
+      const shopId = data.user_data?.shop_id ?? 1;
+      localStorage.setItem('shop_id', String(shopId));
+    }
+  }
+
+  getCurrentShopId(): number {
+    if (!isPlatformBrowser(this.platformId)) return 1;
+    const user = this.getUser();
+    if (user?.shop_id) return Number(user.shop_id);
+    const stored = localStorage.getItem('shop_id');
+    return stored ? Number(stored) : 1;
+  }
+
+  setCurrentShopId(shopId: number) {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('shop_id', String(shopId));
     }
   }
 

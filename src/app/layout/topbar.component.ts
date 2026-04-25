@@ -27,6 +27,10 @@ export class TopbarComponent implements OnInit {
 
   alertCount = 0;
 
+  shops: { id: number; name: string }[] = [];
+  currentShopId = this.auth.getCurrentShopId();
+  shopMenuOpen = false;
+
   deferredPrompt: any;
   showInstallBtn = false;
 
@@ -40,6 +44,22 @@ export class TopbarComponent implements OnInit {
     const target = e.target as HTMLElement;
     if (!target.closest('.hr-dropdown-wrap'))  this.hrOpen      = false;
     if (!target.closest('.profile-wrap'))       this.profileOpen = false;
+    if (!target.closest('.shop-switcher-wrap')) this.shopMenuOpen = false;
+  }
+
+  toggleShopMenu() { this.shopMenuOpen = !this.shopMenuOpen; }
+
+  switchShop(shopId: number) {
+    if (shopId === this.currentShopId) { this.shopMenuOpen = false; return; }
+    this.auth.setCurrentShopId(shopId);
+    this.currentShopId = shopId;
+    this.shopMenuOpen = false;
+    // Hard reload so all loaded data refetches under the new shop
+    window.location.reload();
+  }
+
+  get currentShopName(): string {
+    return this.shops.find(s => s.id === this.currentShopId)?.name || `Shop ${this.currentShopId}`;
   }
 
   toggleMenu()    { this.menuOpen    = !this.menuOpen; }
@@ -58,6 +78,13 @@ export class TopbarComponent implements OnInit {
       next: res => { this.alertCount = (res.expiring_count || 0) + (res.low_stock_count || 0); },
       error: () => {}
     });
+
+    if (this.isAdmin) {
+      this.auth.getShops().subscribe({
+        next: res => { this.shops = res?.data || []; },
+        error: () => {}
+      });
+    }
   }
 
   installApp() {

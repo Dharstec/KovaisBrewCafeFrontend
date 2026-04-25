@@ -17,16 +17,17 @@ export const appConfig: ApplicationConfig = {
             (req, next) => {
                 const router = inject(Router);
                 let token: string | null = null;
-                // ✅ SAFE localStorage access
+                let shopId: string | null = null;
                 if (typeof window !== 'undefined') {
                     token = localStorage.getItem('token');
+                    shopId = localStorage.getItem('shop_id');
                 }
-                const authReq = token
-                    ? req.clone({
-                        setHeaders: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    })
+                const headers: Record<string, string> = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                if (shopId) headers['X-Shop-Id'] = shopId;
+
+                const authReq = Object.keys(headers).length
+                    ? req.clone({ setHeaders: headers })
                     : req;
                 return next(authReq).pipe(catchError((error: HttpErrorResponse) => {
                     if (error.status === 401) {
