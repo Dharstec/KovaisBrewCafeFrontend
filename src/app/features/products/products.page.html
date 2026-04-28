@@ -139,8 +139,8 @@
         <div class="form-group">
           <label class="form-label">Category</label>
           <select class="form-input" [(ngModel)]="form.category_id">
-            <option value="">Select category</option>
-            <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+            <option [ngValue]="null">Select category</option>
+            <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
           </select>
         </div>
 
@@ -234,7 +234,7 @@
               <select class="form-input" [(ngModel)]="form.stock_item_id">
                 <option [ngValue]="null">Select stock item…</option>
                 <option *ngFor="let s of stockProducts" [ngValue]="s.id">
-                  {{ s.name }} ({{ s.current_qty }} {{ s.unit_label }} in stock)
+                  {{ s.name }} — {{ s.current_qty }} {{ s.unit_label }} in stock
                 </option>
               </select>
             </div>
@@ -250,8 +250,8 @@
               </div>
               <div class="recipe-row" *ngFor="let r of recipeItems; let i = index">
                 <select class="form-input" [(ngModel)]="r.stock_item_id">
-                  <option value="">Select stock item</option>
-                  <option *ngFor="let s of stockProducts" [value]="s.id">
+                  <option [ngValue]="null">Select stock item</option>
+                  <option *ngFor="let s of stockProducts" [ngValue]="s.id">
                     {{ s.name }} ({{ s.unit_label }} — {{ s.current_qty }} in stock)
                   </option>
                 </select>

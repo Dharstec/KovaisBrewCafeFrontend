@@ -75,6 +75,13 @@ export const routes: Routes = [
         .then(m => m.StockPage)
   },
   {
+    path: 'stock-count',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/stock/stock-count.page')
+        .then(m => m.StockCountPage)
+  },
+  {
     path: 'coupons',
     loadComponent: () =>
       import('./features/coupon/coupon-list.page')

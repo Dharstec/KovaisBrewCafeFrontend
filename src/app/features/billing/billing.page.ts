@@ -78,16 +78,31 @@ export class BillingPage implements OnInit, OnDestroy {
     return this.store.getTotal();
   }
 
+  /* Zomato tiered packing rate by unit price */
+  private zomatoPackingRate(price: number): number {
+    if (price < 50)   return 5;
+    if (price < 150)  return 7;
+    if (price < 350)  return 10;
+    if (price < 500)  return 15;
+    if (price < 1000) return 20;
+    return 25;
+  }
+
+  /* Swiggy tiered packing rate by unit price */
+  private swiggyPackingRate(price: number): number {
+    if (price < 50)  return 5;
+    if (price < 150) return 7;
+    if (price < 300) return 10;
+    if (price < 500) return 15;
+    return 20;
+  }
+
   /* Packing charge for a single cart line */
   packingForItem(item: any): number {
     if (!this.isOnlinePlatform) return 0;
-    const product = this.products.find(p => p.id === item.productId);
-    if (!product) return 0;
-    if (this.platform === 'zomato') {
-      if (item.price < 100) return 0;  // no packing charge for Zomato items below ₹100
-      return product.zomato_packing != null ? Number(product.zomato_packing) : this.packingDefaults.zomato;
-    }
-    return product.swiggy_packing != null ? Number(product.swiggy_packing) : this.packingDefaults.swiggy;
+    if (this.platform === 'zomato') return this.zomatoPackingRate(item.price);
+    if (this.platform === 'swiggy') return this.swiggyPackingRate(item.price);
+    return 0;
   }
 
   get packingTotal(): number {

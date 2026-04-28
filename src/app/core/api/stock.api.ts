@@ -95,4 +95,34 @@ export class StockApi {
   getCategories() {
     return this.http.get<any>(`${this.base}/category`);
   }
+
+  /* ── DAILY NIGHT STOCK COUNT ── */
+  getCountToday(date?: string) {
+    let p = new HttpParams();
+    if (date) p = p.set('date', date);
+    return this.http.get<any>(`${this.base}/stock-count/today`, { params: p });
+  }
+
+  saveCount(payload: {
+    items: { stock_item_id: number; closing_qty: number; purchase_qty?: number; opening_qty?: number; note?: string }[];
+    count_date?: string;
+  }) {
+    return this.http.post<any>(`${this.base}/stock-count/save`, payload);
+  }
+
+  quickAddStockItem(payload: { name: string; category_id?: number | null; unit_label: string; base_unit?: string; unit_value?: number; min_qty?: number }) {
+    return this.http.post<any>(`${this.base}/stock-count/quick-add-item`, payload);
+  }
+
+  getCountHistory(date: string) {
+    return this.http.get<any>(`${this.base}/stock-count/history`, { params: new HttpParams().set('date', date) });
+  }
+
+  getCountDates() {
+    return this.http.get<string[]>(`${this.base}/stock-count/dates`);
+  }
+
+  unlockCountRow(id: number) {
+    return this.http.post<any>(`${this.base}/stock-count/unlock/${id}`, {});
+  }
 }

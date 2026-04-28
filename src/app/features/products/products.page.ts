@@ -73,21 +73,21 @@ export class ProductsPage implements OnInit {
       this.page,
       this.limit,
       this.selectedCategory
-    ).subscribe((res: any) => {
-      this.products = res.data;
-      this.totalPages = res.totalPages;
-
-      this.pages = Array.from(
-        { length: this.totalPages },
-        (_, i) => i + 1
-      );
+    ).subscribe({
+      next: (res: any) => {
+        this.products   = res?.data || [];
+        this.totalPages = res?.totalPages || 1;
+        this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+      },
+      error: () => { this.products = []; }
     });
   }
 
-
   loadCategories() {
-    this.productApi.getAllCategories()
-      .subscribe((r: any) => this.categories = r.data);
+    this.productApi.getAllCategories().subscribe({
+      next: (r: any) => { this.categories = r?.data || []; },
+      error: () => {}
+    });
   }
 
   loadStockProducts() {
@@ -98,11 +98,11 @@ export class ProductsPage implements OnInit {
     this.form = {
       name: '',
       price: 0,
-      zomato_price: '',
-      swiggy_price: '',
-      zomato_packing: '',
-      swiggy_packing: '',
-      category_id: '',
+      zomato_price: null,
+      swiggy_price: null,
+      zomato_packing: null,
+      swiggy_packing: null,
+      category_id: null,
       image_url: '',
       stock_item_id: null,
       stock_mode: 'none',
@@ -126,23 +126,35 @@ export class ProductsPage implements OnInit {
     this.loadStockProducts();
     this.saveError = '';
 
+    const isSellable    = p.is_sellable    === true || p.is_sellable    === 'true';
+    const isManualPrice = p.is_manual_price === true || p.is_manual_price === 'true';
+    const hasRecipe     = Number(p.recipe_count) > 0;
+    const stockMode     = hasRecipe ? 'recipe' : (p.stock_item_id ? 'direct' : 'none');
+
     this.form = {
       ...p,
-      is_sellable: p.is_sellable === true || p.is_sellable === 'true',
-      stock_mode: p.stock_item_id ? 'direct' : 'none'
+      category_id:     p.category_id     ? Number(p.category_id)     : null,
+      stock_item_id:   p.stock_item_id   ? Number(p.stock_item_id)   : null,
+      zomato_price:    p.zomato_price    != null ? Number(p.zomato_price)    : null,
+      swiggy_price:    p.swiggy_price    != null ? Number(p.swiggy_price)    : null,
+      zomato_packing:  p.zomato_packing  != null ? Number(p.zomato_packing)  : null,
+      swiggy_packing:  p.swiggy_packing  != null ? Number(p.swiggy_packing)  : null,
+      is_sellable:     isSellable,
+      is_manual_price: isManualPrice,
+      stock_mode:      stockMode
     };
 
     this.recipeItems = [];
-    if (this.form.is_sellable) {
-      this.productApi.getRecipeByProduct(p.id).subscribe((res: any) => {
-        const items = Array.isArray(res) ? res : res?.data;
-        this.recipeItems = (items || []).map((r: any) => ({
-          stock_item_id: r.stock_item_id,
-          used_qty: r.used_qty
-        }));
-        if (this.recipeItems.length > 0) {
-          this.form.stock_mode = 'recipe';
-        }
+    if (isSellable && hasRecipe) {
+      this.productApi.getRecipeByProduct(p.id).subscribe({
+        next: (res: any) => {
+          const items = Array.isArray(res) ? res : (res?.data || []);
+          this.recipeItems = items.map((r: any) => ({
+            stock_item_id: r.stock_item_id ? Number(r.stock_item_id) : null,
+            used_qty: r.used_qty
+          }));
+        },
+        error: () => { this.recipeItems = []; }
       });
     }
 
@@ -156,7 +168,7 @@ export class ProductsPage implements OnInit {
   }
 
   addRecipe() {
-    this.recipeItems.push({ stock_item_id: '', used_qty: 1 });
+    this.recipeItems.push({ stock_item_id: null, used_qty: 1 });
   }
 
   removeRecipe(i: number) {

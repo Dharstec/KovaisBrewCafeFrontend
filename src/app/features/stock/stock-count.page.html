@@ -1,0 +1,216 @@
+<div style="padding:20px;max-width:1400px;margin:0 auto">
+
+  <!-- Single clean toolbar -->
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <input type="date" [(ngModel)]="date" (change)="changeDate()"
+           [disabled]="!isAdmin"
+           style="padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;font-weight:500"/>
+    <span *ngIf="alreadySubmitted"
+          style="background:#10b981;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600">✓ SUBMITTED</span>
+
+    <div style="position:relative;flex:1;min-width:160px">
+      <input type="text" [(ngModel)]="search" placeholder="🔍 Search items or category..."
+             style="width:100%;padding:8px 32px 8px 12px;border:1px solid #d1d5db;border-radius:8px;box-sizing:border-box"/>
+      <button *ngIf="search" (click)="clearSearch()" type="button"
+              style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;font-size:16px;padding:4px 8px">✕</button>
+    </div>
+
+    <button (click)="openTopAdd()"
+            style="padding:8px 14px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">
+      ➕ Add Item
+    </button>
+    <button (click)="fillAll()"
+            style="padding:8px 12px;background:#fff;border:1px solid #d1d5db;border-radius:8px;cursor:pointer">
+      = Fill
+    </button>
+    <button (click)="saveAll()" [disabled]="saving || totalDirty === 0"
+            [style.opacity]="totalDirty === 0 ? '0.4' : '1'"
+            style="padding:8px 18px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">
+      💾 Save<span *ngIf="totalDirty > 0"> ({{ totalDirty }})</span>
+    </button>
+  </div>
+
+  <!-- TOP-LEVEL ADD MODAL — name only -->
+  <div *ngIf="topAddOpen"
+       style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px"
+       (click)="closeTopAdd()">
+    <div (click)="$event.stopPropagation()"
+         style="background:#fff;border-radius:12px;max-width:420px;width:100%;padding:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <h3 style="margin:0">➕ Add New Item</h3>
+        <button (click)="closeTopAdd()" style="background:none;border:none;font-size:24px;cursor:pointer">✕</button>
+      </div>
+
+      <input type="text" [(ngModel)]="topAdd.name" placeholder="Item name"
+             (keyup.enter)="saveTopAdd()"
+             style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px"/>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button (click)="closeTopAdd()"
+                style="padding:8px 16px;background:#fff;border:1px solid #d1d5db;border-radius:8px;cursor:pointer">Cancel</button>
+        <button (click)="saveTopAdd()" [disabled]="topAdd.saving"
+                style="padding:8px 18px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">
+          ➕ Add
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" style="text-align:center;padding:40px;color:#6b7280">Loading…</div>
+
+  <div *ngIf="!loading" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1100px">
+      <thead style="background:#f3f4f6;border-bottom:2px solid #d1d5db">
+        <tr>
+          <th style="text-align:left;padding:10px 12px;font-weight:700;color:#374151;width:25%">ITEM</th>
+          <th style="text-align:center;padding:10px 12px;font-weight:700;color:#374151">Min Stock</th>
+          <th style="text-align:right;padding:10px 12px;font-weight:700;color:#374151;background:#fef3c7">Opening</th>
+          <th style="text-align:right;padding:10px 12px;font-weight:700;color:#374151;background:#dbeafe">Purchase</th>
+          <th style="text-align:right;padding:10px 12px;font-weight:700;color:#374151;background:#fee2e2">Billed</th>
+          <th style="text-align:right;padding:10px 12px;font-weight:700;color:#374151;background:#d1fae5">Closing</th>
+          <th style="text-align:right;padding:10px 12px;font-weight:700;color:#374151">Variance</th>
+          <th style="text-align:left;padding:10px 12px;font-weight:700;color:#374151">Note</th>
+          <th style="padding:10px 12px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let g of groups">
+         <ng-container *ngIf="shouldShowGroup(g)">
+          <!-- Category header -->
+          <tr style="background:#9ca3af">
+            <td colspan="9" style="padding:6px 12px;color:#fff;font-weight:700;letter-spacing:0.5px;font-size:12px">
+              {{ g.name | uppercase }}
+              <span *ngIf="search && visibleItemsFor(g).length !== g.items.length"
+                    style="opacity:0.85;font-weight:500;font-size:11px;margin-left:6px">
+                ({{ visibleItemsFor(g).length }}/{{ g.items.length }})
+              </span>
+            </td>
+          </tr>
+
+          <!-- Item rows -->
+          <tr *ngFor="let r of visibleItemsFor(g)"
+              [style.background]="r.dirty ? '#fef3c7' : (r.locked && !isAdmin ? '#f9fafb' : '#fff')"
+              style="border-bottom:1px solid #f3f4f6">
+            <td style="padding:6px 12px;font-weight:600;color:#111827">
+              {{ r.name }}
+              <span style="color:#9ca3af;font-size:11px;font-weight:400">({{ r.unit_label }})</span>
+            </td>
+            <td style="padding:6px;text-align:center">
+              <input *ngIf="isAdmin" type="number" min="0" step="1"
+                     [(ngModel)]="r.min_qty_input"
+                     (blur)="updateMinQty(r)"
+                     (keyup.enter)="updateMinQty(r)"
+                     title="Min Stock — press Enter or click away to save"
+                     style="width:60px;padding:4px 6px;border:1px solid #e5e7eb;border-radius:6px;text-align:center;font-size:12px;color:#6b7280"/>
+              <span *ngIf="!isAdmin" style="color:#6b7280;font-size:12px">{{ r.min_display || '—' }}</span>
+            </td>
+
+            <!-- Opening: admin editable, cashier readonly -->
+            <td style="padding:6px;text-align:right;background:#fffbeb">
+              <input *ngIf="isAdmin" type="number" step="0.01" min="0"
+                     [(ngModel)]="r.opening_input"
+                     (ngModelChange)="markDirty(r)"
+                     [disabled]="r.locked"
+                     style="width:80px;padding:5px 8px;border:1px solid #fde68a;border-radius:6px;text-align:right;font-variant-numeric:tabular-nums"/>
+              <span *ngIf="!isAdmin" style="font-variant-numeric:tabular-nums">{{ r.opening_qty }}</span>
+            </td>
+
+            <!-- Purchase editable -->
+            <td style="padding:6px;text-align:right;background:#eff6ff">
+              <input type="number" step="0.01" min="0"
+                     [(ngModel)]="r.purchase_input"
+                     (ngModelChange)="markDirty(r)"
+                     [disabled]="r.locked && !isAdmin"
+                     placeholder="—"
+                     style="width:80px;padding:5px 8px;border:1px solid #bfdbfe;border-radius:6px;text-align:right;font-variant-numeric:tabular-nums"/>
+            </td>
+
+            <!-- Billed (readonly, from billing) -->
+            <td style="padding:6px 12px;text-align:right;background:#fff1f2;font-variant-numeric:tabular-nums;color:#dc2626;font-weight:600">
+              <span *ngIf="r.billed_qty > 0">−{{ r.billed_qty }}</span>
+              <span *ngIf="r.billed_qty === 0" style="color:#d1d5db">—</span>
+            </td>
+
+            <!-- Closing editable; auto-filled hint when no saved count -->
+            <td style="padding:6px;text-align:right;background:#ecfdf5">
+              <input type="number" step="0.01" min="0"
+                     [(ngModel)]="r.closing_input"
+                     (ngModelChange)="markDirty(r); r.auto_filled=false"
+                     [disabled]="r.locked && !isAdmin"
+                     [title]="r.auto_filled ? 'Auto-suggested: Opening + Purchase − Billed. Update if actual count differs.' : ''"
+                     [style.border]="r.auto_filled ? '1px dashed #6ee7b7' : '1px solid #a7f3d0'"
+                     [style.color]="r.auto_filled ? '#059669' : '#111827'"
+                     style="width:90px;padding:5px 8px;border-radius:6px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600"/>
+            </td>
+
+            <td style="padding:6px 12px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600"
+                [style.color]="computeVariance(r) === null ? '#9ca3af' : (computeVariance(r)! < 0 ? '#dc2626' : (computeVariance(r)! > 0 ? '#059669' : '#374151'))">
+              <ng-container *ngIf="computeVariance(r) !== null">
+                {{ computeVariance(r)! > 0 ? '+' : '' }}{{ computeVariance(r) }}
+              </ng-container>
+              <span *ngIf="computeVariance(r) === null" style="color:#d1d5db">—</span>
+            </td>
+
+            <td style="padding:6px 12px">
+              <input type="text" [(ngModel)]="r.note_input"
+                     (ngModelChange)="r.dirty = true"
+                     [disabled]="r.locked && !isAdmin"
+                     placeholder="—"
+                     style="width:100%;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px"/>
+            </td>
+
+            <td style="padding:6px 12px;text-align:right;white-space:nowrap">
+              <button *ngIf="!(r.locked && !isAdmin)" (click)="fillSame(r)"
+                      title="Closing = Opening + Purchase"
+                      style="background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px">=</button>
+              <button *ngIf="isAdmin && r.locked && r.count_id" (click)="unlockRow(r.count_id!)"
+                      title="Unlock"
+                      style="background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;margin-left:4px">🔓</button>
+              <span *ngIf="r.locked && !isAdmin" style="font-size:11px;color:#9ca3af">🔒</span>
+            </td>
+          </tr>
+
+          <!-- Inline add item row — name only -->
+          <tr *ngIf="g.addOpen && g.addForm" style="background:#f0fdf4;border-bottom:1px solid #bbf7d0">
+            <td colspan="7" style="padding:8px 12px">
+              <input type="text" [(ngModel)]="g.addForm.name" placeholder="New item name"
+                     (keyup.enter)="saveNewItem(g)"
+                     style="width:100%;padding:6px 10px;border:1px solid #86efac;border-radius:6px;font-weight:600"/>
+            </td>
+            <td colspan="2" style="padding:8px 12px;text-align:right;white-space:nowrap">
+              <button (click)="saveNewItem(g)" [disabled]="g.addForm.saving"
+                      style="padding:6px 14px;background:#10b981;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">
+                ➕ Add
+              </button>
+              <button (click)="toggleAdd(g)"
+                      style="padding:6px 12px;background:#fff;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;margin-left:6px">
+                Cancel
+              </button>
+            </td>
+          </tr>
+
+          <!-- "+ Add Item" trigger row -->
+          <tr *ngIf="!g.addOpen" style="background:#fafafa">
+            <td colspan="9" style="padding:6px 12px">
+              <button (click)="toggleAdd(g)"
+                      style="background:none;border:1px dashed #9ca3af;color:#374151;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px">
+                ➕ Add item to {{ g.name }}
+              </button>
+            </td>
+          </tr>
+         </ng-container>
+        </ng-container>
+
+        <tr *ngIf="!hasAnyResults()">
+          <td colspan="9" style="text-align:center;padding:30px;color:#9ca3af">
+            <ng-container *ngIf="search">No items match "<strong>{{ search }}</strong>".
+              <button (click)="clearSearch()" style="margin-left:8px;background:#fff5e6;border:1px solid #f59e0b;color:#b45309;border-radius:6px;padding:4px 10px;cursor:pointer">Clear</button>
+            </ng-container>
+            <ng-container *ngIf="!search">No items yet — click ➕ Add Item above.</ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
