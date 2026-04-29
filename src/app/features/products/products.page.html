@@ -9,35 +9,6 @@
     <button class="btn-add" (click)="open()">+ Add Product</button>
   </div>
 
-  <!-- ══ GLOBAL PACKING DEFAULTS (admin only) ══ -->
-  <div class="packing-defaults" *ngIf="isAdmin">
-    <div class="pd-label">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 110-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 100-5C13 2 12 7 12 7z"/></svg>
-      Default Packing Charges
-    </div>
-    <div class="pd-fields">
-      <div class="pd-field">
-        <span class="pd-plat pd-plat--zomato">Z</span>
-        <label>Zomato default</label>
-        <input class="pd-input" type="number" min="0" step="0.5"
-          [(ngModel)]="globalSettings.zomato_packing_default" placeholder="0" />
-        <span class="pd-unit">₹ per item</span>
-      </div>
-      <div class="pd-field">
-        <span class="pd-plat pd-plat--swiggy">S</span>
-        <label>Swiggy default</label>
-        <input class="pd-input" type="number" min="0" step="0.5"
-          [(ngModel)]="globalSettings.swiggy_packing_default" placeholder="0" />
-        <span class="pd-unit">₹ per item</span>
-      </div>
-      <button class="pd-save" (click)="saveSettings()" [disabled]="settingsSaving">
-        {{ settingsSaving ? 'Saving…' : 'Save Defaults' }}
-      </button>
-      <span class="pd-msg" *ngIf="settingsMsg">{{ settingsMsg }}</span>
-    </div>
-    <p class="pd-hint">Applied to all products unless a product has its own packing charge set below.</p>
-  </div>
-
   <!-- ══ FILTER BAR ══ -->
   <div class="prd-filter">
     <div class="search-wrap">
@@ -182,18 +153,14 @@
 
         <div class="form-row packing-row" *ngIf="form.is_sellable">
           <div class="form-group">
-            <label class="form-label"><span class="plat-badge plat-badge--z">Z</span> Zomato Packing (&#8377;)
-              <span class="form-hint">blank = use default (₹{{ globalSettings.zomato_packing_default }})</span>
-            </label>
+            <label class="form-label"><span class="plat-badge plat-badge--z">Z</span> Zomato Packing (&#8377;) <span class="form-hint">optional</span></label>
             <input class="form-input" type="number" min="0" step="0.5"
-              [(ngModel)]="form.zomato_packing" placeholder="Leave blank to use default" />
+              [(ngModel)]="form.zomato_packing" placeholder="Leave blank if none" />
           </div>
           <div class="form-group">
-            <label class="form-label"><span class="plat-badge plat-badge--s">S</span> Swiggy Packing (&#8377;)
-              <span class="form-hint">blank = use default (₹{{ globalSettings.swiggy_packing_default }})</span>
-            </label>
+            <label class="form-label"><span class="plat-badge plat-badge--s">S</span> Swiggy Packing (&#8377;) <span class="form-hint">optional</span></label>
             <input class="form-input" type="number" min="0" step="0.5"
-              [(ngModel)]="form.swiggy_packing" placeholder="Leave blank to use default" />
+              [(ngModel)]="form.swiggy_packing" placeholder="Leave blank if none" />
           </div>
         </div>
 

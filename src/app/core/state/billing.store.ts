@@ -23,7 +23,9 @@ export class BillingStore {
         name:            product.name,
         price:           product.price,
         qty:             1,
-        is_manual_price: !!product.is_manual_price
+        is_manual_price: !!product.is_manual_price,
+        zomato_packing:  product.zomato_packing  != null ? Number(product.zomato_packing)  : null,
+        swiggy_packing:  product.swiggy_packing  != null ? Number(product.swiggy_packing)  : null
       });
     }
     this.cartSubject.next(cart);

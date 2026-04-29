@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductApi } from '../../core/api/product.api';
-import { SettingsApi } from '../../core/api/settings.api';
 import { AuthApi } from '../../core/api/auth.api';
 
 @Component({
@@ -35,36 +34,12 @@ export class ProductsPage implements OnInit {
 
   isAdmin = false;
 
-  /* ── Global packing defaults ── */
-  globalSettings = { zomato_packing_default: '0', swiggy_packing_default: '0' };
-  settingsSaving = false;
-  settingsMsg = '';
-
-  constructor(private productApi: ProductApi, private settingsApi: SettingsApi, private authApi: AuthApi) { }
+  constructor(private productApi: ProductApi, private authApi: AuthApi) { }
 
   ngOnInit() {
     this.isAdmin = this.authApi.isAdmin();
     this.loadProducts();
     this.loadCategories();
-    this.loadSettings();
-  }
-
-  loadSettings() {
-    this.settingsApi.get().subscribe({
-      next: s => this.globalSettings = { ...this.globalSettings, ...s }
-    });
-  }
-
-  saveSettings() {
-    this.settingsSaving = true;
-    this.settingsApi.update(this.globalSettings).subscribe({
-      next: () => {
-        this.settingsSaving = false;
-        this.settingsMsg = 'Saved!';
-        setTimeout(() => this.settingsMsg = '', 2000);
-      },
-      error: () => { this.settingsSaving = false; this.settingsMsg = 'Failed'; }
-    });
   }
 
   loadProducts() {

@@ -97,11 +97,22 @@ export class BillingPage implements OnInit, OnDestroy {
     return 20;
   }
 
-  /* Packing charge for a single cart line */
+  /* Per-product packing if set, otherwise fall back to tier */
   packingForItem(item: any): number {
     if (!this.isOnlinePlatform) return 0;
-    if (this.platform === 'zomato') return this.zomatoPackingRate(item.price);
-    if (this.platform === 'swiggy') return this.swiggyPackingRate(item.price);
+    const product = this.products.find((p: any) => p.id === item.productId);
+    if (this.platform === 'zomato') {
+      const packing = item.zomato_packing ?? product?.zomato_packing;
+      return (packing != null && Number(packing) > 0)
+        ? Number(packing)
+        : this.zomatoPackingRate(item.price);
+    }
+    if (this.platform === 'swiggy') {
+      const packing = item.swiggy_packing ?? product?.swiggy_packing;
+      return (packing != null && Number(packing) > 0)
+        ? Number(packing)
+        : this.swiggyPackingRate(item.price);
+    }
     return 0;
   }
 
