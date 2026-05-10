@@ -2,6 +2,29 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
+export interface StockShortfallIngredient {
+  stock_item_id: number;
+  name: string;
+  required: number;
+  available: number;
+  unit_label: string;
+}
+
+export interface StockShortfallEntry {
+  product_id: number;
+  product_name: string;
+  type: 'direct' | 'recipe';
+  required: number;
+  available?: number;
+  unit_label?: string;
+  ingredients?: StockShortfallIngredient[];
+}
+
+export interface StockCheckResult {
+  ok: boolean;
+  shortfall: StockShortfallEntry[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class BillApi {
 
@@ -40,6 +63,10 @@ export class BillApi {
 
   cancel(id: number) {
     return this.http.post(`${environment.apiUrl}/bill/cancel/${id}`, {});
+  }
+
+  checkStock(items: { productId: number; qty: number; name?: string }[]) {
+    return this.http.post<StockCheckResult>(`${environment.apiUrl}/bills/check-stock`, { items });
   }
 
   editCompleted(id: number, payload: { customer_name: string; items: any[] }) {

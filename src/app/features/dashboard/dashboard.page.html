@@ -159,9 +159,9 @@
         <div class="chart-card-head">
           <div>
             <h3>Items Sold</h3>
-            <p>Top 15 products by units · {{ itemRangeLabel }}</p>
+            <p>{{ itemChartCount }} product{{ itemChartCount === 1 ? '' : 's' }} by units · {{ itemRangeLabel }}</p>
           </div>
-          <div class="chart-badge">Horizontal Bar</div>
+          <div class="chart-badge">Scrollable</div>
         </div>
         <div class="item-range-row">
           <label>From</label>
@@ -171,8 +171,10 @@
           <button class="item-range-btn" (click)="applyItemRange()">Apply</button>
           <button class="item-range-reset" (click)="itemStart=todayStr; itemEnd=todayStr; applyItemRange()">Today</button>
         </div>
-        <div class="chart-area h380" *ngIf="hasItemData; else noItem">
-          <canvas baseChart [data]="itemChartData" [options]="itemChartOptions" chartType="bar"></canvas>
+        <div class="chart-area chart-area--scroll" *ngIf="hasItemData; else noItem">
+          <div class="chart-canvas-wrap" [style.height.px]="itemChartHeight">
+            <canvas baseChart [data]="itemChartData" [options]="itemChartOptions" chartType="bar"></canvas>
+          </div>
         </div>
         <ng-template #noItem>
           <div class="chart-empty">

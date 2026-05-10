@@ -74,12 +74,11 @@ export const routes: Routes = [
       import('./features/stock/stock.page')
         .then(m => m.StockPage)
   },
+  /* Legacy bookmark — redirect to merged stock page (defaults to Daily Count tab) */
   {
     path: 'stock-count',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/stock/stock-count.page')
-        .then(m => m.StockCountPage)
+    redirectTo: 'stock',
+    pathMatch: 'full'
   },
   {
     path: 'coupons',
@@ -137,6 +136,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/salary/salary.page')
         .then(m => m.SalaryPage)
+  },
+
+  /* 👤 USER MANAGEMENT — Admin only */
+  {
+    path: 'users',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./features/users/users.page')
+        .then(m => m.UsersPage)
   }
 
 ];

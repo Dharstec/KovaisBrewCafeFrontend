@@ -308,19 +308,21 @@
         *ngIf="!isOnlinePlatform"
         class="action-btn save"
         (click)="savePending()"
-        [disabled]="isSaving || !cart.length">
-        <span class="btn-spinner" *ngIf="isSaving"></span>
-        <span *ngIf="!isSaving">💾 Save Pending</span>
+        [disabled]="isSaving || isChecking || !cart.length">
+        <span class="btn-spinner" *ngIf="isSaving || isChecking"></span>
+        <span *ngIf="!isSaving && !isChecking">💾 Save Pending</span>
+        <span *ngIf="isChecking && !isSaving">Checking stock…</span>
         <span *ngIf="isSaving">Saving…</span>
       </button>
 
       <button
         class="action-btn complete"
         *ngIf="cart.length"
-        [disabled]="(!paymentMethod && !isOnlinePlatform) || isCompleting"
+        [disabled]="(!paymentMethod && !isOnlinePlatform) || isCompleting || isChecking"
         (click)="completeBill()">
-        <span class="btn-spinner" *ngIf="isCompleting"></span>
-        <span *ngIf="!isCompleting">✅ Complete Bill</span>
+        <span class="btn-spinner" *ngIf="isCompleting || isChecking"></span>
+        <span *ngIf="!isCompleting && !isChecking">✅ Complete Bill</span>
+        <span *ngIf="isChecking && !isCompleting">Checking stock…</span>
         <span *ngIf="isCompleting">Completing…</span>
       </button>
 
@@ -384,6 +386,56 @@
         Out of stock — restock needed
       </span>
     </div>
+  </div>
+</div>
+
+<!-- ══ OUT-OF-STOCK MODAL ══ -->
+<div class="oos-overlay" *ngIf="outOfStockModal" (click)="closeOutOfStockModal()"></div>
+<div class="oos-modal" *ngIf="outOfStockModal">
+  <div class="oos-head">
+    <div>
+      <div class="oos-title">⚠️ Cannot save — out of stock</div>
+      <div class="oos-sub">Reduce quantities or restock before continuing.</div>
+    </div>
+    <button class="oos-close" (click)="closeOutOfStockModal()" aria-label="Close">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="oos-body">
+    <div class="oos-product" *ngFor="let s of outOfStockModal.items">
+      <!-- Direct-stock product -->
+      <ng-container *ngIf="s.type === 'direct'">
+        <div class="oos-prod-head">
+          <span class="oos-prod-name">{{ s.product_name }}</span>
+          <span class="oos-prod-meta">
+            need {{ s.required }}{{ s.unit_label ? ' ' + s.unit_label : '' }}
+            · only <strong>{{ s.available }}</strong>{{ s.unit_label ? ' ' + s.unit_label : '' }} in stock
+          </span>
+        </div>
+      </ng-container>
+
+      <!-- Recipe product -->
+      <ng-container *ngIf="s.type === 'recipe'">
+        <div class="oos-prod-head">
+          <span class="oos-prod-name">{{ s.product_name }}</span>
+          <span class="oos-prod-meta">{{ s.required }} in cart — ingredients short:</span>
+        </div>
+        <ul class="oos-ing-list">
+          <li *ngFor="let ing of s.ingredients">
+            <span class="oos-ing-name">{{ ing.name }}</span>
+            <span class="oos-ing-meta">
+              need <strong>{{ ing.required }}</strong>{{ ing.unit_label ? ' ' + ing.unit_label : '' }}
+              · only <strong>{{ ing.available }}</strong>{{ ing.unit_label ? ' ' + ing.unit_label : '' }} left
+            </span>
+          </li>
+        </ul>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="oos-foot">
+    <button class="oos-btn" (click)="closeOutOfStockModal()">Close</button>
   </div>
 </div>
 

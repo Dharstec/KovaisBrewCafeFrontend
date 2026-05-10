@@ -27,16 +27,21 @@ export class StockApi {
     return this.http.post<any>(`${this.base}/stock/add-bulk`, payload);
   }
 
-  getEntries(params?: { stock_item_id?: number; page?: number; limit?: number }) {
+  getEntries(params?: { stock_item_id?: number; page?: number; limit?: number; search?: string }) {
     let p = new HttpParams();
     if (params?.stock_item_id) p = p.set('stock_item_id', params.stock_item_id);
     if (params?.page)          p = p.set('page', params.page);
     if (params?.limit)         p = p.set('limit', params.limit);
+    if (params?.search)        p = p.set('search', params.search);
     return this.http.get<any>(`${this.base}/stock/entries`, { params: p });
   }
 
   updateEntry(id: number, payload: { expiry_date?: string; batch_no?: string; supplier?: string; notes?: string }) {
     return this.http.patch<any>(`${this.base}/stock/entries/${id}`, payload);
+  }
+
+  deleteEntry(id: number) {
+    return this.http.delete<any>(`${this.base}/stock/entries/${id}`);
   }
 
   getPriceHistory(id: number) {
@@ -94,6 +99,12 @@ export class StockApi {
 
   getCategories() {
     return this.http.get<any>(`${this.base}/category`);
+  }
+
+  /** Categories used for stock items (ingredients), filtered server-side
+   *  so users don't see product categories like "Beverages" mixed in. */
+  getStockCategories() {
+    return this.http.get<any>(`${this.base}/category_stock`);
   }
 
   /* ── DAILY NIGHT STOCK COUNT ── */

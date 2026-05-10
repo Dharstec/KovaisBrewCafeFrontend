@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,11 +11,17 @@ import { AuthApi } from '../../core/api/auth.api';
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss']
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
 
   authApi = inject(AuthApi);
   router  = inject(Router);
   cdr     = inject(ChangeDetectorRef);
+
+  ngOnInit() {
+    if (this.authApi.isLoggedIn()) {
+      this.router.navigateByUrl('/billing');
+    }
+  }
 
   @ViewChild('otpInput') otpInputRef!: ElementRef<HTMLInputElement>;
 

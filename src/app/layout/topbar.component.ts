@@ -36,7 +36,12 @@ export class TopbarComponent implements OnInit {
 
   get userName():    string { return this.auth.getUser()?.user_name || 'User'; }
   get userInitial(): string { return this.userName.charAt(0).toUpperCase(); }
-  get userRole():    string { return this.isAdmin ? 'Administrator' : 'Staff'; }
+  get userRole(): string {
+    const r = this.auth.getRole();
+    if (r === 'Admin')   return 'Administrator';
+    if (r === 'Manager') return 'Manager';
+    return 'Staff';
+  }
 
   /* Close HR dropdown when clicking outside */
   @HostListener('document:click', ['$event'])

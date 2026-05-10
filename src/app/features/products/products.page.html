@@ -6,7 +6,7 @@
       <h1 class="prd-header__title">Products</h1>
       <p class="prd-header__sub">Manage café menu &amp; inventory</p>
     </div>
-    <button class="btn-add" (click)="open()">+ Add Product</button>
+    <button class="btn-add" (click)="openWizard()">+ Add Product</button>
   </div>
 
   <!-- ══ FILTER BAR ══ -->
@@ -245,6 +245,299 @@
         <button class="btn-save" (click)="save()" [disabled]="saving">
           {{ saving ? 'Saving…' : 'Save Product' }}
         </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════
+       4-STEP CREATE WIZARD
+       Step 1 — Product details
+       Step 2 — Stock tracking mode
+       Step 3 — Stock item / Ingredients
+       Step 4 — Initial purchase (optional)
+       ════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" *ngIf="wizardOpen" (click)="closeWizard()">
+    <div class="modal wizard" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="modal__header wiz-header">
+        <h3 class="modal__title">New Product · Step {{ wizardStep }} of 4</h3>
+        <button class="modal__close" (click)="closeWizard()">&#10005;</button>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="wiz-progress">
+        <div class="wiz-step" [class.wiz-step--done]="wizardStep > 1" [class.wiz-step--active]="wizardStep === 1">
+          <div class="wiz-step__dot">1</div><div class="wiz-step__label">Product</div>
+        </div>
+        <div class="wiz-bar"  [class.wiz-bar--done]="wizardStep > 1"></div>
+        <div class="wiz-step" [class.wiz-step--done]="wizardStep > 2" [class.wiz-step--active]="wizardStep === 2">
+          <div class="wiz-step__dot">2</div><div class="wiz-step__label">Stock mode</div>
+        </div>
+        <div class="wiz-bar"  [class.wiz-bar--done]="wizardStep > 2"></div>
+        <div class="wiz-step" [class.wiz-step--done]="wizardStep > 3" [class.wiz-step--active]="wizardStep === 3">
+          <div class="wiz-step__dot">3</div><div class="wiz-step__label">Ingredient</div>
+        </div>
+        <div class="wiz-bar"  [class.wiz-bar--done]="wizardStep > 3"></div>
+        <div class="wiz-step" [class.wiz-step--active]="wizardStep === 4">
+          <div class="wiz-step__dot">4</div><div class="wiz-step__label">First buy</div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="modal__body wiz-body">
+
+        <!-- ── STEP 1 ── -->
+        <ng-container *ngIf="wizardStep === 1">
+          <p class="wiz-help">Tell us what you're selling. We'll set up its stock in the next steps.</p>
+
+          <div class="form-group">
+            <label class="form-label">Product Name <span class="req">*</span></label>
+            <input class="form-input" type="text" [(ngModel)]="wizardForm.name" placeholder="e.g. Cappuccino, Lays Chips" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category <span class="req">*</span></label>
+            <select class="form-input" [(ngModel)]="wizardForm.category_id">
+              <option [ngValue]="null">Select category</option>
+              <option *ngFor="let c of categories" [ngValue]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Sellable</label>
+              <select class="form-input" [(ngModel)]="wizardForm.is_sellable">
+                <option [ngValue]="true">Yes</option>
+                <option [ngValue]="false">No</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="wizardForm.is_sellable">
+              <label class="form-label">Manual Price</label>
+              <select class="form-input" [(ngModel)]="wizardForm.is_manual_price">
+                <option [ngValue]="false">No (fixed price)</option>
+                <option [ngValue]="true">Yes (cashier enters)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="wizardForm.is_sellable && !wizardForm.is_manual_price">
+            <label class="form-label">Price (₹) <span class="req">*</span></label>
+            <input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="wizardForm.price" placeholder="0.00" />
+          </div>
+
+          <div class="form-row" *ngIf="wizardForm.is_sellable">
+            <div class="form-group">
+              <label class="form-label"><span class="plat-badge plat-badge--z">Z</span> Zomato Price <span class="form-hint">optional</span></label>
+              <input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="wizardForm.zomato_price" placeholder="leave blank if not on Zomato" />
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="plat-badge plat-badge--s">S</span> Swiggy Price <span class="form-hint">optional</span></label>
+              <input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="wizardForm.swiggy_price" placeholder="leave blank if not on Swiggy" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Image URL <span class="form-hint">optional</span></label>
+            <input class="form-input" type="text" [(ngModel)]="wizardForm.image_url" placeholder="https://..." />
+          </div>
+        </ng-container>
+
+
+        <!-- ── STEP 2 ── -->
+        <ng-container *ngIf="wizardStep === 2">
+          <p class="wiz-help">How is the stock for <strong>{{ wizardForm.name || 'this product' }}</strong> tracked?</p>
+
+          <div class="wiz-modes">
+            <button class="wiz-mode" [class.wiz-mode--active]="wizardForm.stock_mode === 'recipe'"
+                    (click)="setWizardMode('recipe')">
+              <div class="wiz-mode__icon">⚙️</div>
+              <div class="wiz-mode__title">Recipe / Made</div>
+              <div class="wiz-mode__desc">Made from raw ingredients (e.g. coffee, juice).<br>One sale uses fixed quantity of each ingredient.</div>
+            </button>
+
+            <button class="wiz-mode" [class.wiz-mode--active]="wizardForm.stock_mode === 'direct'"
+                    (click)="setWizardMode('direct')">
+              <div class="wiz-mode__icon">→</div>
+              <div class="wiz-mode__title">Direct Stock</div>
+              <div class="wiz-mode__desc">Sold as-is (e.g. biscuits, water bottle).<br>One sale = one unit out of stock.</div>
+            </button>
+
+            <button class="wiz-mode" [class.wiz-mode--active]="wizardForm.stock_mode === 'none'"
+                    (click)="setWizardMode('none')">
+              <div class="wiz-mode__icon">○</div>
+              <div class="wiz-mode__title">No Tracking</div>
+              <div class="wiz-mode__desc">Services or anything not held as stock (cleaning fee, custom drink).</div>
+            </button>
+          </div>
+        </ng-container>
+
+
+        <!-- ── STEP 3 ── -->
+        <ng-container *ngIf="wizardStep === 3">
+
+          <ng-container *ngIf="wizardForm.stock_mode === 'none'">
+            <div class="wiz-skip">
+              <p>This product won't track stock. You can move on.</p>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="wizardForm.stock_mode === 'direct'">
+            <p class="wiz-help">Pick the existing stock item that will be deducted on each sale, OR enter a new one to create.</p>
+            <ng-container *ngTemplateOutlet="ingredientRow; context: { $implicit: wizardIngredients[0], i: 0, isRecipe: false }"></ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="wizardForm.stock_mode === 'recipe'">
+            <p class="wiz-help">Add every ingredient that's used per single sale of <strong>{{ wizardForm.name }}</strong>. Enter a name to create a new ingredient on-the-fly.</p>
+
+            <div class="wiz-ing-list">
+              <div class="wiz-ing" *ngFor="let ing of wizardIngredients; let i = index">
+                <div class="wiz-ing__head">
+                  <span class="wiz-ing__num">Ingredient {{ i + 1 }}</span>
+                  <button class="wiz-ing__remove" *ngIf="wizardIngredients.length > 1" (click)="removeIngredient(i)" type="button">Remove</button>
+                </div>
+                <ng-container *ngTemplateOutlet="ingredientRow; context: { $implicit: ing, i: i, isRecipe: true }"></ng-container>
+              </div>
+            </div>
+
+            <button class="btn-add-ingredient" type="button" (click)="addIngredient()">+ Add another ingredient</button>
+          </ng-container>
+
+          <!-- Reusable per-ingredient block -->
+          <ng-template #ingredientRow let-ing let-i="i" let-isRecipe="isRecipe">
+            <div class="wiz-ing__row">
+              <div class="form-group">
+                <label class="form-label">Existing stock item</label>
+                <select class="form-input" [(ngModel)]="ing.stock_item_id" (ngModelChange)="onIngredientSelect(ing)">
+                  <option [ngValue]="null">— or create new below —</option>
+                  <option *ngFor="let s of stockProducts" [ngValue]="s.id">
+                    {{ s.name }} ({{ s.unit_label }} — {{ s.current_qty }} in stock)
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group" *ngIf="isRecipe">
+                <label class="form-label">Qty per sale <span class="req">*</span></label>
+                <input class="form-input" type="number" min="0.001" step="0.001" [(ngModel)]="ing.used_qty" placeholder="e.g. 30" />
+              </div>
+            </div>
+
+            <details class="wiz-create-block" [open]="!ing.stock_item_id">
+              <summary>Or create a new stock item</summary>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Name</label>
+                  <input class="form-input" type="text" [(ngModel)]="ing.new_name" (ngModelChange)="onNewNameChange(ing)" placeholder="e.g. Biscuit, Coffee Beans" />
+                </div>
+                <div class="form-group form-group--sm">
+                  <label class="form-label">Unit</label>
+                  <select class="form-input" [(ngModel)]="ing.new_base_unit" (ngModelChange)="ing.new_unit_label = ing.new_base_unit">
+                    <option value="pcs">pcs</option>
+                    <option value="gm">gm</option>
+                    <option value="kg">kg</option>
+                    <option value="ml">ml</option>
+                    <option value="litre">litre</option>
+                    <option value="pack">pack</option>
+                  </select>
+                </div>
+                <div class="form-group form-group--sm">
+                  <label class="form-label">Min qty <span class="form-hint">low alert</span></label>
+                  <input class="form-input" type="number" min="0" [(ngModel)]="ing.new_min_qty" placeholder="0" />
+                </div>
+              </div>
+              <p class="wiz-tiny-hint">
+                Stock will be tracked in <strong>{{ ing.new_base_unit }}</strong>.
+              </p>
+            </details>
+          </ng-template>
+        </ng-container>
+
+
+        <!-- ── STEP 4 ── -->
+        <ng-container *ngIf="wizardStep === 4">
+          <ng-container *ngIf="wizardForm.stock_mode === 'none' || wizardPurchases.length === 0">
+            <div class="wiz-skip">
+              <p>No stock to buy initially. Click <strong>Finish</strong> to save the product.</p>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="wizardPurchases.length > 0">
+            <p class="wiz-help">Optional: enter your opening stock for each ingredient. Skip a row to add later.</p>
+
+            <div class="wiz-buy-list">
+              <div class="wiz-buy" *ngFor="let p of wizardPurchases; let i = index">
+                <div class="wiz-buy__head">{{ ingredientLabel(i) }}<span class="wiz-buy__unit"> · {{ ingredientUnitLabel(i) }}</span></div>
+
+                <!-- Primary fields -->
+                <div class="form-row">
+                  <div class="form-group form-group--sm">
+                    <label class="form-label">
+                      Qty ({{ ingredientUnitLabel(i) }})
+                    </label>
+                    <input class="form-input" type="number" min="0.001" step="0.001"
+                           [(ngModel)]="p.qty"
+                           [readonly]="p.showBreakdown"
+                           [style.background]="p.showBreakdown ? '#f1f5f9' : ''"
+                           [style.fontWeight]="p.showBreakdown ? '700' : ''"
+                           placeholder="e.g. 40" />
+                    <small *ngIf="p.showBreakdown" class="form-hint">auto-filled</small>
+                  </div>
+                  <div class="form-group form-group--sm">
+                    <label class="form-label">Price / unit (₹)</label>
+                    <input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="p.purchase_price" placeholder="0.00" />
+                  </div>
+                  <div class="form-group form-group--sm">
+                    <label class="form-label">Expiry <span class="form-hint">optional</span></label>
+                    <input class="form-input" type="date" [(ngModel)]="p.expiry_date" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Supplier <span class="form-hint">optional</span></label>
+                    <input class="form-input" type="text" [(ngModel)]="p.supplier" placeholder="vendor name" />
+                  </div>
+                </div>
+
+                <!-- Pack breakdown (optional) -->
+                <div style="margin:4px 0 8px">
+                  <button type="button" (click)="togglePurchaseBreakdown(p)"
+                          style="background:none;border:1px dashed #94a3b8;color:#374151;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px">
+                    {{ p.showBreakdown ? '✕ Remove pack breakdown' : '＋ Bought in packs?' }}
+                  </button>
+                </div>
+                <div *ngIf="p.showBreakdown" class="form-row" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:8px">
+                  <div class="form-group form-group--sm">
+                    <label class="form-label">No. of Packs</label>
+                    <input class="form-input" type="number" min="1" step="1" [(ngModel)]="p.packs" (ngModelChange)="recomputePurchaseQty(p)" placeholder="e.g. 2" />
+                  </div>
+                  <div class="form-group form-group--sm">
+                    <label class="form-label">Qty per Pack ({{ ingredientUnitLabel(i) }})</label>
+                    <input class="form-input" type="number" min="0.001" step="0.001" [(ngModel)]="p.qty_per_pack" (ngModelChange)="recomputePurchaseQty(p)" placeholder="e.g. 40" />
+                  </div>
+                  <div class="form-group form-group--sm" style="align-self:flex-end;padding-bottom:6px">
+                    <span style="font-size:13px;color:#374151">
+                      = <strong style="font-size:15px">{{ p.qty || '—' }}</strong> {{ ingredientUnitLabel(i) }} total
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </ng-container>
+        </ng-container>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="modal__footer wiz-footer">
+        <p class="save-error" *ngIf="wizardError">{{ wizardError }}</p>
+        <div class="wiz-foot-buttons">
+          <button class="btn-cancel" (click)="closeWizard()" [disabled]="wizardSaving">Cancel</button>
+          <button class="btn-back" *ngIf="wizardStep > 1" (click)="goBack()" [disabled]="wizardSaving">← Back</button>
+          <button class="btn-save" (click)="goNext()" [disabled]="wizardSaving">
+            <ng-container *ngIf="wizardStep < 4">Next →</ng-container>
+            <ng-container *ngIf="wizardStep === 4">{{ wizardSaving ? 'Saving…' : 'Finish' }}</ng-container>
+          </button>
+        </div>
       </div>
 
     </div>

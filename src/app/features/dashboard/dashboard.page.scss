@@ -471,6 +471,28 @@ $radius:  14px;
   &.h300 { height: 300px; }
   &.h380 { height: 380px; }
   &.h280 { height: 280px; }
+
+  /* Scrollable variant — used by the Items Sold chart so all products are visible */
+  &.chart-area--scroll {
+    height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* slim, theme-matched scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    &::-webkit-scrollbar { width: 8px; }
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1; border-radius: 4px;
+      &:hover { background: #94a3b8; }
+    }
+    &::-webkit-scrollbar-track { background: transparent; }
+  }
+
+  .chart-canvas-wrap {
+    width: 100%;
+    /* height set inline from itemChartHeight */
+    canvas { width: 100% !important; height: 100% !important; }
+  }
 }
 
 .chart-empty {

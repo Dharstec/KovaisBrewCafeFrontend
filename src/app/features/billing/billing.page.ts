@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { BillingStore }      from '../../core/state/billing.store';
 import { ProductApi }        from '../../core/api/product.api';
-import { BillApi }           from '../../core/api/bill.api';
+import { BillApi, StockShortfallEntry } from '../../core/api/bill.api';
 import { OfflineQueueService } from '../../core/services/offline-queue.service';
 import { PrinterService }    from '../../core/services/printer.service';
 import { SettingsApi }       from '../../core/api/settings.api';
@@ -65,6 +65,10 @@ export class BillingPage implements OnInit, OnDestroy {
 
   /* ── ingredient popup ── */
   ingredientModal: { product: any; items: any[]; loading: boolean } | null = null;
+
+  /* ── out-of-stock pre-flight ── */
+  outOfStockModal: { items: StockShortfallEntry[] } | null = null;
+  isChecking = false;
 
 
   /* ── listeners ── */
@@ -273,11 +277,51 @@ export class BillingPage implements OnInit, OnDestroy {
   }
 
   /* ════════════════════════════════
+     STOCK PRE-FLIGHT
+  ════════════════════════════════ */
+  /**
+   * Verify the cart against current stock before saving / completing.
+   * Returns `true` when it's safe to proceed.
+   * Opens the out-of-stock modal and returns `false` when any product or
+   * ingredient is short.
+   * Skips the network call when offline — the offline queue will sync later
+   * and the backend re-validates on the final write.
+   */
+  private async preflightStockOk(items: { productId: number; qty: number; name?: string }[]): Promise<boolean> {
+    if (!items.length) return true;
+    if (!navigator.onLine) return true;
+
+    this.isChecking = true;
+    try {
+      const res = await firstValueFrom(this.billApi.checkStock(items));
+      if (!res?.ok && res?.shortfall?.length) {
+        this.outOfStockModal = { items: res.shortfall };
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('Stock check failed, allowing save (server will re-validate)', err);
+      return true;
+    } finally {
+      this.isChecking = false;
+    }
+  }
+
+  closeOutOfStockModal() { this.outOfStockModal = null; }
+
+  /* ════════════════════════════════
      SAVE PENDING
   ════════════════════════════════ */
   async savePending() {
     const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
     if (!snapshot.length) { this.showError('Add at least one item'); return; }
+
+    const checkItems = snapshot.map((i: any) => ({
+      productId: Number(i.productId),
+      qty:       Number(i.qty),
+      name:      i.name
+    }));
+    if (!(await this.preflightStockOk(checkItems))) return;
 
     // Ensure a local_id exists (for idempotency on retry)
     if (!this.store.getLocalId()) {
@@ -353,6 +397,8 @@ export class BillingPage implements OnInit, OnDestroy {
       price:     Number(i.price),
       qty:       Number(i.qty)
     }));
+
+    if (!(await this.preflightStockOk(items.map((i: any) => ({ productId: i.productId, qty: i.qty, name: i.name }))))) return;
 
     // Ensure local_id
     if (!this.store.getLocalId()) {

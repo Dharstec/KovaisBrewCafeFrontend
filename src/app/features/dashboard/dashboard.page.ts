@@ -436,18 +436,32 @@ export class DashboardPage implements OnInit {
 
   buildItemChart(data: any[]) {
     if (!data?.length) { this.itemChartData = { labels: [], datasets: [] }; return; }
-    const top = data.slice(0, 15);
+    // Show ALL items, sorted by units sold (highest first). The chart container
+    // scrolls vertically when there are too many to fit.
+    const all = [...data].sort((a: any, b: any) =>
+      (Number(b.total_count) || 0) - (Number(a.total_count) || 0)
+    );
     this.itemChartData = {
-      labels: top.map((d: any) => d.item_name),
+      labels: all.map((d: any) => d.item_name),
       datasets: [{
         label: 'Units Sold',
-        data:  top.map((d: any) => Number(d.total_count) || 0),
-        backgroundColor: top.map((_: any, i: number) => C[i % C.length] + 'cc'),
-        borderColor:     top.map((_: any, i: number) => C[i % C.length]),
+        data:  all.map((d: any) => Number(d.total_count) || 0),
+        backgroundColor: all.map((_: any, i: number) => C[i % C.length] + 'cc'),
+        borderColor:     all.map((_: any, i: number) => C[i % C.length]),
         borderWidth: 0,
         borderRadius: 6
       }]
     };
+  }
+
+  /** Inner canvas height — 28px per item, min 360px so a single bar still looks normal. */
+  get itemChartHeight(): number {
+    const n = this.itemChartData.labels?.length || 0;
+    return Math.max(360, n * 28);
+  }
+
+  get itemChartCount(): number {
+    return this.itemChartData.labels?.length || 0;
   }
 
   buildPaymentChart(data: any[]) {

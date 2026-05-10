@@ -65,6 +65,14 @@ export class AuthApi {
     return this.getRole() === 'Admin';
   }
 
+  isManager(): boolean {
+    return this.getRole() === 'Manager';
+  }
+
+  isManagerOrAdmin(): boolean {
+    return this.isAdmin() || this.isManager();
+  }
+
   getMenu() {
     return this.getUser()?.menu?.side_menu || {};
   }
