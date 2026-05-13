@@ -76,4 +76,14 @@ export class EmployeeAdvancePage implements OnInit {
       alert('Advance saved successfully');
     });
   }
+
+  deleteAdvance(id: number, amount: number) {
+    if (!confirm(`Delete advance of ₹${amount}? This cannot be undone.`)) return;
+
+    this.http.delete(`${environment.apiUrl}/employee-advance/${id}`)
+      .subscribe({
+        next: () => this.loadHistory(),
+        error: () => alert('Failed to delete advance. Please try again.')
+      });
+  }
 }

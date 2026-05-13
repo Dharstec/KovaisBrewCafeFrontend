@@ -31,11 +31,32 @@ export class BillingStore {
     this.cartSubject.next(cart);
   }
 
-  /* ── UPDATE QTY ── */
-  update(productId: number, qty: number) {
-    const cart = this.cartSubject.value
-      .map(i  => i.productId === productId ? { ...i, qty } : i)
-      .filter(i => i.qty > 0);
+  /* ── ADD ADDON LINE ITEM (no productId — not a real product) ── */
+  addAddonItem(addon: { name: string; price: number }) {
+    const cart = [...this.cartSubject.value];
+    cart.push({
+      productId:       null,
+      name:            addon.name,
+      price:           addon.price,
+      qty:             1,
+      is_manual_price: false,
+      is_addon:        true
+    });
+    this.cartSubject.next(cart);
+  }
+
+  /* ── UPDATE QTY — works for both regular items (by productId) and addon items (by index) ── */
+  update(productId: number | null, qty: number, index?: number) {
+    let cart: any[];
+    if (productId === null && index !== undefined) {
+      cart = this.cartSubject.value.map((i, idx) =>
+        idx === index ? { ...i, qty } : i
+      ).filter(i => i.qty > 0);
+    } else {
+      cart = this.cartSubject.value
+        .map(i => i.productId === productId ? { ...i, qty } : i)
+        .filter(i => i.qty > 0);
+    }
     this.cartSubject.next(cart);
   }
 

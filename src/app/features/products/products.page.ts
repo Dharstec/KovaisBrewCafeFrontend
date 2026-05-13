@@ -77,6 +77,12 @@ export class ProductsPage implements OnInit {
 
   isAdmin = false;
 
+  /* ── add-on management (edit modal) ── */
+  addons: any[] = [];
+  addonForm = { name: '', price: null as number | null, platform: 'both' };
+  addonSaving = false;
+  addonError  = '';
+
   constructor(private productApi: ProductApi, private authApi: AuthApi) { }
 
   ngOnInit() {
@@ -514,11 +520,54 @@ export class ProductsPage implements OnInit {
     this.show = false;
     this.saving = false;
     this.saveError = '';
+    this.addons = [];
+    this.addonError = '';
+  }
+
+  loadAddons(productId: number) {
+    this.productApi.getAddons(productId).subscribe({
+      next: (res) => { this.addons = res; },
+      error: () => { this.addons = []; }
+    });
+  }
+
+  addAddon() {
+    if (!this.form.id) return;
+    if (!this.addonForm.name?.trim()) { this.addonError = 'Name is required'; return; }
+    if (this.addonForm.price == null || this.addonForm.price < 0) { this.addonError = 'Price must be ≥ 0'; return; }
+    this.addonSaving = true;
+    this.addonError  = '';
+    this.productApi.createAddon(this.form.id, {
+      name:     this.addonForm.name.trim(),
+      price:    Number(this.addonForm.price),
+      platform: this.addonForm.platform
+    }).subscribe({
+      next: () => {
+        this.addonForm = { name: '', price: null, platform: 'both' };
+        this.addonSaving = false;
+        this.loadAddons(this.form.id);
+      },
+      error: (err) => {
+        this.addonSaving = false;
+        this.addonError  = err.error?.message || 'Failed to save add-on';
+      }
+    });
+  }
+
+  removeAddon(addonId: number) {
+    if (!confirm('Delete this add-on?')) return;
+    this.productApi.deleteAddon(addonId).subscribe({
+      next: () => this.loadAddons(this.form.id),
+      error: () => alert('Failed to delete add-on')
+    });
   }
 
   edit(p: any) {
     this.loadStockProducts();
     this.saveError = '';
+    this.addons    = [];
+    this.addonForm = { name: '', price: null, platform: 'both' };
+    this.addonError = '';
 
     const isSellable    = p.is_sellable    === true || p.is_sellable    === 'true';
     const isManualPrice = p.is_manual_price === true || p.is_manual_price === 'true';
@@ -552,6 +601,7 @@ export class ProductsPage implements OnInit {
       });
     }
 
+    this.loadAddons(p.id);
     this.show = true;
   }
 

@@ -190,12 +190,16 @@
 
     <!-- ── Cart Items ── -->
     <div class="cart-items" *ngIf="cart.length; else emptyCart">
-      <div class="cart-item" *ngFor="let i of cart; trackBy: trackByProductId">
+      <div class="cart-item" [class.cart-item--addon]="i.is_addon"
+           *ngFor="let i of cart; let idx = index; trackBy: trackByProductId">
 
         <div class="ci-top">
-          <div class="ci-name">{{ i.name }}</div>
+          <div class="ci-name">
+            <span *ngIf="i.is_addon" class="ci-addon-tag">add-on</span>
+            {{ i.name }}
+          </div>
           <div class="ci-top-right">
-            <span class="ci-packing" *ngIf="isOnlinePlatform && packingForItem(i) > 0">
+            <span class="ci-packing" *ngIf="!i.is_addon && isOnlinePlatform && packingForItem(i) > 0">
               +₹{{ packingForItem(i) * i.qty | number:'1.2-2' }} pkg
             </span>
             <div class="ci-total">₹ {{ i.price * i.qty | number:'1.2-2' }}</div>
@@ -222,13 +226,13 @@
           <div class="ci-qty">
             <button
               class="qty-btn minus"
-              (click)="$event.stopPropagation(); store.update(i.productId, i.qty - 1)">
+              (click)="$event.stopPropagation(); store.update(i.productId, i.qty - 1, idx)">
               −
             </button>
             <span class="qty-val">{{ i.qty }}</span>
             <button
               class="qty-btn plus"
-              (click)="$event.stopPropagation(); store.update(i.productId, i.qty + 1)"
+              (click)="$event.stopPropagation(); store.update(i.productId, i.qty + 1, idx)"
               [disabled]="i.is_manual_price">
               +
             </button>
@@ -437,6 +441,40 @@
   <div class="oos-foot">
     <button class="oos-btn" (click)="closeOutOfStockModal()">Close</button>
   </div>
+</div>
+
+<!-- ══ ADD-ON SELECTION MODAL ══ -->
+<div class="addon-overlay" *ngIf="addonModal" (click)="closeAddonModal()"></div>
+<div class="addon-modal" *ngIf="addonModal">
+
+  <div class="am-header">
+    <div>
+      <div class="am-title">{{ addonModal.product.name }}</div>
+      <div class="am-sub">Select optional add-ons</div>
+    </div>
+    <button class="am-close" (click)="closeAddonModal()">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="am-loading" *ngIf="addonModal.loading">Loading…</div>
+
+  <div class="am-list" *ngIf="!addonModal.loading">
+    <label class="am-item" *ngFor="let a of addonModal.addons">
+      <input type="checkbox"
+             class="am-check"
+             [checked]="addonModal.selected.has(a.id)"
+             (change)="toggleAddon(a.id)" />
+      <span class="am-item__name">{{ a.name }}</span>
+      <span class="am-item__price">+ &#8377;{{ a.price }}</span>
+    </label>
+  </div>
+
+  <div class="am-footer">
+    <button class="am-btn am-btn--skip" (click)="skipAddons()">Skip Add-ons</button>
+    <button class="am-btn am-btn--confirm" (click)="confirmAddons()">Add to Cart</button>
+  </div>
+
 </div>
 
 <!-- ══ MOBILE TAB BAR ══ -->

@@ -231,6 +231,40 @@
           </div>
         </div>
 
+        <!-- PLATFORM ADD-ONS (only for existing products) -->
+        <div class="addon-box" *ngIf="form.id && form.is_sellable">
+          <div class="addon-box__header">
+            <h4 class="addon-box__title">Swiggy / Zomato Add-ons</h4>
+            <p class="addon-box__sub">Extra items the customer can optionally add (e.g. Extra Cup &#8377;10, Extra Shot &#8377;30)</p>
+          </div>
+
+          <!-- Existing add-ons list -->
+          <div class="addon-list" *ngIf="addons.length">
+            <div class="addon-row" *ngFor="let a of addons">
+              <span class="addon-row__name">{{ a.name }}</span>
+              <span class="addon-row__price">&#8377;{{ a.price }}</span>
+              <span class="addon-row__plat addon-row__plat--{{ a.platform }}">{{ a.platform }}</span>
+              <button class="addon-row__del" type="button" (click)="removeAddon(a.id)">&#10005;</button>
+            </div>
+          </div>
+          <p class="addon-empty" *ngIf="!addons.length">No add-ons configured yet.</p>
+
+          <!-- Add new add-on -->
+          <div class="addon-form">
+            <input class="form-input addon-form__name" type="text" [(ngModel)]="addonForm.name" placeholder="Add-on name (e.g. Extra Cup)" />
+            <input class="form-input addon-form__price" type="number" min="0" step="0.5" [(ngModel)]="addonForm.price" placeholder="&#8377; Price" />
+            <select class="form-input addon-form__plat" [(ngModel)]="addonForm.platform">
+              <option value="both">Both</option>
+              <option value="zomato">Zomato only</option>
+              <option value="swiggy">Swiggy only</option>
+            </select>
+            <button class="btn-addon-add" type="button" (click)="addAddon()" [disabled]="addonSaving">
+              {{ addonSaving ? '…' : '+ Add' }}
+            </button>
+          </div>
+          <p class="save-error" *ngIf="addonError">{{ addonError }}</p>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Image URL</label>
           <input class="form-input" type="text" [(ngModel)]="form.image_url" placeholder="https://..." />
@@ -335,6 +369,19 @@
             <div class="form-group">
               <label class="form-label"><span class="plat-badge plat-badge--s">S</span> Swiggy Price <span class="form-hint">optional</span></label>
               <input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="wizardForm.swiggy_price" placeholder="leave blank if not on Swiggy" />
+            </div>
+          </div>
+
+          <div class="form-row packing-row" *ngIf="wizardForm.is_sellable">
+            <div class="form-group">
+              <label class="form-label"><span class="plat-badge plat-badge--z">Z</span> Zomato Packing (&#8377;) <span class="form-hint">optional</span></label>
+              <input class="form-input" type="number" min="0" step="0.5"
+                [(ngModel)]="wizardForm.zomato_packing" placeholder="Leave blank if none" />
+            </div>
+            <div class="form-group">
+              <label class="form-label"><span class="plat-badge plat-badge--s">S</span> Swiggy Packing (&#8377;) <span class="form-hint">optional</span></label>
+              <input class="form-input" type="number" min="0" step="0.5"
+                [(ngModel)]="wizardForm.swiggy_packing" placeholder="Leave blank if none" />
             </div>
           </div>
 

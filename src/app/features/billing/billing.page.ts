@@ -63,6 +63,14 @@ export class BillingPage implements OnInit, OnDestroy {
   billDate = '';
   todayStr = new Date().toISOString().split('T')[0];
 
+  /* ── add-on selection popup ── */
+  addonModal: {
+    product: any;
+    addons:  any[];
+    selected: Set<number>;
+    loading: boolean;
+  } | null = null;
+
   /* ── ingredient popup ── */
   ingredientModal: { product: any; items: any[]; loading: boolean } | null = null;
 
@@ -240,9 +248,74 @@ export class BillingPage implements OnInit, OnDestroy {
   addProduct(product: any) {
     const existing = this.cart.find(item => item.productId === product.id);
     if (product.is_manual_price && existing) return;
+
+    if (this.isOnlinePlatform) {
+      this.openAddonModal(product);
+    } else {
+      this.store.add({ ...product, price: this.effectivePrice(product) });
+      if (window.innerWidth <= 900) this.showCart = true;
+    }
+  }
+
+  openAddonModal(product: any) {
+    this.addonModal = { product, addons: [], selected: new Set(), loading: true };
+    this.productApi.getAddons(product.id).subscribe({
+      next: (addons: any[]) => {
+        if (!this.addonModal) return;
+        const platform = this.platform;
+        const filtered = addons.filter(a => a.platform === platform || a.platform === 'both');
+        if (filtered.length === 0) {
+          // No add-ons → add directly without modal
+          this.addonModal = null;
+          this.store.add({ ...product, price: this.effectivePrice(product) });
+          if (window.innerWidth <= 900) this.showCart = true;
+        } else {
+          this.addonModal.addons  = filtered;
+          this.addonModal.loading = false;
+        }
+      },
+      error: () => {
+        // On error, add directly
+        this.addonModal = null;
+        this.store.add({ ...product, price: this.effectivePrice(product) });
+        if (window.innerWidth <= 900) this.showCart = true;
+      }
+    });
+  }
+
+  toggleAddon(addonId: number) {
+    if (!this.addonModal) return;
+    if (this.addonModal.selected.has(addonId)) {
+      this.addonModal.selected.delete(addonId);
+    } else {
+      this.addonModal.selected.add(addonId);
+    }
+  }
+
+  confirmAddons() {
+    if (!this.addonModal) return;
+    const { product, addons, selected } = this.addonModal;
+    this.addonModal = null;
+
+    this.store.add({ ...product, price: this.effectivePrice(product) });
+
+    for (const a of addons) {
+      if (selected.has(a.id)) {
+        this.store.addAddonItem({ name: a.name, price: Number(a.price) });
+      }
+    }
+    if (window.innerWidth <= 900) this.showCart = true;
+  }
+
+  skipAddons() {
+    if (!this.addonModal) return;
+    const product = this.addonModal.product;
+    this.addonModal = null;
     this.store.add({ ...product, price: this.effectivePrice(product) });
     if (window.innerWidth <= 900) this.showCart = true;
   }
+
+  closeAddonModal() { this.addonModal = null; }
 
   /* ════════════════════════════════
      COUPON

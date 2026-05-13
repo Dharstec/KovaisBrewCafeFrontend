@@ -61,4 +61,16 @@ export class ProductApi {
     return this.http.post(`${environment.apiUrl}/recipes`, payload);
   }
 
+  getAddons(productId: number) {
+    return this.http.get<any[]>(`${environment.apiUrl}/products/${productId}/addons`);
+  }
+
+  createAddon(productId: number, payload: { name: string; price: number; platform: string }) {
+    return this.http.post<any>(`${environment.apiUrl}/products/${productId}/addons`, payload);
+  }
+
+  deleteAddon(addonId: number) {
+    return this.http.delete<any>(`${environment.apiUrl}/products/addons/${addonId}`);
+  }
+
 }
