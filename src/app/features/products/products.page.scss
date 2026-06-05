@@ -637,6 +637,16 @@ $radius:  14px;
   }
 
   &::placeholder { color: $text3; }
+
+  &--shortcut {
+    width: 64px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 800;
+    font-family: monospace;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
 }
 
 .form-row {

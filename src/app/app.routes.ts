@@ -102,15 +102,6 @@ export const routes: Routes = [
         .then(m => m.ReportsPage)
   },
 
-  /* 📲 WHATSAPP SETUP — Admin only */
-  {
-    path: 'whatsapp-setup',
-    canActivate: [authGuard, adminGuard],
-    loadComponent: () =>
-      import('./features/whatsapp/whatsapp-setup.page')
-        .then(m => m.WhatsappSetupPage)
-  },
-
   /* 👥 EMPLOYEES — Admin only */
   {
     path: 'employees',

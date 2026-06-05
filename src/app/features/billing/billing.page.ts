@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -77,6 +77,20 @@ export class BillingPage implements OnInit, OnDestroy {
   /* ── out-of-stock pre-flight ── */
   outOfStockModal: { items: StockShortfallEntry[] } | null = null;
   isChecking = false;
+
+  /* ── split payment ── */
+  splitPayment = false;
+  splitCash    = 0;
+  splitUpi     = 0;
+
+  get splitTotal(): number { return +(this.splitCash + this.splitUpi).toFixed(2); }
+  get splitValid(): boolean { return Math.abs(this.splitTotal - this.finalTotal) < 0.01; }
+
+  /* ── keyboard shortcuts ── */
+  showShortcutsHelp = false;
+  shortcutBuffer    = '';
+  private shortcutTimer: any = null;
+  @ViewChild('searchInput') searchInputEl!: ElementRef<HTMLInputElement>;
 
 
   /* ── listeners ── */
@@ -459,7 +473,14 @@ export class BillingPage implements OnInit, OnDestroy {
       this.showError('Order number is required for Zomato / Swiggy');
       return;
     }
-    if (!this.paymentMethod && !this.isOnlinePlatform) { this.showError('Select payment method'); return; }
+    if (!this.paymentMethod && !this.isOnlinePlatform && !this.splitPayment) {
+      this.showError('Select payment method');
+      return;
+    }
+    if (this.splitPayment && !this.splitValid) {
+      this.showError(`Split amounts must equal ₹${this.finalTotal.toFixed(2)} (got ₹${this.splitTotal.toFixed(2)})`);
+      return;
+    }
 
     const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
     if (!snapshot.length) { this.showError('Cart is empty'); return; }
@@ -479,6 +500,13 @@ export class BillingPage implements OnInit, OnDestroy {
     }
     const local_id = this.store.getLocalId();
 
+    // Resolve effective payment fields
+    const paymentMode = this.isOnlinePlatform ? 'UPI'
+                      : this.splitPayment      ? 'SPLIT'
+                      : this.paymentMethod;
+    const cashAmt = this.splitPayment ? this.splitCash : null;
+    const upiAmt  = this.splitPayment ? this.splitUpi  : null;
+
     /* ── OFFLINE path ── */
     if (!navigator.onLine) {
       const offlineBill = {
@@ -487,7 +515,7 @@ export class BillingPage implements OnInit, OnDestroy {
         bill_id:         this.store.getBillId(),
         customer_name:   this.customerName?.trim() || '',
         items,
-        payment_mode:    this.paymentMethod,
+        payment_mode:    paymentMode,
         grand_total:     this.finalTotal,
         discount_amount: this.couponDiscount || 0,
         platform:        this.platform || null,
@@ -505,21 +533,25 @@ export class BillingPage implements OnInit, OnDestroy {
     /* ── ONLINE path ── */
     this.isCompleting = true;
 
-    /* Zomato/Swiggy — create + complete in one shot (no pre-save needed) */
-    if (this.isOnlinePlatform) {
-      const local_id = this.store.getLocalId() || this.offlineQueue.generateId();
+    const billId = this.store.getBillId();
+
+    /* No existing bill (fresh cart) — create + complete in one shot via syncOffline */
+    if (!billId || this.isOnlinePlatform) {
       this.billApi.syncOffline({
-        customer_name: this.customerName?.trim() || '',
+        customer_name:   this.customerName?.trim() || '',
         items,
-        payment_mode:  'UPI',
-        grand_total:   this.finalTotal,
+        payment_mode:    paymentMode,
+        grand_total:     this.finalTotal,
+        discount_amount: this.couponDiscount || 0,
+        cash_amount:     cashAmt,
+        upi_amount:      upiAmt,
         local_id,
-        platform:      this.platform,
-        bill_date:     this.billDate || null
+        platform:        this.platform || null,
+        bill_date:       this.billDate || null
       }).subscribe({
         next: (res: any) => {
           this.isCompleting = false;
-          this.printReceipt(res.bill_id || 0, items, this.finalTotal, 'UPI', this.customerName);
+          this.printReceipt(res.bill_id || 0, items, this.finalTotal, paymentMode, this.customerName);
           this.clearBill();
           this.refreshProducts();
         },
@@ -528,21 +560,21 @@ export class BillingPage implements OnInit, OnDestroy {
       return;
     }
 
-    const billId = this.store.getBillId();
-    if (!billId) { this.isCompleting = false; this.showError('Save bill before completing'); return; }
-
+    /* Existing pending bill — update items then complete */
     this.billApi.update(billId, { customer_name: this.customerName, items }).subscribe({
       next: () => {
         this.billApi.complete(billId, {
           customer_name:   this.customerName,
           grand_total:     this.finalTotal,
-          payment_mode:    this.paymentMethod,
+          payment_mode:    paymentMode,
+          cash_amount:     cashAmt,
+          upi_amount:      upiAmt,
           discount_amount: this.couponDiscount || 0,
           bill_date:       this.billDate || null
         }).subscribe({
           next:  () => {
             this.isCompleting = false;
-            this.printReceipt(billId, items, this.finalTotal, this.paymentMethod, this.customerName);
+            this.printReceipt(billId, items, this.finalTotal, paymentMode, this.customerName);
             this.clearBill();
             this.refreshProducts();
           },
@@ -638,11 +670,41 @@ export class BillingPage implements OnInit, OnDestroy {
   /* ════════════════════════════════
      HELPERS
   ════════════════════════════════ */
+  /* ════════════════════════════════
+     SPLIT PAYMENT
+  ════════════════════════════════ */
+  setSplitPayment(on: boolean) {
+    this.splitPayment = on;
+    if (on) {
+      this.paymentMethod = '';
+      this.splitCash     = 0;
+      this.splitUpi      = this.finalTotal;
+    } else {
+      this.splitCash = 0;
+      this.splitUpi  = 0;
+    }
+  }
+
+  onSplitCashChange() {
+    const cash = Math.min(Math.max(0, this.splitCash), this.finalTotal);
+    this.splitCash = +cash.toFixed(2);
+    this.splitUpi  = +(this.finalTotal - this.splitCash).toFixed(2);
+  }
+
+  onSplitUpiChange() {
+    const upi = Math.min(Math.max(0, this.splitUpi), this.finalTotal);
+    this.splitUpi  = +upi.toFixed(2);
+    this.splitCash = +(this.finalTotal - this.splitUpi).toFixed(2);
+  }
+
   clearBill() {
     this.store.clear();
     this.customerName  = '';
     this.paymentMethod = '';
     this.billDate      = '';
+    this.splitPayment  = false;
+    this.splitCash     = 0;
+    this.splitUpi      = 0;
     this.resetCoupon();
   }
 
@@ -688,6 +750,179 @@ export class BillingPage implements OnInit, OnDestroy {
   }
 
   closeIngredientModal() { this.ingredientModal = null; }
+
+  /* ════════════════════════════════
+     KEYBOARD SHORTCUTS
+  ════════════════════════════════ */
+  get shortcutProducts(): any[] {
+    return this.products.filter(p => p.shortcut_key);
+  }
+
+  /** Products whose shortcut_key starts with the current buffer — for live highlight */
+  get shortcutPartialMatches(): any[] {
+    if (!this.shortcutBuffer) return [];
+    const buf = this.shortcutBuffer.toLowerCase();
+    return this.products.filter(p => p.shortcut_key?.toLowerCase().startsWith(buf));
+  }
+
+  /** Exact match for the current buffer */
+  get shortcutExactMatch(): any | null {
+    if (!this.shortcutBuffer) return null;
+    const buf = this.shortcutBuffer.toLowerCase();
+    return this.products.find(p => p.shortcut_key?.toLowerCase() === buf) ?? null;
+  }
+
+  private appendShortcutBuffer(char: string) {
+    clearTimeout(this.shortcutTimer);
+    this.shortcutBuffer += char;
+
+    const partials = this.shortcutPartialMatches;
+
+    if (partials.length === 0) {
+      this.showError(`No product for code "${this.shortcutBuffer}"`);
+      this.shortcutTimer = setTimeout(() => { this.shortcutBuffer = ''; }, 800);
+    }
+    // No auto-timer: user confirms with Enter, preventing accidental adds when typing slowly
+  }
+
+  confirmShortcut() {
+    clearTimeout(this.shortcutTimer);
+    const buf = this.shortcutBuffer;
+    this.shortcutBuffer = '';
+    if (!buf) return;
+    const product = this.products.find(p => p.shortcut_key?.toLowerCase() === buf.toLowerCase());
+    if (product) {
+      this.addProduct(product);
+      this.showSuccess(`Added: ${product.name}`);
+    } else {
+      this.showError(`No exact match for "${buf}"`);
+    }
+  }
+
+  clearShortcutBuffer() {
+    clearTimeout(this.shortcutTimer);
+    this.shortcutBuffer = '';
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent) {
+    const tag = (e.target as HTMLElement).tagName.toLowerCase();
+    const inInput = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+    // Escape — clear shortcut buffer first, then close modals
+    if (e.key === 'Escape') {
+      if (this.shortcutBuffer)     { this.clearShortcutBuffer();   return; }
+      if (this.addonModal)         { this.closeAddonModal();       return; }
+      if (this.ingredientModal)    { this.closeIngredientModal();  return; }
+      if (this.outOfStockModal)    { this.closeOutOfStockModal();  return; }
+      if (this.showShortcutsHelp)  { this.showShortcutsHelp = false; return; }
+      return;
+    }
+
+    // ? — toggle shortcuts help (not inside input)
+    if (e.key === '?' && !inInput) {
+      this.showShortcutsHelp = !this.showShortcutsHelp;
+      return;
+    }
+
+    // / or F2 — focus search (also clears any buffer)
+    if ((e.key === '/' || e.key === 'F2') && !inInput) {
+      e.preventDefault();
+      this.clearShortcutBuffer();
+      this.searchInputEl?.nativeElement.focus();
+      return;
+    }
+
+    // Ctrl+S — Save Pending
+    if (e.ctrlKey && e.key === 's') {
+      e.preventDefault();
+      if (!this.isOnlinePlatform && !this.isSaving && !this.isChecking && this.cart.length) {
+        this.savePending();
+      }
+      return;
+    }
+
+    // Ctrl+Enter — Complete Bill
+    if (e.ctrlKey && e.key === 'Enter') {
+      e.preventDefault();
+      if (!this.isCompleting && !this.isChecking && this.cart.length) {
+        this.completeBill();
+      }
+      return;
+    }
+
+    // Alt+C — Cash
+    if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+      e.preventDefault();
+      if (!this.isOnlinePlatform) { this.setSplitPayment(false); this.paymentMethod = 'CASH'; }
+      return;
+    }
+    // Alt+U — UPI
+    if (e.altKey && (e.key === 'u' || e.key === 'U')) {
+      e.preventDefault();
+      if (!this.isOnlinePlatform) { this.setSplitPayment(false); this.paymentMethod = 'UPI'; }
+      return;
+    }
+    // Alt+X — Split payment
+    if (e.altKey && (e.key === 'x' || e.key === 'X')) {
+      e.preventDefault();
+      if (!this.isOnlinePlatform) this.setSplitPayment(!this.splitPayment);
+      return;
+    }
+
+    // When not inside an input field:
+    if (!inInput) {
+      // F7 — Zomato platform
+      if (e.key === 'F7') { e.preventDefault(); this.setPlatform('zomato'); return; }
+      // F8 — Swiggy platform
+      if (e.key === 'F8') { e.preventDefault(); this.setPlatform('swiggy'); return; }
+
+      // Tab — cycle to next category
+      if (e.key === 'Tab' && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        const idx  = this.categories.findIndex(c => c.name === this.selectedCategory);
+        const next = (idx + 1) % this.categories.length;
+        this.selectedCategory = this.categories[next]?.name ?? 'All';
+        return;
+      }
+
+      // Delete — clear buffer if active, otherwise remove last cart item
+      if (e.key === 'Delete') {
+        e.preventDefault();
+        if (this.shortcutBuffer) { this.clearShortcutBuffer(); return; }
+        if (this.cart.length) {
+          const last = this.cart[this.cart.length - 1];
+          this.store.update(last.productId, last.qty - 1, this.cart.length - 1);
+        }
+        return;
+      }
+
+      // Backspace — remove last character from buffer
+      if (e.key === 'Backspace' && this.shortcutBuffer) {
+        e.preventDefault();
+        clearTimeout(this.shortcutTimer);
+        this.shortcutBuffer = this.shortcutBuffer.slice(0, -1);
+        return;
+      }
+
+      // Enter — confirm current buffer immediately (no waiting for timeout)
+      if (e.key === 'Enter' && this.shortcutBuffer) {
+        e.preventDefault();
+        this.confirmShortcut();
+        return;
+      }
+
+      // Shift+Letter → build the shortcut buffer (Shift required to avoid accidental triggers)
+      // e.g. Shift+S → Samosa, Shift+S then Shift+B → SB (Salt Biscuit)
+      // Press Enter to confirm the match
+      if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey
+          && e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
+        e.preventDefault();
+        this.appendShortcutBuffer(e.key.toUpperCase());
+        return;
+      }
+    }
+  }
 
   showError(msg: string) {
     this.errorMsg   = msg;

@@ -270,6 +270,22 @@
           <input class="form-input" type="text" [(ngModel)]="form.image_url" placeholder="https://..." />
         </div>
 
+        <div class="form-group">
+          <label class="form-label">
+            Billing Shortcut Code
+            <span class="form-hint">Type this code on the billing screen to instantly add — e.g. <strong>S</strong> (Samosa), <strong>SB</strong> (Salt Biscuit), <strong>SR</strong> (Shawarma Roll)</span>
+          </label>
+          <input
+            class="form-input form-input--shortcut"
+            type="text"
+            maxlength="5"
+            [(ngModel)]="form.shortcut_key"
+            placeholder="e.g. SB"
+            style="text-transform:uppercase"
+            (input)="form.shortcut_key = form.shortcut_key?.toLowerCase()"
+          />
+        </div>
+
       </div>
 
       <!-- MODAL FOOTER -->

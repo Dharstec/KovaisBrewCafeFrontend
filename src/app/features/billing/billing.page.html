@@ -20,11 +20,16 @@
       <div class="left-title">
         <h1>New Order</h1>
       </div>
+      <button class="shortcut-help-btn" (click)="showShortcutsHelp = true" title="Keyboard shortcuts (?)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="M7 15l2-3 2 2 2-4 2 5"/></svg>
+        Shortcuts
+      </button>
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input
+          #searchInput
           class="search-input"
-          placeholder="Search products…"
+          placeholder="Search products… ( / )"
           [(ngModel)]="searchText"
           autocomplete="off"
         />
@@ -43,6 +48,23 @@
       <button class="plat-btn plat-btn--swiggy" [class.active]="platform === 'swiggy'" (click)="setPlatform('swiggy')">
         Swiggy
       </button>
+    </div>
+
+    <!-- Shortcut Buffer Indicator -->
+    <div class="shortcut-indicator" *ngIf="shortcutBuffer">
+      <div class="si-left">
+        <span class="si-label">⌨️</span>
+        <span class="si-buffer">{{ shortcutBuffer }}</span>
+        <span class="si-cursor">▋</span>
+      </div>
+      <div class="si-right">
+        <span class="si-match" *ngIf="shortcutExactMatch">→ {{ shortcutExactMatch.name }}</span>
+        <span class="si-partial" *ngIf="!shortcutExactMatch && shortcutPartialMatches.length > 0">
+          {{ shortcutPartialMatches.length }} match{{ shortcutPartialMatches.length > 1 ? 'es' : '' }} — keep typing
+        </span>
+        <span class="si-none" *ngIf="shortcutPartialMatches.length === 0">No match</span>
+      </div>
+      <span class="si-hint">↵ confirm · ⌫ back · Esc cancel</span>
     </div>
 
     <!-- Category Tabs -->
@@ -64,6 +86,8 @@
         *ngFor="let p of filteredProducts"
         [class.out-of-stock]="p.servings_possible !== null && availableServings(p) <= 0"
         [class.stock-low-card]="p.servings_possible !== null && availableServings(p) > 0 && availableServings(p) <= 5"
+        [class.shortcut-match]="shortcutBuffer && p.shortcut_key?.toLowerCase().startsWith(shortcutBuffer.toLowerCase())"
+        [class.shortcut-exact]="shortcutBuffer && p.shortcut_key?.toLowerCase() === shortcutBuffer.toLowerCase()"
         (click)="addProduct(p)">
 
         <!-- Stock badge -->
@@ -72,6 +96,11 @@
           <div class="stock-badge stock-low" *ngIf="availableServings(p) > 0 && availableServings(p) <= 5">~{{ availableServings(p) }} left</div>
           <div class="stock-badge stock-ok"  *ngIf="availableServings(p) > 5">{{ availableServings(p) }} left</div>
         </ng-container>
+
+        <!-- Shortcut badge -->
+        <div class="shortcut-badge" *ngIf="p.shortcut_key" title="Shift+{{ p.shortcut_key | uppercase }} then Enter to add">
+          ⇧{{ p.shortcut_key | uppercase }}
+        </div>
 
         <!-- Image -->
         <div class="prod-img">
@@ -164,20 +193,59 @@
       </div>
 
       <div class="meta-field" *ngIf="!isOnlinePlatform">
-        <label>💳 Payment Method <span class="required">*</span></label>
+        <label>
+          💳 Payment Method <span class="required">*</span>
+          <span class="pay-shortcuts">Alt+C · Alt+U · Alt+X</span>
+        </label>
         <div class="pay-options">
           <button
             class="pay-btn"
-            [class.active]="paymentMethod === 'CASH'"
-            (click)="paymentMethod = 'CASH'">
+            [class.active]="paymentMethod === 'CASH' && !splitPayment"
+            (click)="setSplitPayment(false); paymentMethod = 'CASH'">
             💵 Cash
           </button>
           <button
             class="pay-btn"
-            [class.active]="paymentMethod === 'UPI'"
-            (click)="paymentMethod = 'UPI'">
+            [class.active]="paymentMethod === 'UPI' && !splitPayment"
+            (click)="setSplitPayment(false); paymentMethod = 'UPI'">
             📲 UPI
           </button>
+          <button
+            class="pay-btn pay-btn--split"
+            [class.active]="splitPayment"
+            (click)="setSplitPayment(!splitPayment)"
+            title="Split payment (Alt+X)">
+            ⚡ Split
+          </button>
+        </div>
+
+        <!-- Split Payment Inputs -->
+        <div class="split-inputs" *ngIf="splitPayment">
+          <div class="split-field">
+            <label>💵 Cash</label>
+            <input
+              class="split-amount"
+              type="number" min="0"
+              [max]="finalTotal"
+              [(ngModel)]="splitCash"
+              (ngModelChange)="onSplitCashChange()"
+              placeholder="0" />
+          </div>
+          <div class="split-sep">+</div>
+          <div class="split-field">
+            <label>📲 UPI</label>
+            <input
+              class="split-amount"
+              type="number" min="0"
+              [max]="finalTotal"
+              [(ngModel)]="splitUpi"
+              (ngModelChange)="onSplitUpiChange()"
+              placeholder="0" />
+          </div>
+          <div class="split-status" [class.split-ok]="splitValid" [class.split-err]="!splitValid">
+            <span *ngIf="splitValid">✓ Total matches</span>
+            <span *ngIf="!splitValid">Need ₹{{ (finalTotal - splitTotal) | number:'1.2-2' }} more</span>
+          </div>
         </div>
       </div>
 
@@ -322,7 +390,7 @@
       <button
         class="action-btn complete"
         *ngIf="cart.length"
-        [disabled]="(!paymentMethod && !isOnlinePlatform) || isCompleting || isChecking"
+        [disabled]="(!paymentMethod && !isOnlinePlatform && !splitPayment) || (splitPayment && !splitValid) || isCompleting || isChecking"
         (click)="completeBill()">
         <span class="btn-spinner" *ngIf="isCompleting || isChecking"></span>
         <span *ngIf="!isCompleting && !isChecking">✅ Complete Bill</span>
@@ -475,6 +543,64 @@
     <button class="am-btn am-btn--confirm" (click)="confirmAddons()">Add to Cart</button>
   </div>
 
+</div>
+
+<!-- ══ KEYBOARD SHORTCUTS HELP OVERLAY ══ -->
+<div class="sk-overlay" *ngIf="showShortcutsHelp" (click)="showShortcutsHelp = false"></div>
+<div class="sk-panel" *ngIf="showShortcutsHelp">
+  <div class="sk-head">
+    <div>
+      <div class="sk-title">⌨️ Keyboard Shortcuts</div>
+      <div class="sk-sub">Press <kbd>?</kbd> anywhere to toggle this panel</div>
+    </div>
+    <button class="sk-close" (click)="showShortcutsHelp = false">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="sk-body">
+
+    <div class="sk-section-title">Navigation</div>
+    <div class="sk-row"><kbd>/</kbd><span>Focus search</span></div>
+    <div class="sk-row"><kbd>Tab</kbd><span>Next category</span></div>
+    <div class="sk-row"><kbd>Esc</kbd><span>Close modal / cancel</span></div>
+
+    <div class="sk-section-title">Payment</div>
+    <div class="sk-row"><div class="sk-combo"><kbd>Alt</kbd><kbd>C</kbd></div><span>Select Cash</span></div>
+    <div class="sk-row"><div class="sk-combo"><kbd>Alt</kbd><kbd>U</kbd></div><span>Select UPI</span></div>
+    <div class="sk-row"><div class="sk-combo"><kbd>Alt</kbd><kbd>X</kbd></div><span>Toggle Split payment</span></div>
+    <div class="sk-row"><kbd>F7</kbd><span>Zomato platform</span></div>
+    <div class="sk-row"><kbd>F8</kbd><span>Swiggy platform</span></div>
+
+    <div class="sk-section-title">Bill Actions</div>
+    <div class="sk-row"><kbd>Ctrl</kbd><kbd>S</kbd><span>Save Pending</span></div>
+    <div class="sk-row"><kbd>Ctrl</kbd><kbd>↵</kbd><span>Complete Bill</span></div>
+    <div class="sk-row"><kbd>Del</kbd><span>Remove 1 from last item</span></div>
+
+    <div class="sk-section-title">Product Quick-Add (Shift + code, then ↵)</div>
+    <div class="sk-row sk-row--wide">
+      <div class="sk-combo"><kbd>⇧</kbd><kbd>S</kbd></div><span>then ↵ → adds Samosa</span>
+    </div>
+    <div class="sk-row sk-row--wide">
+      <div class="sk-combo"><kbd>⇧</kbd><kbd>S</kbd><kbd>⇧</kbd><kbd>B</kbd></div><span>then ↵ → adds Salt Biscuit</span>
+    </div>
+    <div class="sk-row sk-row--wide">
+      <kbd>Backspace</kbd><span>Delete last typed character</span>
+    </div>
+
+    <ng-container *ngIf="shortcutProducts.length > 0">
+      <div class="sk-section-title">Assigned shortcuts</div>
+      <div class="sk-row" *ngFor="let p of shortcutProducts">
+        <kbd>{{ p.shortcut_key | uppercase }}</kbd>
+        <span>{{ p.name }}</span>
+      </div>
+    </ng-container>
+
+    <div class="sk-tip" *ngIf="shortcutProducts.length === 0">
+      💡 Go to <strong>Products → Edit</strong> and set a Shortcut Key (e.g. <kbd>S</kbd>, <kbd>SB</kbd>, <kbd>SR</kbd>), then press <kbd>⇧</kbd>+code then <kbd>↵</kbd> on the billing screen
+    </div>
+
+  </div>
 </div>
 
 <!-- ══ MOBILE TAB BAR ══ -->
