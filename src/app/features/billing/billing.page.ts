@@ -1,12 +1,11 @@
 import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs'; // used by preflightStockOk
 
 import { BillingStore }      from '../../core/state/billing.store';
 import { ProductApi }        from '../../core/api/product.api';
 import { BillApi, StockShortfallEntry } from '../../core/api/bill.api';
-import { OfflineQueueService } from '../../core/services/offline-queue.service';
 import { PrinterService }    from '../../core/services/printer.service';
 import { SettingsApi }       from '../../core/api/settings.api';
 import { AuthApi }           from '../../core/api/auth.api';
@@ -21,13 +20,12 @@ import { AuthApi }           from '../../core/api/auth.api';
 export class BillingPage implements OnInit, OnDestroy {
 
   /* ── deps ── */
-  store        = inject(BillingStore);
-  productApi   = inject(ProductApi);
-  billApi      = inject(BillApi);
-  offlineQueue = inject(OfflineQueueService);
-  printer      = inject(PrinterService);
-  settingsApi  = inject(SettingsApi);
-  authApi      = inject(AuthApi);
+  store      = inject(BillingStore);
+  productApi = inject(ProductApi);
+  billApi    = inject(BillApi);
+  printer    = inject(PrinterService);
+  settingsApi = inject(SettingsApi);
+  authApi    = inject(AuthApi);
 
   /* ── catalogue ── */
   products         : any[]   = [];
@@ -47,13 +45,12 @@ export class BillingPage implements OnInit, OnDestroy {
   couponApplied  = false;
 
   /* ── ui state ── */
-  errorMsg         = '';
-  successMsg       = '';
-  isOnlineStatus   = navigator.onLine;
-  isSaving         = false;
-  isCompleting     = false;
-  showCart         = false;
-  syncPending      = 0;
+  errorMsg       = '';
+  successMsg     = '';
+  isOnlineStatus = navigator.onLine;
+  isSaving       = false;
+  isCompleting   = false;
+  showCart       = false;
 
   /* ── packing charges ── */
   packingDefaults = { zomato: 0, swiggy: 0 };
@@ -94,8 +91,8 @@ export class BillingPage implements OnInit, OnDestroy {
 
 
   /* ── listeners ── */
-  private onlineHandler  = async () => { this.isOnlineStatus = true;  await this.syncOfflineQueue(); };
-  private offlineHandler = ()       => { this.isOnlineStatus = false; this.showError('You are offline'); };
+  private onlineHandler  = () => { this.isOnlineStatus = true; };
+  private offlineHandler = () => { this.isOnlineStatus = false; this.showError('No internet. Please connect to hotspot.'); };
 
   /* ════════════════════════════════
      COMPUTED
@@ -157,7 +154,7 @@ export class BillingPage implements OnInit, OnDestroy {
   /* ════════════════════════════════
      LIFECYCLE
   ════════════════════════════════ */
-  async ngOnInit() {
+  ngOnInit() {
     this.isAdmin = this.authApi.isAdmin();
     this.isOnlineStatus = navigator.onLine;
     window.addEventListener('online',  this.onlineHandler);
@@ -165,19 +162,9 @@ export class BillingPage implements OnInit, OnDestroy {
 
     this.customerName = this.store.getCustomerName();
 
-    // Load from cache immediately so offline users see products instantly
-    try {
-      const cached = localStorage.getItem('pos_products');
-      if (cached) this.products = JSON.parse(cached);
-    } catch {}
-
-    // Then refresh from API when online
     this.productApi.getAllBilling().subscribe({
-      next: (res: any[]) => {
-        this.products = res;
-        try { localStorage.setItem('pos_products', JSON.stringify(res)); } catch {}
-      },
-      error: () => {}  // already loaded from cache above
+      next: (res: any[]) => { this.products = res; },
+      error: () => {}
     });
 
     this.store.cart$.subscribe(c => {
@@ -192,10 +179,6 @@ export class BillingPage implements OnInit, OnDestroy {
         this.packingDefaults.swiggy = Number(s.swiggy_packing_default) || 0;
       }
     });
-
-    // Count queued offline bills
-    const q = await this.offlineQueue.getAll();
-    this.syncPending = q.filter(b => b.status === 'queued').length;
   }
 
   ngOnDestroy() {
@@ -204,21 +187,12 @@ export class BillingPage implements OnInit, OnDestroy {
   }
 
   loadCategories() {
-    // Load from cache immediately
-    try {
-      const cached = localStorage.getItem('pos_categories');
-      this.categories = cached ? JSON.parse(cached) : [{ id: 0, name: 'All' }];
-    } catch {
-      this.categories = [{ id: 0, name: 'All' }];
-    }
-
-    // Refresh from API when online
+    this.categories = [{ id: 0, name: 'All' }];
     this.productApi.getAllCategoriesBilling().subscribe({
       next: (res: any) => {
         this.categories = [{ id: 0, name: 'All' }, ...res.data];
-        try { localStorage.setItem('pos_categories', JSON.stringify(this.categories)); } catch {}
       },
-      error: () => {} // already loaded from cache above
+      error: () => {}
     });
   }
 
@@ -400,6 +374,8 @@ export class BillingPage implements OnInit, OnDestroy {
      SAVE PENDING
   ════════════════════════════════ */
   async savePending() {
+    if (!navigator.onLine) { this.showError('No internet. Please connect to hotspot.'); return; }
+
     const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
     if (!snapshot.length) { this.showError('Add at least one item'); return; }
 
@@ -410,45 +386,18 @@ export class BillingPage implements OnInit, OnDestroy {
     }));
     if (!(await this.preflightStockOk(checkItems))) return;
 
-    // Ensure a local_id exists (for idempotency on retry)
-    if (!this.store.getLocalId()) {
-      this.store.setLocalId(this.offlineQueue.generateId());
-    }
-    const local_id = this.store.getLocalId();
-
     const payload = {
       customer_name: this.customerName?.trim() || '',
       items: snapshot.map((i: any) => ({
-        productId: Number(i.productId),
+        productId: i.productId != null ? Number(i.productId) : null,
         name:      i.name,
         price:     Number(i.price),
         qty:       Number(i.qty)
       })),
-      local_id,
       platform:  this.platform || null,
       bill_date: this.billDate || null
     };
 
-    /* ── OFFLINE path ── */
-    if (!navigator.onLine) {
-      const offlineBill = {
-        local_id,
-        type:          'pending' as const,
-        bill_id:       this.store.getBillId(),
-        customer_name: payload.customer_name,
-        items:         payload.items,
-        platform:      this.platform || null,
-        created_at:    new Date().toISOString(),
-        status:        'queued' as const
-      };
-      await this.offlineQueue.add(offlineBill);
-      this.syncPending++;
-      this.showSuccess('Saved offline — will sync when connected');
-      this.clearBill();
-      return;
-    }
-
-    /* ── ONLINE path ── */
     this.isSaving = true;
     const billId  = this.store.getBillId();
 
@@ -469,6 +418,8 @@ export class BillingPage implements OnInit, OnDestroy {
      COMPLETE BILL
   ════════════════════════════════ */
   async completeBill() {
+    if (!navigator.onLine) { this.showError('No internet. Please connect to hotspot.'); return; }
+
     if (this.isOnlinePlatform && !this.customerName?.trim()) {
       this.showError('Order number is required for Zomato / Swiggy');
       return;
@@ -486,19 +437,13 @@ export class BillingPage implements OnInit, OnDestroy {
     if (!snapshot.length) { this.showError('Cart is empty'); return; }
 
     const items = snapshot.map((i: any) => ({
-      productId: Number(i.productId),
+      productId: i.productId != null ? Number(i.productId) : null,
       name:      i.name,
       price:     Number(i.price),
       qty:       Number(i.qty)
     }));
 
     if (!(await this.preflightStockOk(items.map((i: any) => ({ productId: i.productId, qty: i.qty, name: i.name }))))) return;
-
-    // Ensure local_id
-    if (!this.store.getLocalId()) {
-      this.store.setLocalId(this.offlineQueue.generateId());
-    }
-    const local_id = this.store.getLocalId();
 
     // Resolve effective payment fields
     const paymentMode = this.isOnlinePlatform ? 'UPI'
@@ -507,36 +452,11 @@ export class BillingPage implements OnInit, OnDestroy {
     const cashAmt = this.splitPayment ? this.splitCash : null;
     const upiAmt  = this.splitPayment ? this.splitUpi  : null;
 
-    /* ── OFFLINE path ── */
-    if (!navigator.onLine) {
-      const offlineBill = {
-        local_id,
-        type:            'complete' as const,
-        bill_id:         this.store.getBillId(),
-        customer_name:   this.customerName?.trim() || '',
-        items,
-        payment_mode:    paymentMode,
-        grand_total:     this.finalTotal,
-        discount_amount: this.couponDiscount || 0,
-        platform:        this.platform || null,
-        created_at:      new Date().toISOString(),
-        status:          'queued' as const
-      };
-      await this.offlineQueue.add(offlineBill);
-      this.syncPending++;
-      this.showSuccess('Bill queued — will complete when connected');
-      this.printReceipt(0, items, offlineBill.grand_total, offlineBill.payment_mode, offlineBill.customer_name);
-      this.clearBill();
-      return;
-    }
-
-    /* ── ONLINE path ── */
     this.isCompleting = true;
-
     const billId = this.store.getBillId();
 
-    /* No existing bill (fresh cart) — create + complete in one shot via syncOffline */
-    if (!billId || this.isOnlinePlatform) {
+    /* No existing bill (fresh cart) — create + complete in one shot */
+    if (!billId) {
       this.billApi.syncOffline({
         customer_name:   this.customerName?.trim() || '',
         items,
@@ -545,7 +465,7 @@ export class BillingPage implements OnInit, OnDestroy {
         discount_amount: this.couponDiscount || 0,
         cash_amount:     cashAmt,
         upi_amount:      upiAmt,
-        local_id,
+        local_id:        crypto.randomUUID(),
         platform:        this.platform || null,
         bill_date:       this.billDate || null
       }).subscribe({
@@ -583,66 +503,6 @@ export class BillingPage implements OnInit, OnDestroy {
       },
       error: () => { this.isCompleting = false; this.showError('Failed to update bill'); }
     });
-  }
-
-  /* ════════════════════════════════
-     OFFLINE SYNC (when back online)
-  ════════════════════════════════ */
-  async syncOfflineQueue() {
-    const queue = await this.offlineQueue.getAll();
-    const pending = queue.filter(b => b.status === 'queued');
-    if (!pending.length) return;
-
-    for (const bill of pending) {
-      try {
-        if (bill.type === 'pending') {
-          await firstValueFrom(
-            this.billApi.create({
-              customer_name: bill.customer_name,
-              items:         bill.items,
-              local_id:      bill.local_id,
-              platform:      bill.platform || null
-            })
-          );
-        } else {
-          // type === 'complete'
-          if (bill.bill_id) {
-            await firstValueFrom(
-              this.billApi.update(bill.bill_id, { customer_name: bill.customer_name, items: bill.items })
-            );
-            await firstValueFrom(
-              this.billApi.complete(bill.bill_id, {
-                customer_name:   bill.customer_name,
-                grand_total:     bill.grand_total,
-                payment_mode:    bill.payment_mode,
-                discount_amount: bill.discount_amount || 0
-              })
-            );
-          } else {
-            await firstValueFrom(
-              this.billApi.syncOffline({
-                customer_name:   bill.customer_name,
-                items:           bill.items,
-                payment_mode:    bill.payment_mode!,
-                grand_total:     bill.grand_total!,
-                discount_amount: bill.discount_amount || 0,
-                local_id:        bill.local_id,
-                platform:        bill.platform || null
-              })
-            );
-          }
-        }
-        await this.offlineQueue.remove(bill.local_id);
-      } catch (e) {
-        console.warn('Sync failed for', bill.local_id, e);
-      }
-    }
-
-    const remaining = await this.offlineQueue.getAll();
-    this.syncPending = remaining.filter(b => b.status === 'queued').length;
-    if (this.syncPending === 0) {
-      this.showSuccess('All offline bills synced!');
-    }
   }
 
   /* ════════════════════════════════

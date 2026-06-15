@@ -7,9 +7,8 @@ export class BillingStore {
   private cartSubject = new BehaviorSubject<any[]>([]);
   cart$ = this.cartSubject.asObservable();
 
-  private billId:   number | null = null;
-  private localId:  string        = '';
-  private customerName: string    = '';
+  private billId:       number | null = null;
+  private customerName: string        = '';
 
   /* ── ADD ── */
   add(product: any) {
@@ -69,9 +68,8 @@ export class BillingStore {
   }
 
   /* ── LOAD EXISTING BILL ── */
-  load(items: any[], billId: number | null, name: string, localId = '') {
-    this.billId      = billId;
-    this.localId     = localId;
+  load(items: any[], billId: number | null, name: string) {
+    this.billId       = billId;
     this.customerName = name?.trim() || '';
     this.cartSubject.next(
       items.map(i => ({
@@ -88,15 +86,12 @@ export class BillingStore {
   getTotal():        number          { return this.cartSubject.value.reduce((s, i) => s + i.price * i.qty, 0); }
   getItems():        any[]           { return this.cartSubject.value; }
   getBillId():       number | null   { return this.billId; }
-  getLocalId():      string          { return this.localId; }
   getCustomerName(): string          { return this.customerName; }
 
-  setBillId(id: number)       { this.billId  = id; }
-  setLocalId(lid: string)     { this.localId = lid; }
+  setBillId(id: number) { this.billId = id; }
 
   clear() {
     this.billId       = null;
-    this.localId      = '';
     this.customerName = '';
     this.cartSubject.next([]);
   }
