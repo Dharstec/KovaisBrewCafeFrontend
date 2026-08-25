@@ -55,28 +55,4 @@ export class DashboardApi {
     );
   }
 
-  getWhatsappStatus() {
-    return this.http.get<{ ready: boolean; qr: string | null }>(
-      `${environment.apiUrl}/dashboard/whatsapp-status`
-    );
-  }
-
-  getWhatsappGroups() {
-    return this.http.get<{ id: string; name: string }[]>(
-      `${environment.apiUrl}/dashboard/whatsapp-groups`
-    );
-  }
-
-  getWhatsappPreview() {
-    return this.http.get<{ message: string }>(
-      `${environment.apiUrl}/dashboard/whatsapp-preview`
-    );
-  }
-
-  sendWhatsappNow(groupId?: string) {
-    return this.http.post<{ ok: boolean; message: string }>(
-      `${environment.apiUrl}/dashboard/whatsapp-send-now`,
-      groupId ? { groupId } : {}
-    );
-  }
 }
