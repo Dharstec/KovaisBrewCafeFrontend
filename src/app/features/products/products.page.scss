@@ -926,6 +926,7 @@ $radius:  14px;
   background: #fafafa;
   border-bottom: 1px solid #e2e8f0;
   gap: 4px;
+  overflow-x: auto;
 }
 .wiz-step {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
