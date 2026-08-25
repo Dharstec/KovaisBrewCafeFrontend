@@ -29,8 +29,7 @@
       <!-- TOP BAR -->
       <div class="bc-top">
         <div class="bc-top__left">
-          <span class="bc-id">Bill #{{ b.id ?? 'Offline' }}</span>
-          <span class="offline-badge" *ngIf="b.isOffline">Offline</span>
+          <span class="bc-id">Bill #{{ b.id }}</span>
           <span class="bc-time">{{ b.created_at | date:'dd MMM, hh:mm a' }}</span>
         </div>
         <div class="bc-top__right">

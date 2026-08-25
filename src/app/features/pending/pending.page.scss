@@ -340,18 +340,3 @@ $radius:  14px;
   }
 }
 
-// ── Offline Badge ──
-.offline-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  background: rgba(249,115,22,.15);
-  color: #fb923c;
-  border: 1px solid rgba(249,115,22,.3);
-  margin-left: 6px;
-}

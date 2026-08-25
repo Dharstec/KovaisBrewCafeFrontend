@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs'; // used by preflightStockOk
@@ -17,7 +17,7 @@ import { AuthApi }           from '../../core/api/auth.api';
   templateUrl: './billing.page.html',
   styleUrls: ['./billing.page.scss']
 })
-export class BillingPage implements OnInit, OnDestroy {
+export class BillingPage implements OnInit {
 
   /* ── deps ── */
   store      = inject(BillingStore);
@@ -47,7 +47,6 @@ export class BillingPage implements OnInit, OnDestroy {
   /* ── ui state ── */
   errorMsg       = '';
   successMsg     = '';
-  isOnlineStatus = navigator.onLine;
   isSaving       = false;
   isCompleting   = false;
   showCart       = false;
@@ -88,11 +87,6 @@ export class BillingPage implements OnInit, OnDestroy {
   shortcutBuffer    = '';
   private shortcutTimer: any = null;
   @ViewChild('searchInput') searchInputEl!: ElementRef<HTMLInputElement>;
-
-
-  /* ── listeners ── */
-  private onlineHandler  = () => { this.isOnlineStatus = true; };
-  private offlineHandler = () => { this.isOnlineStatus = false; this.showError('No internet. Please connect to hotspot.'); };
 
   /* ════════════════════════════════
      COMPUTED
@@ -156,9 +150,6 @@ export class BillingPage implements OnInit, OnDestroy {
   ════════════════════════════════ */
   ngOnInit() {
     this.isAdmin = this.authApi.isAdmin();
-    this.isOnlineStatus = navigator.onLine;
-    window.addEventListener('online',  this.onlineHandler);
-    window.addEventListener('offline', this.offlineHandler);
 
     this.customerName = this.store.getCustomerName();
 
@@ -179,11 +170,6 @@ export class BillingPage implements OnInit, OnDestroy {
         this.packingDefaults.swiggy = Number(s.swiggy_packing_default) || 0;
       }
     });
-  }
-
-  ngOnDestroy() {
-    window.removeEventListener('online',  this.onlineHandler);
-    window.removeEventListener('offline', this.offlineHandler);
   }
 
   loadCategories() {
@@ -309,7 +295,6 @@ export class BillingPage implements OnInit, OnDestroy {
      COUPON
   ════════════════════════════════ */
   applyCoupon() {
-    if (!navigator.onLine) { this.showError('Internet required to apply coupon'); return; }
     const billId = this.store.getBillId();
     if (!billId)             { this.showError('Save bill before applying coupon'); return; }
     if (!this.couponCode.trim()) { this.showError('Enter coupon code'); return; }
@@ -345,12 +330,9 @@ export class BillingPage implements OnInit, OnDestroy {
    * Returns `true` when it's safe to proceed.
    * Opens the out-of-stock modal and returns `false` when any product or
    * ingredient is short.
-   * Skips the network call when offline — the offline queue will sync later
-   * and the backend re-validates on the final write.
    */
   private async preflightStockOk(items: { productId: number; qty: number; name?: string }[]): Promise<boolean> {
     if (!items.length) return true;
-    if (!navigator.onLine) return true;
 
     this.isChecking = true;
     try {
@@ -374,8 +356,6 @@ export class BillingPage implements OnInit, OnDestroy {
      SAVE PENDING
   ════════════════════════════════ */
   async savePending() {
-    if (!navigator.onLine) { this.showError('No internet. Please connect to hotspot.'); return; }
-
     const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
     if (!snapshot.length) { this.showError('Add at least one item'); return; }
 
@@ -418,8 +398,6 @@ export class BillingPage implements OnInit, OnDestroy {
      COMPLETE BILL
   ════════════════════════════════ */
   async completeBill() {
-    if (!navigator.onLine) { this.showError('No internet. Please connect to hotspot.'); return; }
-
     if (this.isOnlinePlatform && !this.customerName?.trim()) {
       this.showError('Order number is required for Zomato / Swiggy');
       return;
@@ -455,25 +433,34 @@ export class BillingPage implements OnInit, OnDestroy {
     this.isCompleting = true;
     const billId = this.store.getBillId();
 
-    /* No existing bill (fresh cart) — create + complete in one shot */
+    /* No existing bill (fresh cart) — create, then complete */
     if (!billId) {
-      this.billApi.syncOffline({
-        customer_name:   this.customerName?.trim() || '',
+      this.billApi.create({
+        customer_name: this.customerName?.trim() || '',
         items,
-        payment_mode:    paymentMode,
-        grand_total:     this.finalTotal,
-        discount_amount: this.couponDiscount || 0,
-        cash_amount:     cashAmt,
-        upi_amount:      upiAmt,
-        local_id:        crypto.randomUUID(),
-        platform:        this.platform || null,
-        bill_date:       this.billDate || null
+        local_id:      crypto.randomUUID(),
+        platform:      this.platform || null,
+        bill_date:     this.billDate || null
       }).subscribe({
-        next: (res: any) => {
-          this.isCompleting = false;
-          this.printReceipt(res.bill_id || 0, items, this.finalTotal, paymentMode, this.customerName);
-          this.clearBill();
-          this.refreshProducts();
+        next: (createRes: any) => {
+          const newBillId = createRes.bill_id;
+          this.billApi.complete(newBillId, {
+            customer_name:   this.customerName,
+            grand_total:     this.finalTotal,
+            payment_mode:    paymentMode,
+            cash_amount:     cashAmt,
+            upi_amount:      upiAmt,
+            discount_amount: this.couponDiscount || 0,
+            bill_date:       this.billDate || null
+          }).subscribe({
+            next: () => {
+              this.isCompleting = false;
+              this.printReceipt(newBillId, items, this.finalTotal, paymentMode, this.customerName);
+              this.clearBill();
+              this.refreshProducts();
+            },
+            error: () => { this.isCompleting = false; this.showError('Failed to complete bill'); }
+          });
         },
         error: () => { this.isCompleting = false; this.showError('Failed to complete bill'); }
       });
