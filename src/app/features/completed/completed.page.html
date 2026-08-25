@@ -17,27 +17,11 @@
         <span class="sum-pill__label">UPI</span>
         <span class="sum-pill__val">&#8377; {{ upiTotal | number:'1.2-2' }}</span>
       </div>
-      <div class="sum-pill sum-pill--zomato" *ngIf="zomatoTotal > 0">
-        <span class="sum-pill__label">Zomato</span>
-        <span class="sum-pill__val">&#8377; {{ zomatoTotal | number:'1.2-2' }}</span>
-      </div>
-      <div class="sum-pill sum-pill--swiggy" *ngIf="swiggyTotal > 0">
-        <span class="sum-pill__label">Swiggy</span>
-        <span class="sum-pill__val">&#8377; {{ swiggyTotal | number:'1.2-2' }}</span>
-      </div>
       <div class="sum-pill sum-pill--total">
         <span class="sum-pill__label">Total</span>
         <span class="sum-pill__val">&#8377; {{ grandTotal | number:'1.2-2' }}</span>
       </div>
     </div>
-  </div>
-
-  <!-- ══ PLATFORM TABS ══ -->
-  <div class="platform-tabs">
-    <button class="ptab" [class.active]="platformFilter === ''" (click)="setPlatformFilter('')">All</button>
-    <button class="ptab ptab--regular" [class.active]="platformFilter === 'regular'" (click)="setPlatformFilter('regular')">Regular</button>
-    <button class="ptab ptab--zomato"  [class.active]="platformFilter === 'zomato'"  (click)="setPlatformFilter('zomato')">Zomato</button>
-    <button class="ptab ptab--swiggy"  [class.active]="platformFilter === 'swiggy'"  (click)="setPlatformFilter('swiggy')">Swiggy</button>
   </div>
 
   <!-- ══ DATE FILTER (ADMIN ONLY) ══ -->
@@ -100,8 +84,6 @@
                 [class.pay-badge--upi]="b.payment_mode === 'UPI'">
             {{ b.payment_mode }}
           </span>
-          <span class="platform-badge platform-badge--zomato" *ngIf="b.platform === 'zomato'">Zomato</span>
-          <span class="platform-badge platform-badge--swiggy" *ngIf="b.platform === 'swiggy'">Swiggy</span>
           <span class="discount-note" *ngIf="b.discount_amount > 0">
             &#127991; -&#8377;{{ b.discount_amount }} off
           </span>
@@ -124,7 +106,7 @@
         </button>
         <button
           class="btn-edit-bill"
-          *ngIf="isAdmin && (b.platform === 'zomato' || b.platform === 'swiggy')"
+          *ngIf="isAdmin"
           (click)="openEdit(b)">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Edit Bill
@@ -178,7 +160,7 @@
 </div>
 
 <!-- ════════════════════════════════════
-     EDIT BILL MODAL (admin — zomato/swiggy only)
+     EDIT BILL MODAL (admin only)
      ════════════════════════════════════ -->
 <div class="edit-overlay no-print" *ngIf="editModal" (click)="closeEdit()"></div>
 <div class="edit-modal no-print" *ngIf="editModal" (click)="$event.stopPropagation()">
@@ -187,19 +169,16 @@
   <div class="em-header">
     <div>
       <div class="em-title">Edit Bill #{{ editModal.bill.id }}</div>
-      <span class="em-plat" [class.em-plat--zomato]="editModal.bill.platform==='zomato'" [class.em-plat--swiggy]="editModal.bill.platform==='swiggy'">
-        {{ editModal.bill.platform === 'zomato' ? 'Zomato' : 'Swiggy' }}
-      </span>
     </div>
     <button class="em-close" (click)="closeEdit()">
       <svg viewBox="0 0 24 24" width="18" height="18"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
   </div>
 
-  <!-- ORDER NUMBER -->
+  <!-- CUSTOMER NAME -->
   <div class="em-field">
-    <label>Order Number / Customer</label>
-    <input type="text" [(ngModel)]="editModal.customerName" placeholder="e.g. Zomato order #12345" />
+    <label>Customer Name</label>
+    <input type="text" [(ngModel)]="editModal.customerName" placeholder="Optional" />
   </div>
 
   <!-- ITEMS LIST -->

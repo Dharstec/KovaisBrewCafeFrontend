@@ -79,7 +79,7 @@ export class ProductsPage implements OnInit {
 
   /* ── add-on management (edit modal) ── */
   addons: any[] = [];
-  addonForm = { name: '', price: null as number | null, platform: 'both' };
+  addonForm = { name: '', price: null as number | null };
   addonSaving = false;
   addonError  = '';
 
@@ -123,10 +123,6 @@ export class ProductsPage implements OnInit {
     this.form = {
       name: '',
       price: 0,
-      zomato_price: null,
-      swiggy_price: null,
-      zomato_packing: null,
-      swiggy_packing: null,
       category_id: null,
       image_url: '',
       stock_item_id: null,
@@ -156,10 +152,6 @@ export class ProductsPage implements OnInit {
       is_sellable: true,
       is_manual_price: false,
       price: null as number | null,
-      zomato_price:   null as number | null,
-      swiggy_price:   null as number | null,
-      zomato_packing: null as number | null,
-      swiggy_packing: null as number | null,
       stock_mode: 'recipe' as 'none' | 'direct' | 'recipe',
       is_active: true
     };
@@ -411,10 +403,6 @@ export class ProductsPage implements OnInit {
       name: f.name.trim(),
       category_id: f.category_id,
       price: f.is_manual_price ? 0 : Number(f.price) || 0,
-      zomato_price:   f.zomato_price   != null ? Number(f.zomato_price)   : null,
-      swiggy_price:   f.swiggy_price   != null ? Number(f.swiggy_price)   : null,
-      zomato_packing: f.zomato_packing != null ? Number(f.zomato_packing) : null,
-      swiggy_packing: f.swiggy_packing != null ? Number(f.swiggy_packing) : null,
       image_url: f.image_url || '',
       is_sellable: !!f.is_sellable,
       is_manual_price: !!f.is_manual_price,
@@ -462,10 +450,6 @@ export class ProductsPage implements OnInit {
       name: f.name.trim(),
       category_id: f.category_id,
       price: f.is_manual_price ? 0 : Number(f.price) || 0,
-      zomato_price:   f.zomato_price   != null ? Number(f.zomato_price)   : null,
-      swiggy_price:   f.swiggy_price   != null ? Number(f.swiggy_price)   : null,
-      zomato_packing: f.zomato_packing != null ? Number(f.zomato_packing) : null,
-      swiggy_packing: f.swiggy_packing != null ? Number(f.swiggy_packing) : null,
       image_url: f.image_url || '',
       is_sellable: !!f.is_sellable,
       is_manual_price: !!f.is_manual_price,
@@ -538,12 +522,11 @@ export class ProductsPage implements OnInit {
     this.addonSaving = true;
     this.addonError  = '';
     this.productApi.createAddon(this.form.id, {
-      name:     this.addonForm.name.trim(),
-      price:    Number(this.addonForm.price),
-      platform: this.addonForm.platform
+      name:  this.addonForm.name.trim(),
+      price: Number(this.addonForm.price)
     }).subscribe({
       next: () => {
-        this.addonForm = { name: '', price: null, platform: 'both' };
+        this.addonForm = { name: '', price: null };
         this.addonSaving = false;
         this.loadAddons(this.form.id);
       },
@@ -566,7 +549,7 @@ export class ProductsPage implements OnInit {
     this.loadStockProducts();
     this.saveError = '';
     this.addons    = [];
-    this.addonForm = { name: '', price: null, platform: 'both' };
+    this.addonForm = { name: '', price: null };
     this.addonError = '';
 
     const isSellable    = p.is_sellable    === true || p.is_sellable    === 'true';
@@ -578,10 +561,6 @@ export class ProductsPage implements OnInit {
       ...p,
       category_id:     p.category_id     ? Number(p.category_id)     : null,
       stock_item_id:   p.stock_item_id   ? Number(p.stock_item_id)   : null,
-      zomato_price:    p.zomato_price    != null ? Number(p.zomato_price)    : null,
-      swiggy_price:    p.swiggy_price    != null ? Number(p.swiggy_price)    : null,
-      zomato_packing:  p.zomato_packing  != null ? Number(p.zomato_packing)  : null,
-      swiggy_packing:  p.swiggy_packing  != null ? Number(p.swiggy_packing)  : null,
       is_sellable:     isSellable,
       is_manual_price: isManualPrice,
       stock_mode:      stockMode

@@ -65,7 +65,7 @@ export class ProductApi {
     return this.http.get<any[]>(`${environment.apiUrl}/products/${productId}/addons`);
   }
 
-  createAddon(productId: number, payload: { name: string; price: number; platform: string }) {
+  createAddon(productId: number, payload: { name: string; price: number }) {
     return this.http.post<any>(`${environment.apiUrl}/products/${productId}/addons`, payload);
   }
 

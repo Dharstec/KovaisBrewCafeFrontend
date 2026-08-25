@@ -30,7 +30,7 @@ export class BillApi {
 
   private http = inject(HttpClient);
 
-  create(payload: { customer_name: string; items: any[]; local_id?: string; platform?: string | null; bill_date?: string | null }) {
+  create(payload: { customer_name: string; items: any[]; local_id?: string; bill_date?: string | null }) {
     return this.http.post<any>(`${environment.apiUrl}/bills`, payload);
   }
 
@@ -70,14 +70,13 @@ export class BillApi {
     return this.http.delete<any>(`${environment.apiUrl}/bills/completed/${id}`);
   }
 
-  completed(startDate?: string, endDate?: string, page = 1, limit = 20, platform?: string) {
+  completed(startDate?: string, endDate?: string, page = 1, limit = 20) {
     return this.http.get<any>(
       `${environment.apiUrl}/completed`,
       {
         params: {
           ...(startDate && { start_date: startDate }),
           ...(endDate   && { end_date:   endDate   }),
-          ...(platform  && { platform }),
           page,
           limit
         }

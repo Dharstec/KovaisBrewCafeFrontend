@@ -108,42 +108,6 @@ $warn:     #d97706;
 }
 
 /* ── Category Bar ── */
-// ── Platform selector ──
-.platform-bar {
-  display: flex;
-  gap: 8px;
-  padding: 0 20px 10px;
-  flex-shrink: 0;
-}
-
-.plat-btn {
-  padding: 5px 16px;
-  border-radius: 999px;
-  border: 1.5px solid #cbd5e1;
-  background: #f8fafc;
-  color: #64748b;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all .15s;
-
-  &.active {
-    border-color: #374151;
-    background: #374151;
-    color: #fff;
-  }
-
-  &--zomato {
-    &.active { background: #e23744; border-color: #e23744; }
-    &:hover:not(.active) { border-color: #e23744; color: #e23744; }
-  }
-
-  &--swiggy {
-    &.active { background: #fc8019; border-color: #fc8019; }
-    &:hover:not(.active) { border-color: #fc8019; color: #fc8019; }
-  }
-}
-
 .category-bar {
   display: flex;
   gap: 8px;
@@ -493,19 +457,6 @@ $warn:     #d97706;
   flex-shrink: 0;
 }
 
-.platform-note {
-  &__badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    &.zomato { background: #fef2f2; color: #e23744; border: 1.5px solid #fecaca; }
-    &.swiggy { background: #fff7ed; color: #fc8019; border: 1.5px solid #fed7aa; }
-  }
-}
-
 .meta-field {
   display: flex;
   flex-direction: column;
@@ -592,17 +543,6 @@ $warn:     #d97706;
   align-items: flex-end;
   gap: 2px;
 }
-
-.ci-packing {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #e23744;
-  background: #fff0f1;
-  border-radius: 5px;
-  padding: 1px 6px;
-  white-space: nowrap;
-}
-
 
 .ci-name {
   font-size: 14px;
@@ -718,34 +658,6 @@ $warn:     #d97706;
   flex-direction: column;
   gap: 8px;
   flex-shrink: 0;
-}
-
-.packing-total {
-  color: #c2410c;
-  font-weight: 600;
-
-  span:first-child {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-}
-
-
-.plat-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  font-size: 10px;
-  font-weight: 800;
-  color: #fff;
-  flex-shrink: 0;
-
-  &--zomato { background: #e23744; }
-  &--swiggy  { background: #fc8019; }
 }
 
 .total-row {

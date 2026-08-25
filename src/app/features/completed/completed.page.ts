@@ -34,14 +34,9 @@ export class CompletedPage implements OnInit {
   totalPages = 1;
   pages: number[] = [];
 
-  /* PLATFORM TABS */
-  platformFilter = '';
-
   /* TOTALS */
   cashTotal    = 0;
   upiTotal     = 0;
-  zomatoTotal  = 0;
-  swiggyTotal  = 0;
   grandTotal   = 0;
 
   /* PRINT */
@@ -74,8 +69,7 @@ export class CompletedPage implements OnInit {
       this.startDate,
       this.endDate,
       this.page,
-      this.limit,
-      this.platformFilter || undefined
+      this.limit
     ).subscribe({
       next: res => {
         this.bills        = res.data;
@@ -83,18 +77,10 @@ export class CompletedPage implements OnInit {
         this.pages        = Array.from({ length: this.totalPages }, (_, i) => i + 1);
         this.cashTotal    = Number(res.summary?.cash_total    || 0);
         this.upiTotal     = Number(res.summary?.upi_total     || 0);
-        this.zomatoTotal  = Number(res.summary?.zomato_total  || 0);
-        this.swiggyTotal  = Number(res.summary?.swiggy_total  || 0);
         this.grandTotal   = Number(res.summary?.grand_total   || 0);
       },
       error: () => this.toast.error('Load failed', 'Could not fetch completed bills.')
     });
-  }
-
-  setPlatformFilter(p: string) {
-    this.platformFilter = p;
-    this.page = 1;
-    this.loadBills();
   }
 
   applyDateFilter() {
@@ -186,12 +172,7 @@ export class CompletedPage implements OnInit {
     if (existing) {
       existing.qty++;
     } else {
-      const price = this.editModal.bill.platform === 'zomato' && product.zomato_price
-        ? Number(product.zomato_price)
-        : this.editModal.bill.platform === 'swiggy' && product.swiggy_price
-          ? Number(product.swiggy_price)
-          : Number(product.price);
-      this.editModal.items.push({ productId: product.id, name: product.name, price, qty: 1 });
+      this.editModal.items.push({ productId: product.id, name: product.name, price: Number(product.price), qty: 1 });
     }
     this.editModal.addProductId = null;
   }

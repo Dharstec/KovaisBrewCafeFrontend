@@ -27,19 +27,6 @@
       </div>
     </div>
 
-    <!-- Platform Selector -->
-    <div class="platform-bar">
-      <button class="plat-btn" [class.active]="platform === ''" (click)="setPlatform('')">
-        Regular
-      </button>
-      <button class="plat-btn plat-btn--zomato" [class.active]="platform === 'zomato'" (click)="setPlatform('zomato')">
-        Zomato
-      </button>
-      <button class="plat-btn plat-btn--swiggy" [class.active]="platform === 'swiggy'" (click)="setPlatform('swiggy')">
-        Swiggy
-      </button>
-    </div>
-
     <!-- Shortcut Buffer Indicator -->
     <div class="shortcut-indicator" *ngIf="shortcutBuffer">
       <div class="si-left">
@@ -107,7 +94,7 @@
         <!-- Info -->
         <div class="prod-info">
           <div class="prod-name">{{ p.name }}</div>
-          <div class="prod-price" *ngIf="!p.is_manual_price">₹ {{ effectivePrice(p) }}</div>
+          <div class="prod-price" *ngIf="!p.is_manual_price">₹ {{ p.price }}</div>
           <div class="prod-price manual" *ngIf="p.is_manual_price">Custom Price</div>
         </div>
 
@@ -171,18 +158,15 @@
     <!-- ── Customer & Payment ── -->
     <div class="order-meta">
       <div class="meta-field">
-        <label>
-          {{ isOnlinePlatform ? '🔖 Order Number' : '👤 Customer Name' }}
-          <span class="required" *ngIf="isOnlinePlatform">*</span>
-        </label>
+        <label>👤 Customer Name</label>
         <input
-          [placeholder]="isOnlinePlatform ? 'Enter Zomato / Swiggy order number' : 'Optional — e.g. Table 4'"
+          placeholder="Optional — e.g. Table 4"
           [(ngModel)]="customerName"
           autocomplete="off"
         />
       </div>
 
-      <div class="meta-field" *ngIf="!isOnlinePlatform">
+      <div class="meta-field">
         <label>
           💳 Payment Method <span class="required">*</span>
           <span class="pay-shortcuts">Alt+C · Alt+U · Alt+X</span>
@@ -238,12 +222,6 @@
           </div>
         </div>
       </div>
-
-      <div class="meta-field platform-note" *ngIf="isOnlinePlatform">
-        <span class="platform-note__badge" [class.zomato]="platform === 'zomato'" [class.swiggy]="platform === 'swiggy'">
-          {{ platform === 'zomato' ? 'Zomato' : 'Swiggy' }} — UPI payment
-        </span>
-      </div>
     </div>
 
     <!-- ── Cart Items ── -->
@@ -257,9 +235,6 @@
             {{ i.name }}
           </div>
           <div class="ci-top-right">
-            <span class="ci-packing" *ngIf="!i.is_addon && isOnlinePlatform && packingForItem(i) > 0">
-              +₹{{ packingForItem(i) * i.qty | number:'1.2-2' }} pkg
-            </span>
             <div class="ci-total">₹ {{ i.price * i.qty | number:'1.2-2' }}</div>
           </div>
         </div>
@@ -317,16 +292,6 @@
         <span>₹ {{ subtotal | number:'1.2-2' }}</span>
       </div>
 
-      <div class="total-row packing-total" *ngIf="isOnlinePlatform && packingTotal > 0">
-        <span>
-          <span class="plat-chip" [class.plat-chip--zomato]="platform==='zomato'" [class.plat-chip--swiggy]="platform==='swiggy'">
-            {{ platform === 'zomato' ? 'Z' : 'S' }}
-          </span>
-          Packing Charges
-        </span>
-        <span>+ ₹ {{ packingTotal | number:'1.2-2' }}</span>
-      </div>
-
       <!-- Coupon — only after payment method selected -->
       <div class="coupon-section" *ngIf="paymentMethod">
         <div class="coupon-input-row">
@@ -367,7 +332,6 @@
     <div class="action-btns">
 
       <button
-        *ngIf="!isOnlinePlatform"
         class="action-btn save"
         (click)="savePending()"
         [disabled]="isSaving || isChecking || !cart.length">
@@ -380,7 +344,7 @@
       <button
         class="action-btn complete"
         *ngIf="cart.length"
-        [disabled]="(!paymentMethod && !isOnlinePlatform && !splitPayment) || (splitPayment && !splitValid) || isCompleting || isChecking"
+        [disabled]="(!paymentMethod && !splitPayment) || (splitPayment && !splitValid) || isCompleting || isChecking"
         (click)="completeBill()">
         <span class="btn-spinner" *ngIf="isCompleting || isChecking"></span>
         <span *ngIf="!isCompleting && !isChecking">✅ Complete Bill</span>
@@ -559,8 +523,6 @@
     <div class="sk-row"><div class="sk-combo"><kbd>Alt</kbd><kbd>C</kbd></div><span>Select Cash</span></div>
     <div class="sk-row"><div class="sk-combo"><kbd>Alt</kbd><kbd>U</kbd></div><span>Select UPI</span></div>
     <div class="sk-row"><div class="sk-combo"><kbd>Alt</kbd><kbd>X</kbd></div><span>Toggle Split payment</span></div>
-    <div class="sk-row"><kbd>F7</kbd><span>Zomato platform</span></div>
-    <div class="sk-row"><kbd>F8</kbd><span>Swiggy platform</span></div>
 
     <div class="sk-section-title">Bill Actions</div>
     <div class="sk-row"><kbd>Ctrl</kbd><kbd>S</kbd><span>Save Pending</span></div>

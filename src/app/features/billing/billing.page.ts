@@ -7,7 +7,6 @@ import { BillingStore }      from '../../core/state/billing.store';
 import { ProductApi }        from '../../core/api/product.api';
 import { BillApi, StockShortfallEntry } from '../../core/api/bill.api';
 import { PrinterService }    from '../../core/services/printer.service';
-import { SettingsApi }       from '../../core/api/settings.api';
 import { AuthApi }           from '../../core/api/auth.api';
 
 @Component({
@@ -24,7 +23,6 @@ export class BillingPage implements OnInit {
   productApi = inject(ProductApi);
   billApi    = inject(BillApi);
   printer    = inject(PrinterService);
-  settingsApi = inject(SettingsApi);
   authApi    = inject(AuthApi);
 
   /* ── catalogue ── */
@@ -32,7 +30,6 @@ export class BillingPage implements OnInit {
   categories       : any[]   = [];
   selectedCategory           = 'All';
   searchText                 = '';
-  platform                   = '';
 
   /* ── order ── */
   cart             : any[]   = [];
@@ -50,9 +47,6 @@ export class BillingPage implements OnInit {
   isSaving       = false;
   isCompleting   = false;
   showCart       = false;
-
-  /* ── packing charges ── */
-  packingDefaults = { zomato: 0, swiggy: 0 };
 
   /* ── admin: backdated billing ── */
   isAdmin  = false;
@@ -95,52 +89,8 @@ export class BillingPage implements OnInit {
     return this.store.getTotal();
   }
 
-  /* Zomato tiered packing rate by unit price */
-  private zomatoPackingRate(price: number): number {
-    if (price < 50)   return 5;
-    if (price < 150)  return 7;
-    if (price < 350)  return 10;
-    if (price < 500)  return 15;
-    if (price < 1000) return 20;
-    return 25;
-  }
-
-  /* Swiggy tiered packing rate by unit price */
-  private swiggyPackingRate(price: number): number {
-    if (price < 50)  return 5;
-    if (price < 150) return 7;
-    if (price < 300) return 10;
-    if (price < 500) return 15;
-    return 20;
-  }
-
-  /* Per-product packing if set, otherwise fall back to tier */
-  packingForItem(item: any): number {
-    if (!this.isOnlinePlatform) return 0;
-    const product = this.products.find((p: any) => p.id === item.productId);
-    if (this.platform === 'zomato') {
-      const packing = item.zomato_packing ?? product?.zomato_packing;
-      return (packing != null && Number(packing) > 0)
-        ? Number(packing)
-        : this.zomatoPackingRate(item.price);
-    }
-    if (this.platform === 'swiggy') {
-      const packing = item.swiggy_packing ?? product?.swiggy_packing;
-      return (packing != null && Number(packing) > 0)
-        ? Number(packing)
-        : this.swiggyPackingRate(item.price);
-    }
-    return 0;
-  }
-
-  get packingTotal(): number {
-    if (!this.isOnlinePlatform) return 0;
-    const total = this.cart.reduce((sum, item) => sum + this.packingForItem(item) * item.qty, 0);
-    return this.platform === 'zomato' ? Math.min(total, 40) : total;
-  }
-
   get finalTotal(): number {
-    const t = this.subtotal + this.packingTotal - this.couponDiscount;
+    const t = this.subtotal - this.couponDiscount;
     return t > 0 ? t : 0;
   }
 
@@ -164,12 +114,6 @@ export class BillingPage implements OnInit {
     });
 
     this.loadCategories();
-    this.settingsApi.get().subscribe({
-      next: s => {
-        this.packingDefaults.zomato = Number(s.zomato_packing_default) || 0;
-        this.packingDefaults.swiggy = Number(s.swiggy_packing_default) || 0;
-      }
-    });
   }
 
   loadCategories() {
@@ -187,8 +131,6 @@ export class BillingPage implements OnInit {
   ════════════════════════════════ */
   get filteredProducts() {
     let list = this.products;
-    if (this.platform === 'zomato') list = list.filter(p => p.zomato_price);
-    if (this.platform === 'swiggy') list = list.filter(p => p.swiggy_price);
     if (this.selectedCategory !== 'All') {
       list = list.filter(p => p.category === this.selectedCategory);
     }
@@ -199,36 +141,11 @@ export class BillingPage implements OnInit {
     return list;
   }
 
-  effectivePrice(p: any): number {
-    if (this.platform === 'zomato' && p.zomato_price) return Number(p.zomato_price);
-    if (this.platform === 'swiggy' && p.swiggy_price) return Number(p.swiggy_price);
-    return Number(p.price);
-  }
-
-  setPlatform(p: string) {
-    if (this.platform === p) { this.platform = ''; this.paymentMethod = ''; this.clearBill(); return; }
-    if (this.cart.length > 0) {
-      if (!confirm('Changing platform will clear the current cart. Continue?')) return;
-    }
-    this.platform = p;
-    this.paymentMethod = (p === 'zomato' || p === 'swiggy') ? 'UPI' : '';
-    this.clearBill();
-  }
-
-  get isOnlinePlatform(): boolean {
-    return this.platform === 'zomato' || this.platform === 'swiggy';
-  }
-
   addProduct(product: any) {
     const existing = this.cart.find(item => item.productId === product.id);
     if (product.is_manual_price && existing) return;
 
-    if (this.isOnlinePlatform) {
-      this.openAddonModal(product);
-    } else {
-      this.store.add({ ...product, price: this.effectivePrice(product) });
-      if (window.innerWidth <= 900) this.showCart = true;
-    }
+    this.openAddonModal(product);
   }
 
   openAddonModal(product: any) {
@@ -236,22 +153,20 @@ export class BillingPage implements OnInit {
     this.productApi.getAddons(product.id).subscribe({
       next: (addons: any[]) => {
         if (!this.addonModal) return;
-        const platform = this.platform;
-        const filtered = addons.filter(a => a.platform === platform || a.platform === 'both');
-        if (filtered.length === 0) {
+        if (addons.length === 0) {
           // No add-ons → add directly without modal
           this.addonModal = null;
-          this.store.add({ ...product, price: this.effectivePrice(product) });
+          this.store.add({ ...product, price: Number(product.price) });
           if (window.innerWidth <= 900) this.showCart = true;
         } else {
-          this.addonModal.addons  = filtered;
+          this.addonModal.addons  = addons;
           this.addonModal.loading = false;
         }
       },
       error: () => {
         // On error, add directly
         this.addonModal = null;
-        this.store.add({ ...product, price: this.effectivePrice(product) });
+        this.store.add({ ...product, price: Number(product.price) });
         if (window.innerWidth <= 900) this.showCart = true;
       }
     });
@@ -271,7 +186,7 @@ export class BillingPage implements OnInit {
     const { product, addons, selected } = this.addonModal;
     this.addonModal = null;
 
-    this.store.add({ ...product, price: this.effectivePrice(product) });
+    this.store.add({ ...product, price: Number(product.price) });
 
     for (const a of addons) {
       if (selected.has(a.id)) {
@@ -285,7 +200,7 @@ export class BillingPage implements OnInit {
     if (!this.addonModal) return;
     const product = this.addonModal.product;
     this.addonModal = null;
-    this.store.add({ ...product, price: this.effectivePrice(product) });
+    this.store.add({ ...product, price: Number(product.price) });
     if (window.innerWidth <= 900) this.showCart = true;
   }
 
@@ -374,7 +289,6 @@ export class BillingPage implements OnInit {
         price:     Number(i.price),
         qty:       Number(i.qty)
       })),
-      platform:  this.platform || null,
       bill_date: this.billDate || null
     };
 
@@ -398,11 +312,7 @@ export class BillingPage implements OnInit {
      COMPLETE BILL
   ════════════════════════════════ */
   async completeBill() {
-    if (this.isOnlinePlatform && !this.customerName?.trim()) {
-      this.showError('Order number is required for Zomato / Swiggy');
-      return;
-    }
-    if (!this.paymentMethod && !this.isOnlinePlatform && !this.splitPayment) {
+    if (!this.paymentMethod && !this.splitPayment) {
       this.showError('Select payment method');
       return;
     }
@@ -424,9 +334,7 @@ export class BillingPage implements OnInit {
     if (!(await this.preflightStockOk(items.map((i: any) => ({ productId: i.productId, qty: i.qty, name: i.name }))))) return;
 
     // Resolve effective payment fields
-    const paymentMode = this.isOnlinePlatform ? 'UPI'
-                      : this.splitPayment      ? 'SPLIT'
-                      : this.paymentMethod;
+    const paymentMode = this.splitPayment ? 'SPLIT' : this.paymentMethod;
     const cashAmt = this.splitPayment ? this.splitCash : null;
     const upiAmt  = this.splitPayment ? this.splitUpi  : null;
 
@@ -439,7 +347,6 @@ export class BillingPage implements OnInit {
         customer_name: this.customerName?.trim() || '',
         items,
         local_id:      crypto.randomUUID(),
-        platform:      this.platform || null,
         bill_date:     this.billDate || null
       }).subscribe({
         next: (createRes: any) => {
@@ -683,7 +590,7 @@ export class BillingPage implements OnInit {
     // Ctrl+S — Save Pending
     if (e.ctrlKey && e.key === 's') {
       e.preventDefault();
-      if (!this.isOnlinePlatform && !this.isSaving && !this.isChecking && this.cart.length) {
+      if (!this.isSaving && !this.isChecking && this.cart.length) {
         this.savePending();
       }
       return;
@@ -701,29 +608,24 @@ export class BillingPage implements OnInit {
     // Alt+C — Cash
     if (e.altKey && (e.key === 'c' || e.key === 'C')) {
       e.preventDefault();
-      if (!this.isOnlinePlatform) { this.setSplitPayment(false); this.paymentMethod = 'CASH'; }
+      this.setSplitPayment(false); this.paymentMethod = 'CASH';
       return;
     }
     // Alt+U — UPI
     if (e.altKey && (e.key === 'u' || e.key === 'U')) {
       e.preventDefault();
-      if (!this.isOnlinePlatform) { this.setSplitPayment(false); this.paymentMethod = 'UPI'; }
+      this.setSplitPayment(false); this.paymentMethod = 'UPI';
       return;
     }
     // Alt+X — Split payment
     if (e.altKey && (e.key === 'x' || e.key === 'X')) {
       e.preventDefault();
-      if (!this.isOnlinePlatform) this.setSplitPayment(!this.splitPayment);
+      this.setSplitPayment(!this.splitPayment);
       return;
     }
 
     // When not inside an input field:
     if (!inInput) {
-      // F7 — Zomato platform
-      if (e.key === 'F7') { e.preventDefault(); this.setPlatform('zomato'); return; }
-      // F8 — Swiggy platform
-      if (e.key === 'F8') { e.preventDefault(); this.setPlatform('swiggy'); return; }
-
       // Tab — cycle to next category
       if (e.key === 'Tab' && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
