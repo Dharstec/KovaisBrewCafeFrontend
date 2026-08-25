@@ -916,6 +916,11 @@ $radius: 14px;
   .spd-header { flex-wrap: wrap; }
   .search-wrap { width: 100%; }
   .spd-bar { width: 100%; }
-  .spd-drawer { width: 100%; border-radius: 20px 20px 0 0; top: auto; height: 90vh; }
-  .spd-overlay ~ .spd-drawer { top: auto; }
+  .spd-drawer {
+    width: 100%; right: 0; bottom: 0; top: auto;
+    border-radius: 20px 20px 0 0; height: 90vh;
+    transform: translateY(100%);
+
+    &.open { transform: translateY(0); }
+  }
 }
