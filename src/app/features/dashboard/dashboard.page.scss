@@ -1096,6 +1096,7 @@ $radius:  14px;
 }
 
 @media (max-width: 600px) {
+  .db { padding: 16px 14px 40px; }
   .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px; }
   .kpi-card { padding: 14px 14px 12px; }
   .kpi-value { font-size: 22px; }

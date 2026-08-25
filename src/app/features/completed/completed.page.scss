@@ -395,16 +395,23 @@ $radius:  14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 
   &__name {
     font-size: 13px;
     color: $text2;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__price {
     font-size: 13px;
     font-weight: 600;
     color: $text1;
+    flex-shrink: 0;
   }
 }
 
