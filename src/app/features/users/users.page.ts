@@ -11,7 +11,8 @@ type Tab = 'users' | 'roles';
   standalone: true,
   selector: 'app-users-page',
   imports: [CommonModule, FormsModule],
-  templateUrl: './users.page.html'
+  templateUrl: './users.page.html',
+  styleUrls: ['./users.page.scss']
 })
 export class UsersPage implements OnInit {
   private usersApi = inject(UsersApi);

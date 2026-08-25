@@ -1,25 +1,17 @@
-<div style="padding:20px;max-width:1100px;margin:0 auto">
+<div class="up-wrap">
 
   <!-- Header -->
-  <div style="margin-bottom:20px">
-    <h1 style="font-size:22px;font-weight:700;color:#111827;margin:0">User Management</h1>
-    <p style="color:#6b7280;font-size:13px;margin:4px 0 0">Manage system users and roles</p>
+  <div class="up-header">
+    <h1 class="up-title">User Management</h1>
+    <p class="up-subtitle">Manage system users and roles</p>
   </div>
 
   <!-- Tabs -->
-  <div style="display:flex;gap:4px;background:#f3f4f6;border-radius:10px;padding:4px;margin-bottom:20px;width:fit-content">
-    <button (click)="setTab('users')"
-            [style.background]="activeTab==='users' ? '#fff' : 'transparent'"
-            [style.color]="activeTab==='users' ? '#111827' : '#6b7280'"
-            [style.boxShadow]="activeTab==='users' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none'"
-            style="padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.15s">
+  <div class="up-tabs">
+    <button (click)="setTab('users')" class="up-tab" [class.up-tab--active]="activeTab==='users'">
       Users
     </button>
-    <button (click)="setTab('roles')"
-            [style.background]="activeTab==='roles' ? '#fff' : 'transparent'"
-            [style.color]="activeTab==='roles' ? '#111827' : '#6b7280'"
-            [style.boxShadow]="activeTab==='roles' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none'"
-            style="padding:8px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.15s">
+    <button (click)="setTab('roles')" class="up-tab" [class.up-tab--active]="activeTab==='roles'">
       Roles
     </button>
   </div>
@@ -30,160 +22,140 @@
   <ng-container *ngIf="activeTab === 'users'">
 
     <!-- Toolbar -->
-    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button (click)="toggleCreate()"
-              style="padding:9px 18px;background:#3b82f6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">
+    <div class="up-toolbar">
+      <button (click)="toggleCreate()" class="up-btn up-btn--primary">
         {{ showCreateForm ? '✕ Cancel' : '+ Create User' }}
       </button>
     </div>
 
     <!-- Create User Form -->
-    <div *ngIf="showCreateForm"
-         style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px">
-      <h2 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 16px">New User</h2>
+    <div *ngIf="showCreateForm" class="up-card">
+      <h2 class="up-card-title">New User</h2>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-        <div>
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">
-            Username <span style="color:#ef4444">*</span>
+      <div class="up-form-grid">
+        <div class="up-field">
+          <label class="up-label">
+            Username <span class="up-required">*</span>
           </label>
-          <input type="text" [(ngModel)]="createForm.user_name" placeholder="e.g. John"
-                 style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box"/>
+          <input type="text" [(ngModel)]="createForm.user_name" placeholder="e.g. John" class="up-input"/>
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">
-            Email <span style="color:#ef4444">*</span>
+        <div class="up-field">
+          <label class="up-label">
+            Email <span class="up-required">*</span>
           </label>
-          <input type="email" [(ngModel)]="createForm.email" placeholder="user@email.com"
-                 style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box"/>
+          <input type="email" [(ngModel)]="createForm.email" placeholder="user@email.com" class="up-input"/>
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">
-            Password <span style="color:#ef4444">*</span>
+        <div class="up-field">
+          <label class="up-label">
+            Password <span class="up-required">*</span>
           </label>
-          <input type="password" [(ngModel)]="createForm.password" placeholder="••••••••"
-                 style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box"/>
+          <input type="password" [(ngModel)]="createForm.password" placeholder="••••••••" class="up-input"/>
         </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">
-            Role <span style="color:#ef4444">*</span>
+        <div class="up-field">
+          <label class="up-label">
+            Role <span class="up-required">*</span>
           </label>
-          <select [(ngModel)]="createForm.role_id"
-                  style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box">
+          <select [(ngModel)]="createForm.role_id" class="up-input">
             <option [ngValue]="null">Select role…</option>
             <option *ngFor="let r of roles" [ngValue]="r.id">{{ r.role_type }}</option>
           </select>
         </div>
-        <div *ngIf="createForm.role_id && !isAdminRole(createForm.role_id)">
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">Shop</label>
-          <select [(ngModel)]="createForm.shop_id"
-                  style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box">
+        <div class="up-field" *ngIf="createForm.role_id && !isAdminRole(createForm.role_id)">
+          <label class="up-label">Shop</label>
+          <select [(ngModel)]="createForm.shop_id" class="up-input">
             <option [ngValue]="null">Default (Shop 1)</option>
             <option *ngFor="let s of shops" [ngValue]="s.id">{{ s.name }}</option>
           </select>
         </div>
       </div>
 
-      <div *ngIf="createError" style="margin-top:10px;color:#dc2626;font-size:13px">{{ createError }}</div>
-      <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px">
-        <button (click)="toggleCreate()"
-                style="padding:9px 18px;background:#fff;border:1px solid #d1d5db;border-radius:8px;cursor:pointer;font-size:13px">
+      <div *ngIf="createError" class="up-error">{{ createError }}</div>
+      <div class="up-form-actions">
+        <button (click)="toggleCreate()" class="up-btn up-btn--ghost">
           Cancel
         </button>
-        <button (click)="submitCreate()" [disabled]="createLoading"
-                style="padding:9px 20px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px">
+        <button (click)="submitCreate()" [disabled]="createLoading" class="up-btn up-btn--success">
           {{ createLoading ? 'Creating…' : 'Create User' }}
         </button>
       </div>
     </div>
 
     <!-- Users Table -->
-    <div *ngIf="usersLoading" style="text-align:center;padding:40px;color:#6b7280">Loading…</div>
+    <div *ngIf="usersLoading" class="up-loading">Loading…</div>
 
-    <div *ngIf="!usersLoading" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px">
-        <thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb">
+    <div *ngIf="!usersLoading" class="up-table-wrap">
+      <table class="up-table up-table--users">
+        <thead>
           <tr>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">#</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Username</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Email</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Role</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Shop</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Created</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Actions</th>
+            <th>#</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Shop</th>
+            <th>Created</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <ng-container *ngFor="let u of users">
 
             <!-- VIEW ROW -->
-            <tr *ngIf="editingUserId !== u.id"
-                style="border-bottom:1px solid #f3f4f6"
-                [style.background]="u.id === currentUserId ? '#f0fdf4' : '#fff'">
-              <td style="padding:12px 16px;color:#9ca3af">{{ u.id }}</td>
-              <td style="padding:12px 16px;font-weight:600;color:#111827">
+            <tr *ngIf="editingUserId !== u.id" class="up-row" [class.up-row--me]="u.id === currentUserId">
+              <td class="up-muted">{{ u.id }}</td>
+              <td class="up-strong">
                 {{ u.user_name }}
-                <span *ngIf="u.id === currentUserId"
-                      style="margin-left:6px;font-size:10px;background:#d1fae5;color:#065f46;padding:2px 6px;border-radius:4px;font-weight:600">YOU</span>
+                <span *ngIf="u.id === currentUserId" class="up-badge-you">YOU</span>
               </td>
-              <td style="padding:12px 16px;color:#374151">{{ u.email }}</td>
-              <td style="padding:12px 16px">
-                <span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:0.3px"
-                      [style.background]="u.role_type==='Admin' ? '#fef3c7' : u.role_type==='Manager' ? '#dbeafe' : '#f3f4f6'"
-                      [style.color]="u.role_type==='Admin' ? '#92400e' : u.role_type==='Manager' ? '#1e40af' : '#374151'">
+              <td class="up-text">{{ u.email }}</td>
+              <td>
+                <span class="up-role-badge"
+                      [class.up-role-badge--admin]="u.role_type==='Admin'"
+                      [class.up-role-badge--manager]="u.role_type==='Manager'"
+                      [class.up-role-badge--default]="u.role_type!=='Admin' && u.role_type!=='Manager'">
                   {{ u.role_type }}
                 </span>
               </td>
-              <td style="padding:12px 16px;color:#374151">{{ u.shop_name || '— (All shops)' }}</td>
-              <td style="padding:12px 16px;color:#9ca3af">{{ fmtDate(u.created_at) }}</td>
-              <td style="padding:12px 16px">
-                <button (click)="startEdit(u)"
-                        style="padding:5px 12px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;margin-right:4px">
+              <td class="up-text">{{ u.shop_name || '— (All shops)' }}</td>
+              <td class="up-muted">{{ fmtDate(u.created_at) }}</td>
+              <td>
+                <button (click)="startEdit(u)" class="up-btn up-btn--edit">
                   Edit
                 </button>
-                <button *ngIf="u.id !== currentUserId" (click)="deleteUser(u)"
-                        style="padding:5px 12px;background:#fff;border:1px solid #fca5a5;color:#dc2626;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">
+                <button *ngIf="u.id !== currentUserId" (click)="deleteUser(u)" class="up-btn up-btn--delete">
                   Delete
                 </button>
               </td>
             </tr>
 
             <!-- EDIT ROW -->
-            <tr *ngIf="editingUserId === u.id"
-                style="border-bottom:1px solid #bfdbfe;background:#eff6ff">
-              <td style="padding:10px 16px;color:#9ca3af">{{ u.id }}</td>
-              <td style="padding:10px 8px">
-                <input type="text" [(ngModel)]="editForm.user_name"
-                       style="width:100%;padding:7px 10px;border:1px solid #93c5fd;border-radius:6px;font-size:13px"/>
+            <tr *ngIf="editingUserId === u.id" class="up-edit-row">
+              <td class="up-muted">{{ u.id }}</td>
+              <td>
+                <input type="text" [(ngModel)]="editForm.user_name" class="up-input up-input--sm"/>
               </td>
-              <td style="padding:10px 16px;color:#6b7280">{{ u.email }}</td>
-              <td style="padding:10px 8px">
-                <select [(ngModel)]="editForm.role_id"
-                        style="width:100%;padding:7px 10px;border:1px solid #93c5fd;border-radius:6px;font-size:13px">
+              <td class="up-text-dim">{{ u.email }}</td>
+              <td>
+                <select [(ngModel)]="editForm.role_id" class="up-input up-input--sm">
                   <option [ngValue]="null">Select…</option>
                   <option *ngFor="let r of roles" [ngValue]="r.id">{{ r.role_type }}</option>
                 </select>
               </td>
-              <td style="padding:10px 8px">
-                <select *ngIf="editForm.role_id && !isAdminRole(editForm.role_id)" [(ngModel)]="editForm.shop_id"
-                        style="width:100%;padding:7px 10px;border:1px solid #93c5fd;border-radius:6px;font-size:13px">
+              <td>
+                <select *ngIf="editForm.role_id && !isAdminRole(editForm.role_id)" [(ngModel)]="editForm.shop_id" class="up-input up-input--sm">
                   <option [ngValue]="null">Shop 1 (default)</option>
                   <option *ngFor="let s of shops" [ngValue]="s.id">{{ s.name }}</option>
                 </select>
-                <span *ngIf="!editForm.role_id || isAdminRole(editForm.role_id)" style="color:#9ca3af;font-size:12px">All shops</span>
+                <span *ngIf="!editForm.role_id || isAdminRole(editForm.role_id)" class="up-all-shops">All shops</span>
               </td>
-              <td style="padding:10px 8px">
-                <input type="password" [(ngModel)]="editForm.password" placeholder="New password (optional)"
-                       style="width:100%;padding:7px 10px;border:1px solid #93c5fd;border-radius:6px;font-size:13px"/>
+              <td>
+                <input type="password" [(ngModel)]="editForm.password" placeholder="New password (optional)" class="up-input up-input--sm"/>
               </td>
-              <td style="padding:10px 8px">
-                <div *ngIf="editError" style="color:#dc2626;font-size:11px;margin-bottom:4px">{{ editError }}</div>
-                <button (click)="submitEdit(u)" [disabled]="editLoading"
-                        style="padding:6px 12px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;margin-right:4px">
+              <td>
+                <div *ngIf="editError" class="up-error up-error--sm">{{ editError }}</div>
+                <button (click)="submitEdit(u)" [disabled]="editLoading" class="up-btn up-btn--save">
                   {{ editLoading ? '…' : 'Save' }}
                 </button>
-                <button (click)="cancelEdit()"
-                        style="padding:6px 10px;background:#fff;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;font-size:12px">
+                <button (click)="cancelEdit()" class="up-btn up-btn--cancel">
                   Cancel
                 </button>
               </td>
@@ -192,7 +164,7 @@
           </ng-container>
 
           <tr *ngIf="!users.length">
-            <td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">No users found</td>
+            <td colspan="7" class="up-empty">No users found</td>
           </tr>
         </tbody>
       </table>
@@ -206,61 +178,61 @@
   <ng-container *ngIf="activeTab === 'roles'">
 
     <!-- Create Role Form -->
-    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px">
-      <h2 style="font-size:16px;font-weight:700;color:#111827;margin:0 0 14px">Create New Role</h2>
-      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-        <div style="flex:1;min-width:220px">
-          <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px">
-            Role Name <span style="color:#ef4444">*</span>
+    <div class="up-card">
+      <h2 class="up-card-title">Create New Role</h2>
+      <div class="up-role-form-row">
+        <div class="up-field up-field--grow">
+          <label class="up-label">
+            Role Name <span class="up-required">*</span>
           </label>
           <input type="text" [(ngModel)]="newRoleName"
                  (keyup.enter)="submitCreateRole()"
                  placeholder="e.g. Manager, Supervisor…"
-                 style="width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;box-sizing:border-box"/>
+                 class="up-input"/>
         </div>
-        <button (click)="submitCreateRole()" [disabled]="roleLoading"
-                style="padding:9px 20px;background:#10b981;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap">
+        <button (click)="submitCreateRole()" [disabled]="roleLoading" class="up-btn up-btn--success up-btn--nowrap">
           {{ roleLoading ? 'Creating…' : '+ Create Role' }}
         </button>
       </div>
-      <div *ngIf="roleError" style="margin-top:8px;color:#dc2626;font-size:13px">{{ roleError }}</div>
-      <p style="margin:10px 0 0;font-size:12px;color:#9ca3af">
+      <div *ngIf="roleError" class="up-error">{{ roleError }}</div>
+      <p class="up-hint">
         New roles inherit Admin-level permissions. Assign users to this role from the Users tab.
       </p>
     </div>
 
     <!-- Roles Table -->
-    <div *ngIf="rolesLoading" style="text-align:center;padding:40px;color:#6b7280">Loading…</div>
+    <div *ngIf="rolesLoading" class="up-loading">Loading…</div>
 
-    <div *ngIf="!rolesLoading" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:400px">
-        <thead style="background:#f9fafb;border-bottom:1px solid #e5e7eb">
+    <div *ngIf="!rolesLoading" class="up-table-wrap">
+      <table class="up-table up-table--roles">
+        <thead>
           <tr>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">#</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Role Name</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Type</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Created</th>
-            <th style="padding:12px 16px;text-align:left;font-weight:600;color:#374151">Users</th>
+            <th>#</th>
+            <th>Role Name</th>
+            <th>Type</th>
+            <th>Created</th>
+            <th>Users</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let r of roles" style="border-bottom:1px solid #f3f4f6">
-            <td style="padding:12px 16px;color:#9ca3af">{{ r.id }}</td>
-            <td style="padding:12px 16px;font-weight:700;color:#111827">{{ r.role_type }}</td>
-            <td style="padding:12px 16px">
-              <span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700"
-                    [style.background]="r.role_type==='Admin' ? '#fef3c7' : r.role_type==='Manager' ? '#dbeafe' : '#f3f4f6'"
-                    [style.color]="r.role_type==='Admin' ? '#92400e' : r.role_type==='Manager' ? '#1e40af' : '#374151'">
+          <tr *ngFor="let r of roles" class="up-row">
+            <td class="up-muted">{{ r.id }}</td>
+            <td class="up-strong">{{ r.role_type }}</td>
+            <td>
+              <span class="up-role-badge"
+                    [class.up-role-badge--admin]="r.role_type==='Admin'"
+                    [class.up-role-badge--manager]="r.role_type==='Manager'"
+                    [class.up-role-badge--default]="r.role_type!=='Admin' && r.role_type!=='Manager'">
                 {{ r.role_type==='Admin' ? 'System Admin' : r.role_type==='User' ? 'Cashier (default)' : r.role_type }}
               </span>
             </td>
-            <td style="padding:12px 16px;color:#9ca3af">{{ fmtDate(r.created_at) }}</td>
-            <td style="padding:12px 16px;color:#374151">
+            <td class="up-muted">{{ fmtDate(r.created_at) }}</td>
+            <td class="up-text">
               {{ usersInRole(r.id) }}
             </td>
           </tr>
           <tr *ngIf="!roles.length">
-            <td colspan="5" style="text-align:center;padding:40px;color:#9ca3af">No roles found</td>
+            <td colspan="5" class="up-empty">No roles found</td>
           </tr>
         </tbody>
       </table>
