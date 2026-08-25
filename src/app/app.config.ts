@@ -1,4 +1,4 @@
-import { ApplicationConfig, inject, isDevMode } from '@angular/core';
+import { ApplicationConfig, inject } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import {
     provideHttpClient,
@@ -7,7 +7,6 @@ import {
 } from '@angular/common/http';
 import { routes } from './app.routes';
 import { catchError, throwError } from 'rxjs';
-import { provideServiceWorker } from '@angular/service-worker';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
@@ -40,10 +39,6 @@ export const appConfig: ApplicationConfig = {
                 }));
             },
         ])),
-        provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-        }),
         provideCharts(withDefaultRegisterables()) // ✅ REQUIRED
 
     ],

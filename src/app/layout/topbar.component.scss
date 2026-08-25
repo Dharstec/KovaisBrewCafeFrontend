@@ -397,36 +397,6 @@ $border: rgba(255,255,255,.06);
   }
 }
 
-/* Install button */
-.btn-install {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: transparent;
-  color: $text;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all .15s;
-
-  svg {
-    width: 14px;
-    height: 14px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  &:hover { background: rgba(255,255,255,.08); }
-}
-
 /* Hamburger */
 .menu-btn {
   display: none;
@@ -564,35 +534,6 @@ $border: rgba(255,255,255,.06);
   margin: 10px 0;
 }
 
-.drawer-install {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 11px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.15);
-  background: transparent;
-  color: $text;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: left;
-  transition: background .15s;
-
-  svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    fill: none;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  &:hover { background: rgba(255,255,255,.06); }
-}
-
 .drawer-logout {
   display: flex;
   align-items: center;
@@ -721,5 +662,4 @@ $border: rgba(255,255,255,.06);
   .topbar { padding: 0 14px; }
   .brand-sub { display: none; }
   .user-pill { padding: 4px; }
-  .btn-install { display: none; }
 }

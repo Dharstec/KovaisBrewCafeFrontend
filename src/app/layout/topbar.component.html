@@ -89,11 +89,6 @@
   <!-- ── Right Section ── -->
   <div class="topbar-right">
 
-    <button class="btn-install" *ngIf="showInstallBtn" (click)="installApp()" title="Install App">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-      Install
-    </button>
-
     <!-- Shop switcher (Admin only) — compact -->
     <div *ngIf="isAdmin && shops.length > 1" class="shop-switcher-wrap" style="position:relative;flex-shrink:0"
          (click)="$event.stopPropagation()">
@@ -242,11 +237,6 @@
     </div>
 
     <div class="drawer-divider"></div>
-
-    <button class="drawer-install" *ngIf="showInstallBtn" (click)="installApp()">
-      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-      Install App
-    </button>
 
     <button class="drawer-logout" (click)="logout()">
       <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>

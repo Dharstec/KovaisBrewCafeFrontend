@@ -31,9 +31,6 @@ export class TopbarComponent implements OnInit {
   currentShopId = this.auth.getCurrentShopId();
   shopMenuOpen = false;
 
-  deferredPrompt: any;
-  showInstallBtn = false;
-
   get userName():    string { return this.auth.getUser()?.user_name || 'User'; }
   get userInitial(): string { return this.userName.charAt(0).toUpperCase(); }
   get userRole(): string {
@@ -73,12 +70,6 @@ export class TopbarComponent implements OnInit {
   toggleProfile() { this.profileOpen = !this.profileOpen; }
 
   ngOnInit() {
-    window.addEventListener('beforeinstallprompt', (e: any) => {
-      e.preventDefault();
-      this.deferredPrompt = e;
-      this.showInstallBtn = true;
-    });
-
     this.stockApi.getAlerts().subscribe({
       next: res => { this.alertCount = (res.expiring_count || 0) + (res.low_stock_count || 0); },
       error: () => {}
@@ -90,15 +81,6 @@ export class TopbarComponent implements OnInit {
         error: () => {}
       });
     }
-  }
-
-  installApp() {
-    if (!this.deferredPrompt) return;
-    this.deferredPrompt.prompt();
-    this.deferredPrompt.userChoice.then(() => {
-      this.deferredPrompt  = null;
-      this.showInstallBtn  = false;
-    });
   }
 
   logout() {
