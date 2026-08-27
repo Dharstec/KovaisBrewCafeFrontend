@@ -293,7 +293,7 @@
       </div>
 
       <!-- Coupon — only after payment method selected -->
-      <div class="coupon-section" *ngIf="paymentMethod">
+      <div class="coupon-section" *ngIf="paymentMethod || splitPayment">
         <div class="coupon-input-row">
           <div class="coupon-field">
             <span class="coupon-icon">🎟</span>

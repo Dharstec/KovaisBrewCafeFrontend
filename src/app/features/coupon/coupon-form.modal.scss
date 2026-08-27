@@ -1,3 +1,8 @@
+$font:    'Inter', system-ui, sans-serif;
+$accent:  #f97316;
+$border:  #e2e8f0;
+$text2:   #475569;
+
 .overlay {
   position: fixed;
   inset: 0;
@@ -51,4 +56,28 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+
+  button {
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 10px;
+    font-family: $font;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, $accent 0%, #fb923c 100%);
+    color: #fff;
+    transition: opacity .15s;
+
+    &:hover { opacity: .9; }
+
+    &.ghost {
+      background: transparent;
+      border: 1px solid $border;
+      color: $text2;
+
+      &:hover { opacity: 1; background: #f8fafc; }
+    }
+  }
 }
