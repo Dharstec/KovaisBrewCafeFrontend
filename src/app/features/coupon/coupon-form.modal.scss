@@ -38,17 +38,36 @@ $text2:   #475569;
   margin-bottom: 16px;
 }
 
-.modal input, select {
+.modal input:not([type="checkbox"]), select {
   width: 100%;
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #ddd;
   margin-bottom: 10px;
+  box-sizing: border-box;
 }
 
 .row {
   display: flex;
   gap: 10px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: $text2;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: $accent;
+    cursor: pointer;
+  }
 }
 
 .actions {
