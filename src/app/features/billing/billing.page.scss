@@ -912,6 +912,20 @@ $warn:     #d97706;
   .right {
     min-height: 50vh;
   }
+
+  /* Action buttons must never render under the fixed Menu/Cart tab bar.
+     Short carts (few items, no split/coupon rows) previously let this
+     block land naturally in that 58px dead zone with nothing pushing
+     it clear - sticky pins it just above the tab bar regardless of
+     how much content is above it. */
+  .action-btns {
+    position: sticky;
+    bottom: 58px;
+    background: $surface;
+    padding-top: 10px;
+    margin-top: 4px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,.05);
+  }
 }
 
 /* Show both panels always on wider screens */
