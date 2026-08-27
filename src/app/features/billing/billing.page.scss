@@ -913,6 +913,19 @@ $warn:     #d97706;
     min-height: 50vh;
   }
 
+  /* On mobile the whole page already scrolls as one unit (.pos), so
+     .cart-items must NOT also be its own tiny internally-scrolling
+     region (flex:1 + overflow-y:auto, meant for a fixed-height desktop
+     sidebar). When Split payment or the coupon box take up extra
+     space above it, flex:1 was squeezing this down to barely one
+     item's height with a cramped internal scrollbar - the rest of the
+     cart looked like it had vanished. Let it flow at its natural
+     height instead, like everything else in this panel does. */
+  .cart-items {
+    flex: none;
+    overflow-y: visible;
+  }
+
   /* Action buttons must never render under the fixed Menu/Cart tab bar.
      Short carts (few items, no split/coupon rows) previously let this
      block land naturally in that 58px dead zone with nothing pushing
