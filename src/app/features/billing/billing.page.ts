@@ -145,7 +145,12 @@ export class BillingPage implements OnInit {
     const existing = this.cart.find(item => item.productId === product.id);
     if (product.is_manual_price && existing) return;
 
-    this.openAddonModal(product);
+    if (product.has_addons) {
+      this.openAddonModal(product);
+    } else {
+      this.store.add({ ...product, price: Number(product.price) });
+      if (window.innerWidth <= 900) this.showCart = true;
+    }
   }
 
   openAddonModal(product: any) {
