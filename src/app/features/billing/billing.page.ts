@@ -219,9 +219,25 @@ export class BillingPage implements OnInit {
     if (!billId)             { this.showError('Save bill before applying coupon'); return; }
     if (!this.couponCode.trim()) { this.showError('Enter coupon code'); return; }
 
-    this.billApi.applyCoupon(billId, { coupon_code: this.couponCode }).subscribe({
-      next: (res: any) => { this.couponDiscount = Number(res.coupon_discount) || 0; this.couponApplied = true; },
-      error: (err)     => this.showError(err.error?.msg || 'Invalid coupon')
+    const snapshot = JSON.parse(JSON.stringify(this.store.getItems()));
+    const items = snapshot.map((i: any) => ({
+      productId: i.productId != null ? Number(i.productId) : null,
+      name:      i.name,
+      price:     Number(i.price),
+      qty:       Number(i.qty)
+    }));
+
+    // Sync the current cart to the server first - otherwise the coupon
+    // gets validated against whatever total was last saved, not what's
+    // actually in the cart right now (e.g. items removed but not saved).
+    this.billApi.update(billId, { customer_name: this.customerName, items }).subscribe({
+      next: () => {
+        this.billApi.applyCoupon(billId, { coupon_code: this.couponCode }).subscribe({
+          next: (res: any) => { this.couponDiscount = Number(res.coupon_discount) || 0; this.couponApplied = true; },
+          error: (err)     => this.showError(err.error?.msg || 'Invalid coupon')
+        });
+      },
+      error: (err) => this.showError(err?.error?.message || 'Failed to sync cart before applying coupon')
     });
   }
 
