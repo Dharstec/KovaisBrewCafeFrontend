@@ -850,7 +850,13 @@ $radius:  14px;
 }
 
 // ═══════════════════════════════════════════
-//  PRINT — RECEIPT
+//  PRINT — RECEIPT (58 mm thermal roll)
+//
+//  A 58 mm roll prints 48 mm wide, so the receipt is 48 mm and centred:
+//  on a 58 mm page it lands exactly on the print head; on a 48 mm page it
+//  fills it. Page margins are zeroed while printing (PrinterService.printPage).
+//  Thermal heads print only black dots, so there's no grey or opacity —
+//  greys come out as faint speckles. Weights are 600+ so text prints solid.
 // ═══════════════════════════════════════════
 .print-receipt-wrap {
   display: none;
@@ -869,53 +875,164 @@ $radius:  14px;
     display: block !important;
   }
 
-  .print-receipt {
-    font-family: 'Courier New', monospace;
-    max-width: 80mm;
+  .rc {
+    width: 48mm;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 6mm 4mm;
-    font-size: 12px;
+    padding: 1mm 0 2mm;
+    /* Bahnschrift ships with Windows 10/11: a clean DIN face that prints crisp */
+    font-family: Bahnschrift, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.32;
     color: #000;
+    background: #fff;
+    font-variant-numeric: tabular-nums;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 
-    .shop-name {
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 2px;
+    b { font-weight: 800; }
+  }
+
+  // ── Header: mark, name, contact ──
+  .rc-head {
+    text-align: center;
+    padding-bottom: 1.4mm;
+  }
+  .rc-logo {
+    display: block;
+    width: 8mm;
+    height: 10mm;
+    margin: 0 auto 0.8mm;
+  }
+  .rc-name {
+    font-size: 13.5px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1.15;
+    margin-bottom: 0.4mm;
+  }
+  .rc-info {
+    font-size: 9.5px;
+    line-height: 1.3;
+  }
+
+  // ── Bill no / date, payment / time ──
+  .rc-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 2mm;
+    padding: 1.1mm 0;
+    border-top: 1px dashed #000;
+    border-bottom: 1px dashed #000;
+    font-size: 10.5px;
+  }
+  .rc-cut {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    span { margin-right: 1.2mm; }   // Angular drops the space between label and value
+  }
+  .rc-span { grid-column: 1 / -1; }
+
+  // ── Items: one line each ──
+  .rc-items {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin-top: 1mm;
+
+    .rc-col-q { width: 5mm; }
+    .rc-col-a { width: 12.5mm; }
+
+    th {
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 0 0 0.7mm;
+      border-bottom: 1px solid #000;
     }
+    td {
+      padding: 0.65mm 0;
+      vertical-align: baseline;
+    }
+  }
+  .rc-nm {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 1.2mm !important;
+    /* a narrower face fits ~20 % more of each name on its one line */
+    font-family: Bahnschrift, 'sans-serif-condensed', 'Roboto Condensed', 'Arial Narrow', 'Segoe UI', Roboto, Arial, sans-serif;
+    font-stretch: 87.5%;
+  }
+  .rc-c { text-align: center !important; }
+  .rc-r { text-align: right !important; }
 
-    .shop-sub {
-      text-align: center;
+  // ── Sub total, discount ──
+  .rc-sums {
+    margin-top: 0.8mm;
+    padding-top: 1mm;
+    border-top: 1px solid #000;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 2mm;
+    }
+    span {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    b { white-space: nowrap; }
+  }
+  .rc-pay {
+    border-top: 0;
+    padding-top: 0.4mm;
+  }
+
+  // ── TOTAL: a solid black bar ──
+  .rc-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 1.2mm;
+    padding: 1.1mm 2mm;
+    border-radius: 1mm;
+    background: #000;
+    color: #fff;
+    font-size: 14px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+
+    span {
       font-size: 11px;
-      margin-bottom: 4px;
-      opacity: 0.7;
+      font-weight: 800;
+      letter-spacing: 0.16em;
     }
+    b { white-space: nowrap; }
+  }
 
-    .divider-dashed {
-      border-top: 1px dashed #000;
-      margin: 4px 0;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      margin: 4px 0;
-
-      td, th { padding: 2px 0; vertical-align: top; }
-      th { font-weight: bold; }
-    }
-
-    .items-table th { font-size: 11px; }
-
-    .right { text-align: right; }
-
-    .total-row td { padding-top: 4px; }
-
-    .thank-you {
-      text-align: center;
-      margin-top: 6px;
-      font-size: 12px;
-    }
+  // ── Footer ──
+  .rc-foot {
+    margin-top: 1.8mm;
+    padding-top: 1.3mm;
+    border-top: 1px dashed #000;
+    text-align: center;
+  }
+  .rc-saved {
+    font-size: 10px;
+    font-weight: 700;
+    margin-bottom: 0.4mm;
+  }
+  .rc-thanks {
+    font-size: 11.5px;
+    font-weight: 800;
   }
 }

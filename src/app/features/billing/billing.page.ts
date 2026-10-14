@@ -383,7 +383,7 @@ export class BillingPage implements OnInit {
           }).subscribe({
             next: () => {
               this.isCompleting = false;
-              this.printReceipt(newBillId, items, this.finalTotal, paymentMode, this.customerName);
+              this.printReceipt(newBillId, items, this.finalTotal, paymentMode, this.customerName, cashAmt, upiAmt);
               this.clearBill();
               this.refreshProducts();
             },
@@ -409,7 +409,7 @@ export class BillingPage implements OnInit {
         }).subscribe({
           next:  () => {
             this.isCompleting = false;
-            this.printReceipt(billId, items, this.finalTotal, paymentMode, this.customerName);
+            this.printReceipt(billId, items, this.finalTotal, paymentMode, this.customerName, cashAmt, upiAmt);
             this.clearBill();
             this.refreshProducts();
           },
@@ -428,16 +428,20 @@ export class BillingPage implements OnInit {
     items       : { name: string; price: number; qty: number }[],
     grandTotal  : number,
     paymentMode : string,
-    customerName: string
+    customerName: string,
+    cashAmt     : number | null = null,
+    upiAmt      : number | null = null
   ) {
     if (!this.printer.isAndroid()) return;  // only works on Android with RawBT
     this.printer.printViaRawBT({
-      billId,
+      id          : billId,
+      createdAt   : this.billDate || new Date(),
       customerName,
       paymentMode,
+      cashAmount  : cashAmt,
+      upiAmount   : upiAmt,
+      couponCode  : this.couponDiscount > 0 ? this.couponCode : null,
       items,
-      subtotal    : this.subtotal,
-      discount    : this.couponDiscount,
       grandTotal
     });
   }

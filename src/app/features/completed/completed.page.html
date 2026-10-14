@@ -233,50 +233,63 @@
 </div>
 
 <!-- ════════════════════════════════════
-     PRINT RECEIPT OVERLAY (hidden, print only)
+     PRINT RECEIPT — 58 mm thermal (shown only when printing)
+     Every item stays on one line; long names end in "…".
      ════════════════════════════════════ -->
-<div class="print-receipt-wrap" id="printArea" *ngIf="printBillData">
-  <div class="print-receipt">
-    <div class="shop-name">&#9749; Kovai's Brew Café</div>
-    <div class="shop-sub">Bill Receipt</div>
-    <div class="divider-dashed"></div>
+<div class="print-receipt-wrap" id="printArea" *ngIf="receipt as r">
+  <div class="rc">
 
-    <table>
-      <tr><td>Bill #</td><td class="right">{{ printBillData.id }}</td></tr>
-      <tr><td>Date</td><td class="right">{{ printBillData.created_at | date:'dd MMM yyyy, hh:mm a' }}</td></tr>
-      <tr *ngIf="printBillData.customer_name">
-        <td>Customer</td><td class="right">{{ printBillData.customer_name }}</td>
-      </tr>
-      <tr><td>Payment</td><td class="right">{{ printBillData.payment_mode }}</td></tr>
-    </table>
+    <div class="rc-head">
+      <svg class="rc-logo" viewBox="0 0 40 50" aria-hidden="true">
+        <path d="M16 10c-3-3 3-4.5 0-8M24 10c-3-3 3-4.5 0-8" fill="none" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
+        <rect x="5" y="13" width="30" height="6" rx="2.5" fill="none" stroke="#000" stroke-width="2.4"/>
+        <path d="M8.6 19h22.8l-1.15 10H9.75z" fill="#000"/>
+        <path d="M7.5 19h25l-3 26q-.3 2.5-2.9 2.5H13.4q-2.6 0-2.9-2.5z" fill="none" stroke="#000" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M13.4 32.5l.6 11.5M17.8 32.5l.3 11.5M22.2 32.5l-.3 11.5M26.6 32.5l-.6 11.5" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div class="rc-name">{{ shop.name }}</div>
+      <div class="rc-info" *ngIf="shop.address">{{ shop.address }}</div>
+      <div class="rc-info" *ngIf="shop.phone">Ph {{ shop.phone }}</div>
+      <div class="rc-info" *ngIf="shop.gstin">GSTIN {{ shop.gstin }}</div>
+    </div>
 
-    <div class="divider-dashed"></div>
+    <div class="rc-meta">
+      <div class="rc-cut"><span>Bill No:</span><b>{{ r.billNo }}</b></div>
+      <div class="rc-r"><b>{{ r.date }}</b></div>
+      <div class="rc-cut"><span>Payment:</span><b>{{ r.payMode }}</b></div>
+      <div class="rc-r"><b>{{ r.time }}</b></div>
+      <div class="rc-cut rc-span" *ngIf="r.customer"><span>Customer:</span><b>{{ r.customer }}</b></div>
+    </div>
 
-    <table class="items-table">
-      <thead><tr><th>Item</th><th>Qty</th><th class="right">Amt</th></tr></thead>
+    <table class="rc-items">
+      <colgroup><col><col class="rc-col-q"><col class="rc-col-a"></colgroup>
+      <thead><tr><th>Item</th><th class="rc-c">Qty</th><th class="rc-r">Amount</th></tr></thead>
       <tbody>
-        <tr *ngFor="let i of printBillData.items">
-          <td>{{ i.name }}</td>
-          <td>{{ i.qty }}</td>
-          <td class="right">&#8377;{{ i.price * i.qty | number:'1.2-2' }}</td>
+        <tr *ngFor="let l of r.lines">
+          <td class="rc-nm">{{ l.name }}</td>
+          <td class="rc-c">{{ l.qty }}</td>
+          <td class="rc-r">{{ l.amount | number:'1.2-2' }}</td>
         </tr>
       </tbody>
     </table>
 
-    <div class="divider-dashed"></div>
+    <div class="rc-sums">
+      <div><span>Sub Total ({{ r.qtyCount }} {{ r.qtyCount === 1 ? 'item' : 'items' }})</span><b>{{ r.subtotal | number:'1.2-2' }}</b></div>
+      <div *ngIf="r.discount"><span>{{ r.discountLabel }}</span><b>&minus;{{ r.discount | number:'1.2-2' }}</b></div>
+      <div *ngIf="r.extra"><span>Other charges</span><b>{{ r.extra | number:'1.2-2' }}</b></div>
+    </div>
 
-    <table>
-      <tr *ngIf="printBillData.discount_amount > 0">
-        <td>Discount</td>
-        <td class="right">-&#8377;{{ printBillData.discount_amount | number:'1.2-2' }}</td>
-      </tr>
-      <tr class="total-row">
-        <td><strong>TOTAL</strong></td>
-        <td class="right"><strong>&#8377;{{ printBillData.grand_total | number:'1.2-2' }}</strong></td>
-      </tr>
-    </table>
+    <div class="rc-total"><span>TOTAL</span><b>&#8377;{{ r.total | number:'1.2-2' }}</b></div>
 
-    <div class="divider-dashed"></div>
-    <div class="thank-you">Thank You! Visit Again &#128522;</div>
+    <div class="rc-sums rc-pay" *ngIf="r.payments.length">
+      <div *ngFor="let p of r.payments"><span>Paid by {{ p.label }}</span><b>&#8377;{{ p.amount | number:'1.2-2' }}</b></div>
+    </div>
+
+    <div class="rc-foot">
+      <div class="rc-saved" *ngIf="r.discount">You saved &#8377;{{ r.discount | number:'1.2-2' }} today</div>
+      <div class="rc-thanks">{{ shop.thanks }}</div>
+      <div class="rc-info" *ngIf="shop.social">Follow us {{ shop.social }}</div>
+    </div>
+
   </div>
 </div>

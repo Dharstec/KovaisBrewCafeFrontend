@@ -331,40 +331,6 @@ img {
 
   body { background: #fff !important; font-size: 12px; }
 
-  .print-receipt {
-    font-family: 'Courier New', monospace;
-    max-width: 80mm;
-    margin: 0 auto;
-    padding: 8mm;
-  }
-
-  .print-receipt .shop-name {
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 2mm;
-  }
-
-  .print-receipt .divider-dashed {
-    border-top: 1px dashed #000;
-    margin: 3mm 0;
-  }
-
-  .print-receipt table {
-    width: 100%;
-    font-size: 11px;
-    border-collapse: collapse;
-  }
-
-  .print-receipt td {
-    padding: 1mm 0;
-  }
-
-  .print-receipt .total-row {
-    font-weight: bold;
-    border-top: 1px solid #000;
-    padding-top: 2mm;
-  }
 }
 
 /* ── Responsive Helpers ── */

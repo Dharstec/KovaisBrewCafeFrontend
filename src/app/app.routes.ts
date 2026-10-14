@@ -82,12 +82,14 @@ export const routes: Routes = [
   },
   {
     path: 'coupons',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/coupon/coupon-list.page')
         .then(m => m.CouponListPage)
   },
   {
     path: 'expenses',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/spendPage/spend.page')
         .then(m => m.SpendPage)

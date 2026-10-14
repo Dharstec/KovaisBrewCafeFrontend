@@ -5,6 +5,7 @@ import { BillApi } from '../../core/api/bill.api';
 import { ProductApi } from '../../core/api/product.api';
 import { AuthApi } from '../../core/api/auth.api';
 import { ToastService } from '../../core/services/toast.service';
+import { PrinterService, ReceiptView } from '../../core/services/printer.service';
 
 @Component({
   standalone: true,
@@ -18,6 +19,7 @@ export class CompletedPage implements OnInit {
   auth       = inject(AuthApi);
   toast      = inject(ToastService);
   productApi = inject(ProductApi);
+  printer    = inject(PrinterService);
 
   bills: any[] = [];
 
@@ -40,7 +42,8 @@ export class CompletedPage implements OnInit {
   grandTotal   = 0;
 
   /* PRINT */
-  printBillData: any = null;
+  receipt: ReceiptView | null = null;
+  shop = this.printer.shop;
 
   /* EDIT MODAL */
   editModal: {
@@ -93,10 +96,20 @@ export class CompletedPage implements OnInit {
   next() { if (this.page < this.totalPages) { this.page++; this.loadBills(); } }
   prev() { if (this.page > 1)              { this.page--; this.loadBills(); } }
 
-  /* PRINT RECEIPT */
+  /* PRINT RECEIPT — 58 mm thermal, via the browser's print dialog */
   printBill(bill: any) {
-    this.printBillData = bill;
-    setTimeout(() => window.print(), 100);
+    this.receipt = this.printer.toReceiptView({
+      id          : bill.id,
+      createdAt   : bill.created_at,
+      customerName: bill.customer_name,
+      paymentMode : bill.payment_mode,
+      cashAmount  : bill.cash_amount,
+      upiAmount   : bill.upi_amount,
+      couponCode  : bill.coupon_code,
+      items       : bill.items || [],
+      grandTotal  : bill.grand_total
+    });
+    setTimeout(() => this.printer.printPage(), 100);
   }
 
   /* ══════════════════════════════════════
