@@ -43,7 +43,9 @@ export class CompletedPage implements OnInit {
 
   /* PRINT */
   receipt: ReceiptView | null = null;
-  shop = this.printer.shop;
+  receiptFlip = false;                          // this print goes upside down
+  shop    = this.printer.shop;
+  topEdge = this.printer.startAtTopEdge;        // "Name at top edge" switch
 
   /* EDIT MODAL */
   editModal: {
@@ -109,7 +111,13 @@ export class CompletedPage implements OnInit {
       items       : bill.items || [],
       grandTotal  : bill.grand_total
     });
+    this.receiptFlip = this.topEdge && this.receipt.lines.length <= this.printer.topEdgeMaxLines;
     setTimeout(() => this.printer.printPage(), 100);
+  }
+
+  setTopEdge(on: boolean) {
+    this.topEdge = on;
+    this.printer.startAtTopEdge = on;
   }
 
   /* ══════════════════════════════════════

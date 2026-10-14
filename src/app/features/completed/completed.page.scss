@@ -217,6 +217,52 @@ $radius:  14px;
   }
 }
 
+// "Name at top edge" switch — see PrinterService.startAtTopEdge
+.paper-switch {
+  position: relative;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $text2;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  &__track {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: $border;
+    transition: background 0.2s;
+  }
+
+  &__dot {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+    transition: transform 0.2s;
+  }
+}
+.paper-switch input:checked + .paper-switch__track { background: $accent; }
+.paper-switch input:checked + .paper-switch__track .paper-switch__dot { transform: translateX(14px); }
+.paper-switch input:focus-visible + .paper-switch__track { outline: 2px solid $accent; outline-offset: 2px; }
+
 // ═══════════════════════════════════════════
 //  BILL GRID
 // ═══════════════════════════════════════════
@@ -1034,5 +1080,25 @@ $radius:  14px;
   .rc-thanks {
     font-size: 11.5px;
     font-weight: 800;
+  }
+
+  // ── Tear guide: a short hairline printed last, a few mm past the bill.
+  //    The printer skips blank paper at the end of a job, so without some
+  //    ink there it stops early and the tear cuts the last line. ──
+  .rc-guide {
+    width: 8mm;
+    margin: 0 auto;
+    border-top: 1px solid #000;
+  }
+  .rc-guide--bottom { margin-top: 5mm; }
+  .rc-guide--top { display: none; margin-bottom: 5mm; }
+
+  // ── Upside down: the name is printed last, so it sits at the tear edge ──
+  .rc--flip {
+    transform: rotate(180deg);
+    padding: 0;
+
+    .rc-guide--top { display: block; }
+    .rc-guide--bottom { display: none; }
   }
 }

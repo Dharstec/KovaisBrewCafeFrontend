@@ -44,6 +44,7 @@ export interface ReceiptView {
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+const TOP_EDGE_KEY = 'receipt_top_edge';
 
 @Injectable({ providedIn: 'root' })
 export class PrinterService {
@@ -113,6 +114,25 @@ export class PrinterService {
       payments,
     };
   }
+
+  // ─── Where the bill starts on the paper ──────────────────
+
+  /**
+   * A tear-off printer can't print on the paper between its print head and
+   * its tear edge, so after every bill that piece comes out blank. Printed
+   * the usual way it lands above the next bill's name; printed upside down
+   * (name printed last) the name sits right at the tear edge and the blank
+   * piece falls below "Thank you". On by default, remembered per device.
+   */
+  get startAtTopEdge(): boolean {
+    try { return localStorage.getItem(TOP_EDGE_KEY) !== 'off'; } catch { return true; }
+  }
+  set startAtTopEdge(on: boolean) {
+    try { localStorage.setItem(TOP_EDGE_KEY, on ? 'on' : 'off'); } catch { /* storage blocked */ }
+  }
+
+  /** Longer bills print the usual way: an upside-down bill can't be split across pages. */
+  readonly topEdgeMaxLines = 20;
 
   // ─── Browser printing (58 mm thermal via the print dialog) ───
 

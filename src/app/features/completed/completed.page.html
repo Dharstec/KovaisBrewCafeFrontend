@@ -59,6 +59,12 @@
   <div class="section-title">
     <span class="section-title__bar"></span>
     <span class="section-title__text">Bills</span>
+    <label class="paper-switch"
+           title="Prints the bill upside down, so the cafe name starts right at the torn edge. The blank piece every tear-off printer leaves between bills goes below 'Thank you' instead.">
+      <input type="checkbox" [checked]="topEdge" (change)="setTopEdge($any($event.target).checked)">
+      <span class="paper-switch__track"><span class="paper-switch__dot"></span></span>
+      Name at top edge
+    </label>
   </div>
 
   <!-- ══ BILL GRID ══ -->
@@ -237,7 +243,10 @@
      Every item stays on one line; long names end in "…".
      ════════════════════════════════════ -->
 <div class="print-receipt-wrap" id="printArea" *ngIf="receipt as r">
-  <div class="rc">
+  <div class="rc" [class.rc--flip]="receiptFlip">
+
+    <!-- upside-down printing ends here: keeps the name clear of the tear edge -->
+    <div class="rc-guide rc-guide--top" aria-hidden="true"></div>
 
     <div class="rc-head">
       <svg class="rc-logo" viewBox="0 0 40 50" aria-hidden="true">
@@ -290,6 +299,9 @@
       <div class="rc-thanks">{{ shop.thanks }}</div>
       <div class="rc-info" *ngIf="shop.social">Follow us {{ shop.social }}</div>
     </div>
+
+    <!-- normal printing ends here: keeps the footer clear of the tear edge -->
+    <div class="rc-guide rc-guide--bottom" aria-hidden="true"></div>
 
   </div>
 </div>
